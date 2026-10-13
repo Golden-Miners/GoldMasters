@@ -686,32 +686,39 @@ Binaries and data directory are **repo-local and git-ignored**; nothing is machi
 | A7 | PostgreSQL 18.6 is the right pin. | Environment Availability | 18 is the newest supported major; 19 was in beta at research time. Pinning 18.6 avoids a beta. If stability risk is judged high, 17.11 is the conservative alternate. |
 | A8 | A Node-driven stack script (`concurrently` + `wait-on`) is acceptable on PowerShell-first Windows, or a PowerShell script is preferred. | Recommended Project Structure | Not decided; both work. Planning should pick one and document it (D-33 requires *one* documented entry point). |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Every question below carries an inline `RESOLVED:` marker naming the plan task that settled it. The questions and their rationale are kept as written so a later reader can see what was genuinely open before planning.
 
 1. **C-09 error-code vocabulary and minting rule** (unselected gray area; criterion 1 needs it as versioned code)
    - What we know: the envelope is fixed — `{code, message, retryable, correlation_id, details}` [VERIFIED: Schema.md:224-237]; `retryable` is determined by code, not model judgement.
    - What's unclear: the actual code list and the rule for adding codes; whether codes are a closed enum or a namespaced string pattern.
    - Recommendation: define a closed `ErrorCode` enum in the contracts package as part of the frozen version (bumping minor to add codes per D-23), with `retryable` as a per-code property, and pin conformance cases for the codes Phase 1 itself can emit (`CONTRACT_VALIDATION_FAILED`, `UNKNOWN_CONTRACT_MAJOR`, `CONFIG_INVALID`, `UNSUPPORTED_*`). Flag for user confirmation since it is a published contract.
+   - RESOLVED: adopted as recommended, and settled by plan 01-01 (contracts foundation) Task 3, which creates the closed `ErrorCode` enum in `packages/contracts/src/goldmasters_contracts/errors.py` with `retryable` exposed as a per-code property and pins `CONTRACT_VALIDATION_FAILED`, `UNKNOWN_CONTRACT_MAJOR`, `CONFIG_INVALID`, `UNSUPPORTED_INSTRUMENT`, `UNSUPPORTED_TIMEFRAME` and `INTERNAL_ERROR`; adding a code is a minor bump per D-23. Plan 01-04 Task 3 pins the conformance cases for every code Phase 1 itself can emit.
 
 2. **Migration lifecycle mechanics** (unselected gray area; criterion 5)
    - What we know: Alembic is the tool (Architecture.md §8); the migration must apply and roll back; two DB roles exist (D-35).
    - What's unclear: how the same migration is applied to the persistent working DB vs. the throwaway per-run test DB, and where the test DB is created/dropped.
    - Recommendation: `alembic upgrade head` against the working DB via the stack script; a pytest fixture that creates a per-run database, runs `upgrade head → downgrade base → upgrade head`, asserts schema state, then drops it. Pin Alembic ≥1.20.
+   - RESOLVED: adopted as recommended, and settled by plan 01-06 Task 1 (a hand-written revision with a real `downgrade()`, plus `apps/api/alembic.ini` and `env.py` reading the API `Settings` for the URL) and Task 2 (a session-scoped fixture that creates a throwaway per-run database, runs `upgrade head → downgrade base → upgrade head`, asserts schema state, then drops it). The persistent working database is handled by the stack script in plan 01-05.
 
 3. **Redaction rules + correlation-ID origin** (unselected gray area; criterion 4)
    - What we know: transport is structlog + OTel-to-disk (D-30); Schema.md §10 forbids secrets/SQL/stack traces/paths/tokens in `message`, and §1 line 18 forbids secrets in logs/traces.
    - What's unclear: exactly which fields are redacted, the redaction marker, and where the correlation ID is minted (per HTTP request; per background run?).
    - Recommendation: mint a UUID correlation ID in request middleware, bind via `bind_contextvars`, propagate to spans and to the C-09 body; add a structlog processor with a redaction allowlist/denylist and a test asserting a known secret never appears in a captured log line.
+   - RESOLVED: adopted as recommended, and settled by plan 01-09 Task 1 (the structlog redaction processor with its deny-list of secret-named keys and `SecretStr` values, plus `tests/unit/test_logging_redaction.py` asserting a known secret never appears in a captured log line) and Task 2 (a per-HTTP-request UUID minted in middleware, bound via `bind_contextvars`, propagated to spans and echoed to the C-09 body, plus `tests/unit/test_correlation_id.py`). Per-background-run IDs are out of Phase 1 scope: Phase 1 mints them per request only.
 
 4. **Loopback host representation**
    - What we know: D-34 requires a non-loopback bind to be rejected.
    - What's unclear: whether `localhost` (a name) is accepted alongside `127.0.0.1`/`::1`, and how IPv6 loopback is treated.
    - Recommendation: accept `127.0.0.1` and `::1` explicitly; resolve `localhost` via `ipaddress`/stdlib and reject everything else.
+   - RESOLVED: adopted as recommended, and settled by plan 01-08 Task 1, which implements the `assert_loopback(host)` guard in `apps/api/src/goldmasters_api/app.py` (accepts `127.0.0.1` and `::1`, resolves `localhost` through the stdlib, raises for anything else) and proves it with the negative and acceptance assertions in `tests/integration/test_health.py`.
 
 5. **Where the config hash is computed and what it covers**
    - What we know: D-15/D-27 require the hash recorded on every run/decision.
    - What's unclear: the exact canonicalisation (which fields, ordering, secrets excluded).
    - Recommendation: hash the deterministic JSON serialisation of the resolved non-secret settings object with sorted keys; exclude `SecretStr` fields; version the hash algorithm alongside `config_version`.
+   - RESOLVED: adopted as recommended, and settled by plan 01-10 Task 2, which implements `hash_effective_config(settings)` in `apps/api/src/goldmasters_api/settings.py` — canonical JSON with sorted keys, every `SecretStr` field excluded, the hash-algorithm version exposed alongside `config_version` — with determinism, key-order and secret-exclusion assertions in `tests/unit/test_settings_startup.py`.
 
 ## Environment Availability
 

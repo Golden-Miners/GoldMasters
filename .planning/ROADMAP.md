@@ -43,7 +43,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. No order-placement, order-modification or order-closure module, endpoint, tool or broker-trading credential exists — verified by an automated boundary test that runs in CI.
   4. Configuration is validated at startup, `.env.example` contains no real secret values, and logs and traces are structured, correlation-ID stamped and redacted.
   5. The PostgreSQL migration applies and rolls back, and formatting, linting, typing and unit checks run in CI and fail the build on violation — with the exact commands and their results recorded.
-**Plans**: TBD
+**Plans:** 11 plans
+
+- [ ] 01-01-PLAN.md — Tracer: uv workspace + contracts core (shared base, decimal wire form, enums, C-09 errors, envelope) + core contract tests
+- [ ] 01-02-PLAN.md — Signals-only boundary scan + negative meta-test + dependency allowlist + tool configs + one `scripts/gate` + tracked hook (CI intent recorded as a build-failing local gate; no hosted workflow file)
+- [ ] 01-03-PLAN.md — Version and identity rules + market bar/quote, precision table, decision and journal contracts + contract tests
+- [ ] 01-04-PLAN.md — Contract evidence: purity test + committed-schema drift test + golden conformance suite over shared accepted/rejected cases
+- [ ] 01-05-PLAN.md — Portable repo-local PostgreSQL provisioning + falsification probe + one `scripts/stack` command
+- [ ] 01-06-PLAN.md — Hand-written Alembic migration (apply + rollback) + throwaway per-run DB fixture + persistence round-trip tests
+- [ ] 01-07-PLAN.md — Next.js client skeleton + TypeScript generation from committed schema + health page + run/evidence docs
+- [ ] 01-08-PLAN.md — Tracer: end-to-end contract envelope → committed JSON Schema → FastAPI settings/lifespan/loopback guard/health spine
+- [ ] 01-09-PLAN.md — Observability: structured JSON logging with redaction + per-request correlation ID + local on-disk traces
+- [ ] 01-10-PLAN.md — Configuration surface: explicit validated settings, fail-loud startup, effective-config hash, `config/goldmasters.yaml` and `.env.example`
+- [ ] 01-11-PLAN.md — News, sentiment and backtest contracts + final package barrel + complete committed schema export + `.gitattributes`
 
 ### Phase 2: Market Data and Provider Selection
 **Goal**: The operator can select a provider and instrument and receive real, validated, provenance-stamped market data — or a visible, structured failure.
