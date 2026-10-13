@@ -4,7 +4,9 @@
 
 GoldMasters is built from its contracts outward. Phase 1 freezes the machine-checked schema layer (Schema.md is canonical for names and JSON shapes), stands up the local skeleton and enforces the research-only boundary structurally — so no later phase can accidentally grow an execution path or an unvalidated payload. Phase 2 makes real market data arrive with provenance and quality status, or fail visibly. Phase 3 puts every number that a signal depends on — structure, regimes, strategy rule checks, entry/stop/target, risk/reward and the hard risk gate — into versioned deterministic code. Phase 4 hosts those roles inside a bounded LangGraph run with a locally discovered Ollama model, where a critical failure can only end in NO_TRADE or INSUFFICIENT_DATA. Phase 5 adds source-attributed news and sentiment, then the CEO decision contract with evidence references and fail-closed rules. Phase 6 makes decisions immutable and outcomes append-only, and adds reproducible, cost-aware backtesting. Phase 7 delivers the read-only research console over real API state. Phase 8 proves, with recorded evidence, that nothing is fabricated, nothing executes and nothing is claimed untested.
 
-**Granularity:** `standard` (GSD default — no `.planning/config.json` exists). Phase IDs are sequential.
+**Granularity:** `standard` (GSD default - no `.planning/config.json` exists). Phase IDs are sequential.
+
+**Milestone:** v1.0 - Research Signal Team (first milestone; started 2026-10-13).
 
 **Requirement coverage:** 12/12 v1 requirements mapped, one phase each, no orphans.
 
