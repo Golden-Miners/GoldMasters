@@ -1,0 +1,28 @@
+{
+  "source_path": "C:\\XauMaster\\Design.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Design Brief",
+  "summary": "Design brief for the GoldMasters signal research console: design principles, visual direction, tokens, screen inventory, user flows, components, and accessibility targets.",
+  "scope": [
+    "Design principles",
+    "Visual direction",
+    "Design tokens",
+    "Color palette",
+    "Typography",
+    "Spacing, radius, shadows",
+    "Screen inventory",
+    "Core user flows",
+    "Per-screen layout",
+    "Component library",
+    "Key-screen states",
+    "Responsive behaviour",
+    "Accessibility",
+    "WCAG 2.2 AA"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": "Manifest declared type DOC; used as authoritative. Content is a UI/UX design brief (prose plus token and component inventories) with no decision, requirement, or API/schema contract sections."
+}

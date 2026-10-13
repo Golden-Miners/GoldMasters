@@ -1,0 +1,13 @@
+{
+  "source_path": "C:\\XauMaster\\Security.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Security Review Plan",
+  "summary": "Audit rules, severity rubric, required security audit categories, findings template, and pre-launch checklist for GoldMasters.",
+  "scope": ["security audit", "authentication", "authorization", "secrets", "injection", "API routes", "rate limiting", "IDOR", "CORS", "dependency vulnerabilities", "logging", "trading/agent security", "data storage"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

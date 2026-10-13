@@ -1,0 +1,38 @@
+{
+  "source_path": "C:\\XauMaster\\AGENTS.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "AGENTS.md — GoldMasters (read first, every session)",
+  "summary": "Agent operating guide for the GoldMasters LangGraph signal project: mandatory session-start reading, token-saving rules, non-negotiables, commands, and agent skills.",
+  "scope": [
+    "GoldMasters",
+    "LangGraph multi-agent trading signal team",
+    "session-start reading",
+    "token-saving",
+    "non-negotiables",
+    "commands",
+    "agent skills",
+    "issue tracker",
+    "domain docs"
+  ],
+  "cross_refs": [
+    "Rules.md",
+    "Memory.md",
+    "Task.md",
+    "Schema.md",
+    "Architecture.md",
+    "PRD.md",
+    "Design.md",
+    "Debug.md",
+    "Security.md",
+    ".scratch/",
+    "docs/agents/issue-tracker.md",
+    "GLOSSARY.md",
+    "docs/adr/",
+    "docs/agents/domain.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

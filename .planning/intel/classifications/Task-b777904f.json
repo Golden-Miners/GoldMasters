@@ -1,0 +1,13 @@
+{
+  "source_path": "C:\\XauMaster\\Task.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Task Tracker",
+  "summary": "Task tracker listing planned phases, tasks, statuses, and acceptance gates for the GoldMasters trading-signal project.",
+  "scope": ["GoldMasters", "task tracker", "phase plan", "acceptance gates", "status definitions"],
+  "cross_refs": ["Memory.md", "Schema.md", "README"],
+  "locked": false,
+  "precedence": null,
+  "notes": "Type set from MANIFEST_TYPE (DOC), which is authoritative; content is a checkbox task/phase tracker with no decision, requirement, or technical-contract signals."
+}

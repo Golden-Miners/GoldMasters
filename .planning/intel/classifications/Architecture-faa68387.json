@@ -1,0 +1,30 @@
+{
+  "source_path": "C:\\XauMaster\\Architecture.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Architecture and Development Plan",
+  "summary": "Proposed architecture and phased development plan for a LangGraph multi-agent trading signal system, covering topology, agent contracts, tooling, quality gates and deployment boundaries.",
+  "scope": [
+    "LangGraph",
+    "FastAPI",
+    "React/Next.js",
+    "PostgreSQL",
+    "Ollama",
+    "MT5 adapter",
+    "agent topology",
+    "agent contracts",
+    "risk gates",
+    "backtesting",
+    "quality gates",
+    "repository layout",
+    "deployment boundary"
+  ],
+  "cross_refs": [
+    "Schema.md",
+    "Design.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

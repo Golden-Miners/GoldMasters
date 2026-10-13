@@ -1,0 +1,13 @@
+{
+  "source_path": "C:/XauMaster/Memory.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Project Memory and Handoff",
+  "summary": "Durable handoff state for the GoldMasters signal project: confirmed user decisions, product rules, documentation index, completed work, open decisions, and next-session instructions.",
+  "scope": ["GoldMasters", "project memory and handoff", "trading signal team", "MT5", "Ollama", "LangGraph", "PostgreSQL", "OpenCode"],
+  "cross_refs": ["Prd.md", "Design.md", "Security.md", "Architecture.md", "Schema.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

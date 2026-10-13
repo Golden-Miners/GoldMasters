@@ -1,0 +1,27 @@
+{
+  "source_path": "C:\\XauMaster\\Prd.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Product Requirements Document",
+  "summary": "Defines V1 product requirements for GoldMasters: a local multi-agent trading research assistant producing explainable TRADE/NO TRADE/INSUFFICIENT DATA decisions with no order execution.",
+  "scope": [
+    "GoldMasters",
+    "LangGraph orchestration",
+    "specialist agents",
+    "CEO decision contract",
+    "MT5 market data",
+    "news and sentiment",
+    "backtesting",
+    "trade journal",
+    "Ollama local models",
+    "React/Next.js UI",
+    "PostgreSQL"
+  ],
+  "cross_refs": [
+    "Schema.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

@@ -1,0 +1,25 @@
+# Ingest manifest for /gsd-ingest-docs — approved by user 2026-10-13.
+# Directory-convention discovery matched 0 files (this repo keeps docs at root as <Name>.md).
+# Precedence falls back to the default ADR > SPEC > PRD > DOC.
+
+docs:
+  - path: Prd.md
+    type: PRD
+  - path: Schema.md
+    type: SPEC
+  - path: Architecture.md
+    type: DOC
+  - path: Rules.md
+    type: DOC
+  - path: Design.md
+    type: DOC
+  - path: Security.md
+    type: DOC
+  - path: Debug.md
+    type: DOC
+  - path: Memory.md
+    type: DOC
+  - path: Task.md
+    type: DOC
+  - path: AGENTS.md
+    type: DOC

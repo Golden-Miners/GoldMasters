@@ -1,0 +1,13 @@
+{
+  "source_path": "C:/XauMaster/Rules.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "GoldMasters — Mandatory Rules for AI and Coding Agents",
+  "summary": "Policy rulebook governing AI and coding agent conduct across truth, boundaries, security, workflow, testing, and documentation.",
+  "scope": ["truth and provenance", "product boundary", "agent boundaries", "data and provider rules", "development workflow", "debugging rules", "security rules", "OpenCode skills and MCP usage", "testing rules", "documentation and output"],
+  "cross_refs": ["Schema.md", "Memory.md", "Task.md", "Architecture.md"],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}
