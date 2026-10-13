@@ -1,5 +1,17 @@
 # GoldMasters
 
+## Current Milestone: v1.0 Research Signal Team
+
+**Goal:** Ship the research-only signal team — real, validated, provenance-stamped market data flowing through deterministic analysis and hard risk gates into a schema-valid, evidence-referenced CEO decision, surfaced in a local console.
+
+**Target features:**
+- Provider/instrument selection and validated market-data ingestion with provenance
+- Deterministic analysis, strategy rules, and blocking risk/validation gates
+- LangGraph orchestration over a locally discovered Ollama runtime
+- News/sentiment evidence and the CEO decision contract, failing closed
+- Research console UI, journal, backtesting and reports
+- Hardening, data-integrity verification and the research-only boundary
+
 ## What This Is
 
 GoldMasters is a single-operator, locally hosted research tool: a LangGraph multi-agent "trading signal team" that reads real market data from an explicitly selected provider (local MT5 read-only adapter first), gathers and validates evidence, and produces explainable `TRADE` / `NO_TRADE` / `INSUFFICIENT_DATA` research decisions with full provenance. It never places, modifies or closes an order — a `TRADE` is a qualified research candidate that requires manual review. The goal is a traceable research brief that exposes evidence freshness, source provenance, uncertainty and disagreement instead of concealing them.
@@ -128,4 +140,4 @@ Status vocabulary: `locked` = user-confirmed (Memory.md, confirmed user decision
 After each phase: move invalidated requirements to Out of Scope with the reason, move validated requirements to Validated with the phase reference, add new requirements to Active, log new decisions in Key Decisions, and update "What This Is" if the product drifted. After each milestone: full section review, Core Value check, Out of Scope audit, and refresh Context with current state. Locked decisions (DR-01…DR-08) change only with explicit user confirmation; proposed decisions (DR-09…DR-15) become locked when confirmed against the real repository and environment.
 
 ---
-*Last updated: 2026-10-13 after ingest-driven project initialization (10 documents → intel synthesis, 12 requirements, 23 constraints, 15 decision records).*
+*Last updated: 2026-10-13 after ingest-driven project initialization, then milestone v1.0 started (10 documents → intel synthesis, 12 requirements, 23 constraints, 15 decision records).*
