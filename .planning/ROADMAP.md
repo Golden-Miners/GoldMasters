@@ -34,6 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Contracts and Foundation
+
 **Goal**: A frozen, machine-checked contract layer and a running, observable local skeleton, with the research-only boundary enforced structurally from the first commit.
 **Depends on**: Nothing (first phase)
 **Requirements**: REQ-no-trade-execution
@@ -43,21 +44,38 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. No order-placement, order-modification or order-closure module, endpoint, tool or broker-trading credential exists — verified by an automated boundary test that runs in CI.
   4. Configuration is validated at startup, `.env.example` contains no real secret values, and logs and traces are structured, correlation-ID stamped and redacted.
   5. The PostgreSQL migration applies and rolls back, and formatting, linting, typing and unit checks run in CI and fail the build on violation — with the exact commands and their results recorded.
-**Plans:** 11 plans
 
+**Plans:** 11 plans
+**Wave 1**
 - [ ] 01-01-PLAN.md — Tracer: uv workspace + contracts core (shared base, decimal wire form, enums, C-09 errors, envelope) + core contract tests
-- [ ] 01-02-PLAN.md — Signals-only boundary scan + negative meta-test + dependency allowlist + tool configs + one `scripts/gate` + tracked hook (CI intent recorded as a build-failing local gate; no hosted workflow file)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-03-PLAN.md — Version and identity rules + market bar/quote, precision table, decision and journal contracts + contract tests
-- [ ] 01-04-PLAN.md — Contract evidence: purity test + committed-schema drift test + golden conformance suite over shared accepted/rejected cases
-- [ ] 01-05-PLAN.md — Portable repo-local PostgreSQL provisioning + falsification probe + one `scripts/stack` command
-- [ ] 01-06-PLAN.md — Hand-written Alembic migration (apply + rollback) + throwaway per-run DB fixture + persistence round-trip tests
-- [ ] 01-07-PLAN.md — Next.js client skeleton + TypeScript generation from committed schema + health page + run/evidence docs
 - [ ] 01-08-PLAN.md — Tracer: end-to-end contract envelope → committed JSON Schema → FastAPI settings/lifespan/loopback guard/health spine
-- [ ] 01-09-PLAN.md — Observability: structured JSON logging with redaction + per-request correlation ID + local on-disk traces
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 01-02-PLAN.md — Signals-only boundary scan + negative meta-test + dependency allowlist + tool configs + one `scripts/gate` + tracked hook (CI intent recorded as a build-failing local gate; no hosted workflow file)
+- [ ] 01-05-PLAN.md — Portable repo-local PostgreSQL provisioning + falsification probe + one `scripts/stack` command
 - [ ] 01-10-PLAN.md — Configuration surface: explicit validated settings, fail-loud startup, effective-config hash, `config/goldmasters.yaml` and `.env.example`
 - [ ] 01-11-PLAN.md — News, sentiment and backtest contracts + final package barrel + complete committed schema export + `.gitattributes`
 
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 01-04-PLAN.md — Contract evidence: purity test + committed-schema drift test + golden conformance suite over shared accepted/rejected cases
+- [ ] 01-09-PLAN.md — Observability: structured JSON logging with redaction + per-request correlation ID + local on-disk traces
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 01-06-PLAN.md — Hand-written Alembic migration (apply + rollback) + throwaway per-run DB fixture + persistence round-trip tests
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 01-07-PLAN.md — Next.js client skeleton + TypeScript generation from committed schema + health page + run/evidence docs
+
+**Cross-cutting constraints:**
+- FLAGGED ASSUMPTION (unresolved edge, category=boundary, req=REQ-no-trade-execution): the exact behaviour at each min/max/threshold and one step either side is NOT yet specified; Phase 1 records this as an open assumption rather than inventing thresholds.
+- FLAGGED ASSUMPTION (unresolved edge, category=precision, req=REQ-no-trade-execution): where precision loss, overflow or rounding/tie-breaking can occur, and the exact rounding contract (half-up vs half-to-even, ceil/floor/truncate), is NOT yet specified; Phase 1 enforces decimal *form* only (D-19) and records rounding as an open assumption.
+- FLAGGED ASSUMPTION (unresolved edge, category=concurrency, req=REQ-no-trade-execution): what is guaranteed if a run is interrupted or executed in parallel is NOT yet specified; Phase 1 records this as an open assumption.
+
 ### Phase 2: Market Data and Provider Selection
+
 **Goal**: The operator can select a provider and instrument and receive real, validated, provenance-stamped market data — or a visible, structured failure.
 **Depends on**: Phase 1
 **Requirements**: REQ-instrument-provider-selection, REQ-market-data-ingestion-validation
@@ -68,9 +86,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Every bar carries provider_id, provider_symbol, timeframe, bar open/close times, retrieved_at, finite OHLC values, volume with preserved volume_type, quality_status and quality_flags.
   5. Freshness/ordering/duplicate/gap/OHLC/finite validation runs on every retrieval, and a stale, malformed or disconnected feed produces a non-healthy quality status or INSUFFICIENT_DATA downstream — never a synthesized candle.
   6. Provider health reports terminal-closed, disconnected, missing-history and unsupported-symbol states distinctly, with contract tests and failure tests recorded.
+
 **Plans**: TBD
 
 ### Phase 3: Deterministic Analysis, Strategy Rules and Risk Gates
+
 **Goal**: Every number behind a candidate — structure, regime, levels, ordering, risk/reward and eligibility — is produced by versioned deterministic code with rule-by-rule evidence, and hard gates can block it.
 **Depends on**: Phase 2
 **Requirements**: REQ-specialist-agent-responsibilities
@@ -81,9 +101,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Candidate entry, stop, targets and risk/reward are computed in code from defined rules; ordering is validated and every level stays null when it is not derived and validated.
   5. The deterministic risk/validation gate enforces level ordering, configured risk limits, data quality and required evidence — and can block a candidate before any decision is produced.
   6. Every specialist role (Market Analyst, Trend, Instrument, Strategy Supervisor and Strategy Agents, Signaling, News, Sentiment, Research, Backtesting, Trade Journal, Monitoring, CEO, Risk/Validation Gate) has a documented single responsibility, typed I/O, version, timeout and failure status; Monitoring emits no trading recommendation; no role can overwrite or erase another's findings.
+
 **Plans**: TBD
 
 ### Phase 4: LangGraph Orchestration and Local Model Runtime
+
 **Goal**: A bounded, resumable graph runs the specialist roles end to end against a locally discovered model, validating every node's output and failing closed on critical failure.
 **Depends on**: Phase 3
 **Requirements**: REQ-langgraph-orchestration, REQ-local-model-support
@@ -94,9 +116,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Every node payload passes schema validation before use; unvalidated model output never reaches a decision, and a validation failure yields a structured sanitized error rather than a filled-in guess.
   5. Ollama is configured by endpoint with a health check and runtime model discovery — no model name, hardware capability or context window is assumed — and model availability and test status are recorded.
   6. When a critical node fails, the run terminates as INSUFFICIENT_DATA or NO_TRADE under the documented failure policy; no run path can end in an unqualified TRADE.
+
 **Plans**: TBD
 
 ### Phase 5: News, Sentiment and CEO Decision Contract
+
 **Goal**: Source-attributed news and sentiment become first-class evidence, and the CEO emits a schema-valid, evidence-referenced decision that fails closed.
 **Depends on**: Phase 4
 **Requirements**: REQ-news-and-sentiment, REQ-ceo-decision-contract, REQ-evidence-and-provenance
@@ -106,9 +130,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Sentiment reports its analysis window, evidence references, coverage count, unique-source count, duplicate policy, conflicts, limitations and model version, separating source statements from model interpretation — and shows a score only when the scoring method is defined and versioned.
   4. Every decision record validates against the CEO contract with `manual_review_required = true`, and a TRADE appears only when required evidence is present, current, schema-valid, strategy-qualified and risk-validated, with entry/stop/targets/risk_reward null otherwise.
   5. Decision traceability is instrumented — the percentage of decisions with complete evidence references and configuration/version metadata is measured and displayed before any target is set.
+
 **Plans**: TBD
 
 ### Phase 6: Journal, Persistence and Backtesting
+
 **Goal**: Decisions are immutable and outcomes append-only, and backtests are reproducible, cost-aware and honest about missing data.
 **Depends on**: Phase 5
 **Requirements**: REQ-journal-and-backtesting
@@ -118,9 +144,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. In-sample development is separated from validation/out-of-sample results, and missing data and excluded periods are reported rather than quietly dropped.
   4. Metrics are computed by deterministic code and cross-checked against hand-verifiable cases; no LLM prose introduces or recalculates an authoritative metric.
   5. Leakage, timestamp alignment, transaction-cost application and split enforcement are covered by tests that fail when an assumption is violated.
+
 **Plans**: TBD
 
 ### Phase 7: Research Console UI and Reports
+
 **Goal**: The operator can research an instrument and review any decision in a console that reads only real API state and offers no execution action.
 **Depends on**: Phase 6
 **Requirements**: REQ-ui-and-reports
@@ -130,10 +158,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Empty, loading, degraded, stale, no-setup, insufficient-evidence, conflicting-agents, schema-invalid, unavailable and offline states all render explicitly; `unknown` is never styled healthy, and a provider outage shows no market data.
   4. The Decision Detail primary action is "Open evidence" or "Add review note" — no execute-trade control, prompt, credential or privileged agent tool is reachable from the client.
   5. Keyboard navigation, visible focus, non-colour-only status, tabular chart alternatives and WCAG 2.2 AA contrast targets are verified, with Playwright coverage of the core journeys and their error states.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 8: Hardening, Data-Integrity Verification and Release Gate
+
 **Goal**: Every capability is backed by recorded evidence, no fabricated data or execution path survives an audit, and the single local host has an operator runbook.
 **Depends on**: Phase 7
 **Requirements**: REQ-no-fabricated-data
@@ -143,6 +173,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Provider outage, model outage, database outage, timeout and malformed-output paths are tested, and critical failures demonstrably cannot produce a TRADE.
   4. Backup/restore and migration rollback are tested, dependencies and secrets are scanned, and local services bind to loopback only.
   5. The release suite runs with exact commands and recorded output, unresolved items are listed instead of hidden, and no claim of "zero hallucinations", "perfect analysis" or "zero errors" appears anywhere in the project.
+
 **Plans**: TBD
 
 ## Progress
