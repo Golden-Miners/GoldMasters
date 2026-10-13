@@ -6,11 +6,13 @@ GoldMasters is built from its contracts outward. Phase 1 freezes the machine-che
 
 **Granularity:** `standard` (GSD default - no `.planning/config.json` exists). Phase IDs are sequential.
 
-**Milestone:** v1.0 - Research Signal Team (first milestone; started 2026-10-13).
-
 **Requirement coverage:** 12/12 v1 requirements mapped, one phase each, no orphans.
 
 **Relationship to Task.md:** the project's own tracker defines phases 0–8. This roadmap folds Task.md Phase 0 (discovery) into Phase 1 and Task.md Phase 5 (persistence/journal/monitoring) into Phase 6, and keeps the remaining boundaries. Roadmap order — 1 Contracts → 2 Data → 3 Deterministic → 4 Graph/Agents → 5 Evidence/CEO → 6 Journal/Backtest → 7 UI → 8 Release — is the dependency order, not a claim of progress: no task in Task.md is verified complete beyond the recorded Phase 0 items, and RISK-01/RISK-02 (tracker contradictions) must be resolved before execution starts.
+
+## Milestones
+
+- 🚧 **v1.0 Research Signal Team** - Phases 1-8 (in progress)
 
 ## Phases
 
