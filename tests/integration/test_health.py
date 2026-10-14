@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-
 from goldmasters_api.app import assert_loopback, create_app
 
 
@@ -15,7 +14,10 @@ def test_health_returns_five_chain_fields() -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert isinstance(body["version"], str) and body["version"]
-    assert isinstance(body["contract_schema_version"], str) and body["contract_schema_version"]
+    assert (
+        isinstance(body["contract_schema_version"], str)
+        and body["contract_schema_version"]
+    )
     assert isinstance(body["config_hash"], str) and body["config_hash"]
     assert isinstance(body["database"]["reachable"], bool)
 
@@ -68,5 +70,3 @@ def test_probe_is_bounded_on_black_holed_address() -> None:
     start = time.monotonic()
     assert probe_database("postgresql+psycopg://192.0.2.1:5432/goldmasters") is False
     assert time.monotonic() - start < 10
-
-

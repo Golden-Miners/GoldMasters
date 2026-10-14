@@ -9,12 +9,11 @@ echoes the connection string or any fragment of it.
 
 from __future__ import annotations
 
+import goldmasters_contracts
 from fastapi import APIRouter, Request
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
 
 import goldmasters_api
-import goldmasters_contracts
 
 __all__ = ["probe_database", "router"]
 
@@ -34,9 +33,9 @@ def probe_database(database_url: str) -> bool:
             connection.execute(text("SELECT 1"))
         engine.dispose()
         return True
-    except SQLAlchemyError:
-        return False
-    except Exception:
+    except Exception:  # noqa: BLE001 — probe contract: every failure maps to False
+        # Any failure — unreachable host, bad URL, driver error — is a
+        # value, not an exception: reachable False, URL never echoed.
         return False
 
 

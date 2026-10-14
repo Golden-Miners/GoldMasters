@@ -29,7 +29,9 @@ def canonicalise(payload: dict[str, object]) -> str:
     return json.dumps(payload, sort_keys=True, indent=2).replace("\r\n", "\n") + "\n"
 
 
-def export_schema(output_dir: Path | str = Path(__file__).parent / "schema") -> list[Path]:
+def export_schema(
+    output_dir: Path | str = Path(__file__).parent / "schema",
+) -> list[Path]:
     """Export every contract in ``CONTRACTS`` to ``<output_dir>/<stem>.json``."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)

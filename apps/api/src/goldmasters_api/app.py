@@ -27,8 +27,10 @@ def assert_loopback(host: str) -> None:
         try:
             infos = socket.getaddrinfo(host, None)
         except socket.gaierror as exc:
-            raise ValueError(f"bind_host {host!r} does not resolve to loopback") from exc
-        candidates = sorted({info[4][0] for info in infos})
+            raise ValueError(
+                f"bind_host {host!r} does not resolve to loopback"
+            ) from exc
+        candidates = sorted({str(info[4][0]) for info in infos})
     for candidate in candidates:
         try:
             parsed = ipaddress.ip_address(candidate)
@@ -43,7 +45,7 @@ def assert_loopback(host: str) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Resolve settings once; fail startup on a non-loopback bind."""
-    settings = Settings()  # type: ignore[call-arg]
+    settings = Settings()
     assert_loopback(settings.bind_host)
     app.state.settings = settings
     app.state.config_hash = hash_effective_config(settings)
