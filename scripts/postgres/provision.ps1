@@ -37,7 +37,19 @@ $BinDir = Join-Path $PostgresDir 'pgsql/bin'
 New-Item -ItemType Directory -Force -Path $PostgresDir | Out-Null
 
 function Get-Sha256([string]$Path) {
-  return (Get-FileHash -Path $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+  # Pure .NET: works even when utility cmdlets (Get-FileHash) are unavailable.
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+      $bytes = $sha.ComputeHash($stream)
+    } finally {
+      $stream.Close()
+    }
+  } finally {
+    $sha.Dispose()
+  }
+  return ([System.BitConverter]::ToString($bytes)).Replace('-', '').ToLowerInvariant()
 }
 
 if ((Test-Path $ZipPath) -and (Test-Path $LockPath)) {
@@ -64,7 +76,9 @@ if ((Test-Path $ZipPath) -and (Test-Path $LockPath)) {
 }
 
 if (-not (Test-Path (Join-Path $BinDir 'initdb.exe'))) {
-  Expand-Archive -Path $ZipPath -DestinationPath $PostgresDir -Force
+  # Pure .NET extraction: Expand-Archive needs PS5+.
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $PostgresDir)
 }
 
 foreach ($exe in @('initdb.exe', 'pg_ctl.exe', 'psql.exe')) {

@@ -25,7 +25,8 @@ New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 
 $bytes = New-Object byte[] 32
 [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
-[Convert]::ToBase64String($bytes) | Set-Content -NoNewline $PwFile
+# .NET write: Set-Content -NoNewline needs PS5+.
+[System.IO.File]::WriteAllText($PwFile, [Convert]::ToBase64String($bytes))
 
 & (Join-Path $BinDir 'initdb.exe') -D $DataDir -U goldmasters --auth=scram-sha-256 --pwfile=$PwFile -E UTF8 --locale=C
 if ($LASTEXITCODE -ne 0) { throw "initdb failed (exit $LASTEXITCODE)." }
