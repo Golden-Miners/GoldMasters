@@ -11,24 +11,26 @@ updated: 2026-10-14T21:30:00Z
 number: 1
 name: Open the health page in a browser
 expected: |
-  With `sh scripts/stack` running, http://127.0.0.1:3000 shows the five chain
+  With the stack running, http://127.0.0.1:3000 shows the five chain
   fields with live backend values (or an explicit unavailable state with the
   backend down).
-awaiting: user response
+awaiting: user retry after stack starts (see below)
 
 ## Tests
 
 ### 1. Open the health page in a browser
 expected: Five live values render (or an explicit unavailable state with the backend down)
-result: [pending]
+result: blocked
+blocked_by: server
+reason: "sh scripts/stack → 'sh' is not recognized as a name of a cmdlet (PowerShell has no sh on PATH), so the stack never started"
 
 ## Summary
 
 total: 1
 passed: 0
 issues: 0
-pending: 1
+pending: 0
 skipped: 0
-blocked: 0
+blocked: 1
 
 ## Gaps

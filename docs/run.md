@@ -2,6 +2,11 @@
 
 Startup order: gate → stack (database + backend) → client.
 
+> Windows PowerShell note: `sh` is not on PATH by default. Either add
+> `C:\Program Files\Git\bin` to PATH, or prefix every `sh …` command below
+> with `& "C:\Program Files\Git\bin\sh.exe"`. Example:
+> `& "C:\Program Files\Git\bin\sh.exe" scripts/stack`.
+
 ## 1. Quality gate
 
 ```sh
