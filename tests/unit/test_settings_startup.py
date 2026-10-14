@@ -23,9 +23,21 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_missing_required_key_names_it(
     clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    from goldmasters_api.settings import Settings as SettingsModel
+    from pydantic_settings import SettingsConfigDict
+
+    class NoDotenvSettings(SettingsModel):
+        model_config = SettingsConfigDict(
+            env_prefix="GOLDMASTERS_",
+            env_file=None,
+            extra="forbid",
+            frozen=True,
+            yaml_file="config/goldmasters.yaml",
+        )
+
     monkeypatch.delenv("GOLDMASTERS_DATABASE_URL", raising=False)
     with pytest.raises(ValidationError, match="database_url"):
-        Settings()  # type: ignore[call-arg]
+        NoDotenvSettings()  # type: ignore[call-arg]
 
 
 def test_invalid_value_names_the_key(

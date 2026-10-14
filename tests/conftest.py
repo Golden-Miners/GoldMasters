@@ -62,7 +62,7 @@ def _ensure_cluster_running() -> None:
 
 
 @pytest.fixture(scope="session")
-def throwaway_database() -> Generator[str, None, None]:
+def throwaway_database() -> Generator[str]:
     """Create a uniquely named database; drop it (with connections) at teardown."""
     _ensure_cluster_running()
     working = _working_url()
@@ -100,7 +100,7 @@ def database_url(throwaway_database: str) -> str:
 @pytest.fixture(scope="session")
 def migrated_database(
     throwaway_database: str,
-) -> Generator[str, None, None]:
+) -> Generator[str]:
     """Throwaway database with `alembic upgrade head` applied."""
     from alembic.command import upgrade
     from alembic.config import Config
@@ -109,9 +109,7 @@ def migrated_database(
     os.environ["GOLDMASTERS_DATABASE_URL"] = throwaway_database
     try:
         config = Config(str(REPO / "apps" / "api" / "alembic.ini"))
-        config.set_main_option(
-            "script_location", str(REPO / "apps" / "api" / "migrations")
-        )
+        config.set_main_option("script_location", str(REPO / "apps" / "api" / "migrations"))
         upgrade(config, "head")
         yield throwaway_database
     finally:

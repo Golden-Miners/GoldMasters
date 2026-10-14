@@ -22,7 +22,7 @@ def _tables_and_indexes(url: str) -> tuple[set[str], set[str]]:
         tables = set(inspector.get_table_names())
         indexes: set[str] = set()
         for table in tables:
-            indexes.update(index["name"] for index in inspector.get_indexes(table))
+            indexes.update(index["name"] for index in inspector.get_indexes(table) if index["name"])
         return tables, indexes
     finally:
         engine.dispose()
