@@ -29,4 +29,20 @@ $bytes = New-Object byte[] 32
 
 & (Join-Path $BinDir 'initdb.exe') -D $DataDir -U goldmasters --auth=scram-sha-256 --pwfile=$PwFile -E UTF8 --locale=C
 if ($LASTEXITCODE -ne 0) { throw "initdb failed (exit $LASTEXITCODE)." }
+
+# The working database the API and the test suite derive their URLs from.
+# Idempotent: created once, left alone afterwards.
+$env:PGPASSWORD = (Get-Content $PwFile -Raw).Trim()
+& (Join-Path $BinDir 'pg_ctl.exe') -D $DataDir -o '-p 5432 -h 127.0.0.1' -l (Join-Path (Split-Path -Parent $DataDir) 'server.log') start
+if ($LASTEXITCODE -ne 0) { throw "temporary start for createdb failed (exit $LASTEXITCODE)." }
+try {
+  $exists = & (Join-Path $BinDir 'psql.exe') -h 127.0.0.1 -p 5432 -U goldmasters -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='goldmasters';"
+  if ($LASTEXITCODE -ne 0) { throw 'database check failed.' }
+  if ($exists.Trim() -ne '1') {
+    & (Join-Path $BinDir 'createdb.exe') -h 127.0.0.1 -p 5432 -U goldmasters goldmasters
+    if ($LASTEXITCODE -ne 0) { throw "createdb failed (exit $LASTEXITCODE)." }
+  }
+} finally {
+  & (Join-Path $BinDir 'pg_ctl.exe') -D $DataDir stop -m fast | Out-Null
+}
 Write-Host 'STEP init ok'

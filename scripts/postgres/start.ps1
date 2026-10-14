@@ -15,6 +15,12 @@ $BinDir = Join-Path $PostgresDir 'pgsql/bin'
 $DataDir = Join-Path $PostgresDir 'data'
 $LogFile = Join-Path $PostgresDir 'server.log'
 
+& (Join-Path $BinDir 'pg_ctl.exe') -D $DataDir status 2>$null | Out-Null
+if ($LASTEXITCODE -eq 0) {
+  Write-Host 'STEP start ok (already running on 127.0.0.1:5432)'
+  exit 0
+}
+
 & (Join-Path $BinDir 'pg_ctl.exe') -D $DataDir -o '-p 5432 -h 127.0.0.1' -l $LogFile start
 if ($LASTEXITCODE -ne 0) { throw "pg_ctl start failed (exit $LASTEXITCODE)." }
 
