@@ -83,7 +83,7 @@ class MarketBar(ContractModel):
     quality_flags: list[QualityFlag] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_bar_invariants(self) -> "MarketBar":
+    def _validate_bar_invariants(self) -> MarketBar:
         """Enforce Schema.md §4 validation invariants (D-04)."""
         # All prices must be finite and positive (D-04, Schema.md:106)
         for price_name in ("open", "high", "low", "close"):
@@ -95,20 +95,23 @@ class MarketBar(ContractModel):
         max_ohl = max(self.open, self.close, self.low)
         if self.high < max_ohl:
             raise ValueError(
-                f"high ({self.high}) must be >= max(open={self.open}, close={self.close}, low={self.low})"
+                f"high ({self.high}) must be >= max("
+                f"open={self.open}, close={self.close}, low={self.low})"
             )
 
         # low <= min(open, close, high) (Schema.md:107)
         min_ohl = min(self.open, self.close, self.high)
         if self.low > min_ohl:
             raise ValueError(
-                f"low ({self.low}) must be <= min(open={self.open}, close={self.close}, high={self.high})"
+                f"low ({self.low}) must be <= min("
+                f"open={self.open}, close={self.close}, high={self.high})"
             )
 
         # Timestamps ordered (Schema.md:108)
         if self.bar_close_time is not None and self.bar_open_time >= self.bar_close_time:
             raise ValueError(
-                f"bar_open_time ({self.bar_open_time}) must be < bar_close_time ({self.bar_close_time})"
+                f"bar_open_time ({self.bar_open_time}) must be < "
+                f"bar_close_time ({self.bar_close_time})"
             )
 
         # Quality information required — no default fill (D-22)
@@ -143,7 +146,7 @@ class MarketQuote(ContractModel):
     quality_flags: list[QualityFlag] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_quote_invariants(self) -> "MarketQuote":
+    def _validate_quote_invariants(self) -> MarketQuote:
         """Enforce quote invariants."""
         # Spread only when derived from valid bid/ask (Schema.md:116)
         if self.spread is not None:

@@ -50,7 +50,7 @@ def export_schema(
     written: list[Path] = []
     for stem, attribute in CONTRACTS:
         model = getattr(goldmasters_contracts, attribute)
-        schema = model.model_json_schema(mode="serialization")  # type: ignore[attr-defined]
+        schema = model.model_json_schema(mode="serialization")
         target = out / f"{stem}.json"
         target.write_text(canonicalise(schema), encoding="utf-8", newline="\n")
         written.append(target)

@@ -19,7 +19,6 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 from pydantic import AfterValidator, BeforeValidator, WithJsonSchema
-from typing_extensions import Annotated as TypedAnnotated
 
 __all__ = [
     "IdPrefix",
@@ -106,7 +105,8 @@ def PrefixedId(prefix: IdPrefix) -> Any:
     prefix and UUID shape.
     """
     validator = _prefixed_id_validator(prefix)
-    pattern = rf"^{re.escape(prefix.value)}[0-9a-f]{{8}}-[0-9a-f]{{4}}-[0-9a-f]{{4}}-[0-9a-f]{{4}}-[0-9a-f]{{12}}$"
+    uuid_shape = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    pattern = rf"^{re.escape(prefix.value)}{uuid_shape}$"
     return Annotated[
         str,
         BeforeValidator(validator),

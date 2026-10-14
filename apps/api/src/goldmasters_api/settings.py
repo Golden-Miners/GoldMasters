@@ -69,9 +69,7 @@ class Settings(BaseSettings):
             key for key in os.environ if key.startswith("GOLDMASTERS_") and key not in declared
         )
         if unknown:
-            raise ValueError(
-                f"undeclared GOLDMASTERS_ variable(s): {', '.join(unknown)}"
-            )
+            raise ValueError(f"undeclared GOLDMASTERS_ variable(s): {', '.join(unknown)}")
         return data
 
     @classmethod

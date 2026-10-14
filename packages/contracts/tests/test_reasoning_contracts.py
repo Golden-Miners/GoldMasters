@@ -90,9 +90,7 @@ def test_sentiment_score_bounds() -> None:
     _sentiment(score=SCORE_MIN, scoring_method="lexicon", scoring_method_version="1")
     _sentiment(score=SCORE_MAX, scoring_method="lexicon", scoring_method_version="1")
     with pytest.raises(ValidationError):
-        _sentiment(
-            score=SCORE_MAX + 0.1, scoring_method="lexicon", scoring_method_version="1"
-        )
+        _sentiment(score=SCORE_MAX + 0.1, scoring_method="lexicon", scoring_method_version="1")
     with pytest.raises(ValidationError):
         _sentiment(score=0.5)
 
@@ -113,9 +111,7 @@ def test_backtest_accepts_and_rejects_price_form() -> None:
 
 
 def test_unavailability_representable() -> None:
-    item = _news(
-        status=EvidenceStatus.UNAVAILABLE, content_hash=None, published_at=None
-    )
+    item = _news(status=EvidenceStatus.UNAVAILABLE, content_hash=None, published_at=None)
     assert item.content_hash is None
     record = _sentiment(coverage_count=0, unique_source_count=0)
     assert record.score is None
@@ -160,7 +156,7 @@ def test_export_is_deterministic(tmp_path: Path) -> None:
     first = exporter.export_schema(tmp_path / "a")  # type: ignore[attr-defined]
     second = exporter.export_schema(tmp_path / "b")  # type: ignore[attr-defined]
     assert [p.name for p in first] == [p.name for p in second]
-    for a, b in zip(first, second):
+    for a, b in zip(first, second, strict=True):
         raw_a = (tmp_path / "a" / a.name).read_bytes()
         raw_b = (tmp_path / "b" / b.name).read_bytes()
         assert raw_a == raw_b
@@ -185,9 +181,7 @@ def test_wire_types_are_strings_not_number_unions() -> None:
                             f"{path}: number union"
                         )
             if node_t.get("type") == "number":
-                assert path.startswith("sentiment.json/properties/score"), (
-                    f"{path}: number"
-                )
+                assert path.startswith("sentiment.json/properties/score"), f"{path}: number"
             for key, value in node_t.items():
                 walk(value, f"{path}/{key}")
         elif isinstance(node, list):
@@ -202,11 +196,9 @@ def test_envelope_still_matches_fresh_export() -> None:
 
     exporter = _load_exporter()
     fresh = exporter.canonicalise(  # type: ignore[attr-defined]
-        __import__("goldmasters_contracts").Envelope.model_json_schema(
-            mode="serialization"
-        )
+        __import__("goldmasters_contracts").Envelope.model_json_schema(mode="serialization")
     )
-    committed = (
-        REPO / "packages" / "contracts" / "schema" / "envelope.json"
-    ).read_text(encoding="utf-8")
+    committed = (REPO / "packages" / "contracts" / "schema" / "envelope.json").read_text(
+        encoding="utf-8"
+    )
     assert fresh == committed

@@ -69,9 +69,7 @@ class DecisionRecord(ContractModel):
     @model_validator(mode="after")
     def _validate_decision_invariants(self) -> DecisionRecord:
         if self.manual_review_required is not True:
-            raise ValueError(
-                "manual_review_required must be true for every V1 decision"
-            )
+            raise ValueError("manual_review_required must be true for every V1 decision")
         has_levels = (
             self.entry is not None
             or self.stop_loss is not None

@@ -11,7 +11,6 @@ Covers the five behaviours specified in the plan:
 from __future__ import annotations
 
 import json
-from uuid import uuid4
 
 import pytest
 from goldmasters_contracts import Envelope, SchemaVersionStr, parse_contract_version
@@ -25,22 +24,25 @@ VALID_RUN_ID = f"run_{VALID_UUID}"
 VALID_DEC_ID = f"dec_{VALID_UUID}"
 
 # Minimal valid envelope data for testing
-BASE_ENVELOPE_JSON = json.dumps({
-    "run_id": VALID_RUN_ID,
-    "agent_name": "trend_agent",
-    "agent_version": "1.0.0",
-    "status": "ok",
-    "created_at": "2026-01-01T00:00:00Z",
-    "as_of": None,
-    "input_refs": [],
-    "evidence_refs": [],
-    "limitations": [],
-    "error": None,
-    "result": {},
-})
+BASE_ENVELOPE_JSON = json.dumps(
+    {
+        "run_id": VALID_RUN_ID,
+        "agent_name": "trend_agent",
+        "agent_version": "1.0.0",
+        "status": "ok",
+        "created_at": "2026-01-01T00:00:00Z",
+        "as_of": None,
+        "input_refs": [],
+        "evidence_refs": [],
+        "limitations": [],
+        "error": None,
+        "result": {},
+    }
+)
 
 
 # --- Test 1: parse_contract_version accepts valid 1.x versions ---
+
 
 def test_parse_contract_version_accepts_1_0() -> None:
     version = parse_contract_version("1.0")
@@ -72,7 +74,10 @@ def test_parse_contract_version_exposes_major_as_1() -> None:
 
 # --- Test 2: parse_contract_version rejects invalid versions ---
 
-@pytest.mark.parametrize("raw", ["2.0", "", "v1", "1", "1.x", "0.1", "1.0.0.0", "1.0.", ".1", "1..0"])
+
+@pytest.mark.parametrize(
+    "raw", ["2.0", "", "v1", "1", "1.x", "0.1", "1.0.0.0", "1.0.", ".1", "1..0"]
+)
 def test_parse_contract_version_rejects_invalid(raw: str) -> None:
     with pytest.raises(ValueError):
         parse_contract_version(raw)
@@ -100,6 +105,7 @@ def test_parse_contract_version_rejects_unparseable() -> None:
 
 
 # --- Test 3: Envelope accepts schema_version="1.4" and rejects "3.0" ---
+
 
 def test_envelope_accepts_schema_version_1_4() -> None:
     data = json.loads(BASE_ENVELOPE_JSON)
@@ -146,6 +152,7 @@ def test_envelope_rejects_schema_version_unparseable() -> None:
 
 # --- Test 4: run_id accepts run_-prefixed UUID and rejects dec_-prefixed ---
 
+
 def test_run_id_accepts_run_prefixed_uuid() -> None:
     data = json.loads(BASE_ENVELOPE_JSON)
     data["schema_version"] = "1.0"
@@ -188,6 +195,7 @@ def test_run_id_rejects_wrong_prefix_case() -> None:
 
 # --- Test 5: Correct prefix with malformed UUID body is rejected ---
 
+
 def test_run_id_rejects_malformed_uuid() -> None:
     data = json.loads(BASE_ENVELOPE_JSON)
     data["schema_version"] = "1.0"
@@ -214,6 +222,7 @@ def test_run_id_rejects_uuid_with_wrong_format() -> None:
 
 # --- Additional tests for IdPrefix, ProviderId, and annotated types ---
 
+
 def test_id_prefix_enum_has_required_members() -> None:
     assert IdPrefix.RUN.value == "run_"
     assert IdPrefix.DEC.value == "dec_"
@@ -238,7 +247,16 @@ def test_provider_id_rejects_invalid_patterns() -> None:
     class _ProviderModel(BaseModel):
         provider_id: ProviderId
 
-    for invalid in ("MT5", "Alpha-Vantage", "provider 1", "provider@name", "", "123", "_provider", "provider_"):
+    for invalid in (
+        "MT5",
+        "Alpha-Vantage",
+        "provider 1",
+        "provider@name",
+        "",
+        "123",
+        "_provider",
+        "provider_",
+    ):
         with pytest.raises(ValidationError):
             _ProviderModel.model_validate({"provider_id": invalid})
 
@@ -247,6 +265,7 @@ def test_prefixed_id_factory_creates_distinct_types() -> None:
     # The factory returns distinct annotated types for each prefix
     assert RunId is not DecId
     from goldmasters_contracts.ids import AgentId
+
     assert RunId is not AgentId
     assert DecId is not AgentId
 
@@ -289,8 +308,9 @@ def test_validation_uses_stdlib_uuid_only() -> None:
     """Verify that UUID validation uses only stdlib uuid (no third-party)."""
     # This is implicitly tested by the malformed UUID rejection tests above.
     # The implementation uses uuid.UUID() from the standard library.
-    import goldmasters_contracts.ids as ids_module
     import inspect
+
+    import goldmasters_contracts.ids as ids_module
 
     source = inspect.getsource(ids_module)
     assert "uuid.UUID" in source

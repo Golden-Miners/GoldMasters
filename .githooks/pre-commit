@@ -1,0 +1,6 @@
+#!/bin/sh
+# Pre-commit hook: fast gate subset (D-39/D-40).
+# Enable once with: git config core.hooksPath .githooks
+set -eu
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec sh "$ROOT/scripts/gate" --fast

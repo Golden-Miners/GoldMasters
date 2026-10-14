@@ -203,9 +203,7 @@ def test_error_payload_accepts_the_documented_document() -> None:
 
 def test_error_payload_rejects_an_unknown_extra_field() -> None:
     with pytest.raises(ValidationError):
-        ErrorPayload.model_validate_json(
-            json.dumps({**C09_DOCUMENT, "unexpected": "x"})
-        )
+        ErrorPayload.model_validate_json(json.dumps({**C09_DOCUMENT, "unexpected": "x"}))
 
 
 def test_error_payload_rejects_a_missing_code() -> None:
@@ -216,9 +214,7 @@ def test_error_payload_rejects_a_missing_code() -> None:
 
 def test_error_payload_rejects_a_non_boolean_retryable() -> None:
     with pytest.raises(ValidationError):
-        ErrorPayload.model_validate_json(
-            json.dumps({**C09_DOCUMENT, "retryable": "no"})
-        )
+        ErrorPayload.model_validate_json(json.dumps({**C09_DOCUMENT, "retryable": "no"}))
 
 
 # --- Test 8: the closed ErrorCode vocabulary (D-23) ---
@@ -240,9 +236,7 @@ def test_retryable_is_per_code_not_a_constant() -> None:
 
 
 def test_retryable_comes_from_the_code_not_the_caller() -> None:
-    overridden = ErrorPayload.model_validate_json(
-        json.dumps({**C09_DOCUMENT, "retryable": True})
-    )
+    overridden = ErrorPayload.model_validate_json(json.dumps({**C09_DOCUMENT, "retryable": True}))
     assert overridden.retryable is False
 
     retryable = ErrorPayload.model_validate_json(
@@ -266,16 +260,12 @@ def test_envelope_accepts_the_documented_document() -> None:
     assert envelope.schema_version == CONTRACT_VERSION
     assert envelope.error is None
     assert envelope.as_of is None
-    assert envelope.model_dump_json() == json.dumps(
-        ENVELOPE_DOCUMENT, separators=(",", ":")
-    )
+    assert envelope.model_dump_json() == json.dumps(ENVELOPE_DOCUMENT, separators=(",", ":"))
 
 
 def test_envelope_rejects_an_unknown_extra_field() -> None:
     with pytest.raises(ValidationError):
-        Envelope.model_validate_json(
-            json.dumps({**ENVELOPE_DOCUMENT, "unexpected": "x"})
-        )
+        Envelope.model_validate_json(json.dumps({**ENVELOPE_DOCUMENT, "unexpected": "x"}))
 
 
 # --- Test 11: the package barrel (D-06) ---

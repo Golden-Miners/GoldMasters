@@ -7,8 +7,8 @@ import pathlib
 
 import pytest
 import yaml
-
 from goldmasters_api.settings import Settings
+from pydantic_settings import SettingsConfigDict
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 YAML_PATH = REPO / "config" / "goldmasters.yaml"
@@ -93,8 +93,14 @@ def test_document_supplies_defaults_env_wins(
         encoding="utf-8",
     )
 
-    class DocumentSettings(SettingsModel):  # type: ignore[misc]
-        model_config = dict(SettingsModel.model_config, yaml_file=str(copy))
+    class DocumentSettings(SettingsModel):
+        model_config = SettingsConfigDict(
+            env_prefix="GOLDMASTERS_",
+            env_file=".env",
+            extra="forbid",
+            frozen=True,
+            yaml_file=str(copy),
+        )
 
     assert DocumentSettings().log_level == "DEBUG"  # type: ignore[call-arg]
     monkeypatch.setenv("GOLDMASTERS_LOG_LEVEL", "WARNING")

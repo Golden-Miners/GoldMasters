@@ -1,0 +1,37 @@
+#!/bin/sh
+# GoldMasters quality gate (D-38): the single meaning of "green".
+#   sh scripts/gate         # full ordered gate
+#   sh scripts/gate --fast  # commit subset (D-40): changed-file checks + fast tests
+set -eu
+
+step() { echo "--- gate: $1"; }
+
+if [ "${1:-}" = "--fast" ]; then
+  step "ruff format --check (changed files)"
+  CHANGED="$(git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null | grep '\.py$' || true)"
+  if [ -n "$CHANGED" ]; then
+    # shellcheck disable=SC2086
+    uv run ruff format --check $CHANGED
+    step "ruff check (changed files)"
+    # shellcheck disable=SC2086
+    uv run ruff check $CHANGED
+    step "mypy --strict (workspace)"
+    uv run mypy --strict .
+  else
+    echo "(no changed Python files; skipping format/lint/mypy)"
+  fi
+  step "pytest tests/security"
+  uv run pytest tests/security -q
+  echo "gate --fast: PASS"
+  exit 0
+fi
+
+step "ruff format --check ."
+uv run ruff format --check .
+step "ruff check ."
+uv run ruff check .
+step "mypy --strict ."
+uv run mypy --strict .
+step "pytest"
+uv run pytest
+echo "gate: PASS"

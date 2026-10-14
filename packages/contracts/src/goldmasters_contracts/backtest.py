@@ -10,7 +10,12 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from goldmasters_contracts._base import ContractModel, IanaTimezone, PriceStr, UtcDatetime
+from goldmasters_contracts._base import (
+    ContractModel,
+    IanaTimezone,
+    PriceStr,
+    UtcDatetime,
+)
 from goldmasters_contracts.enums import EvidenceStatus, Timeframe
 
 __all__ = ["BacktestAssumptions", "BacktestMetric", "BacktestRecord"]

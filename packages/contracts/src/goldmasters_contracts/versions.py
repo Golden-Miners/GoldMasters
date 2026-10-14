@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Annotated
 
 from pydantic import AfterValidator, WithJsonSchema
-from typing_extensions import Annotated
 
 __all__ = [
     "CONTRACT_VERSION_MAJOR_SUPPORTED",

@@ -118,10 +118,7 @@ def test_precision_table_round_trip_and_interval() -> None:
     assert table.lookup("xauusd", "mt5").status == "found"
     assert table.lookup("eurusd", "mt5").status == "unknown"
     assert table.lookup("xauusd", "other").status == "unknown"
-    assert (
-        table.lookup("xauusd", "mt5", at=datetime(2027, 1, 1, tzinfo=UTC)).status
-        == "unknown"
-    )
+    assert table.lookup("xauusd", "mt5", at=datetime(2027, 1, 1, tzinfo=UTC)).status == "unknown"
 
 
 def test_decision_manual_review_and_level_rules() -> None:

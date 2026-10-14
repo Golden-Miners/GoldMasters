@@ -30,7 +30,7 @@ def test_no_forbidden_call_in_source_tree() -> None:
         for path in sorted(root.rglob("*.py")):
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, UnicodeDecodeError):
+            except SyntaxError, UnicodeDecodeError:
                 continue
             hits = boundary.scan_forbidden(tree) | (  # type: ignore[attr-defined]
                 boundary.scan_import_roots(tree)  # type: ignore[attr-defined]
@@ -100,7 +100,11 @@ def _distribution_name(requirement: str) -> str:
 
 def test_dependencies_match_allowlist() -> None:
     declared: set[str] = set()
-    for manifest in [REPO / "pyproject.toml", *sorted(REPO.glob("*/pyproject.toml")), *sorted(REPO.glob("*/*/pyproject.toml"))]:
+    for manifest in [
+        REPO / "pyproject.toml",
+        *sorted(REPO.glob("*/pyproject.toml")),
+        *sorted(REPO.glob("*/*/pyproject.toml")),
+    ]:
         if not manifest.is_file():
             continue
         data = tomllib.loads(manifest.read_text(encoding="utf-8"))

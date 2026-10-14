@@ -82,7 +82,7 @@ def scan_tree(root: Path) -> dict[str, set[str]]:
     for path in sorted(root.rglob("*.py")):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+        except SyntaxError, UnicodeDecodeError:
             continue
         hits = scan_forbidden(tree) | (scan_import_roots(tree) & set(FORBIDDEN_IMPORT_ROOTS))
         if hits:

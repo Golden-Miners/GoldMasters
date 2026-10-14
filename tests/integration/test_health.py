@@ -23,10 +23,7 @@ def test_health_returns_five_chain_fields() -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert isinstance(body["version"], str) and body["version"]
-    assert (
-        isinstance(body["contract_schema_version"], str)
-        and body["contract_schema_version"]
-    )
+    assert isinstance(body["contract_schema_version"], str) and body["contract_schema_version"]
     assert isinstance(body["config_hash"], str) and body["config_hash"]
     assert isinstance(body["database"]["reachable"], bool)
 

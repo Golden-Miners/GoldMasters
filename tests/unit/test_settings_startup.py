@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from goldmasters_api.settings import Settings
 from pydantic import SecretStr, ValidationError
 from pydantic_settings.sources import YamlConfigSettingsSource
-
-from goldmasters_api.settings import Settings
 
 DB = "postgresql+psycopg://goldmasters:secret@127.0.0.1:5432/goldmasters"
 
@@ -21,19 +20,25 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GOLDMASTERS_DATABASE_URL", DB)
 
 
-def test_missing_required_key_names_it(clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_missing_required_key_names_it(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.delenv("GOLDMASTERS_DATABASE_URL", raising=False)
     with pytest.raises(ValidationError, match="database_url"):
         Settings()  # type: ignore[call-arg]
 
 
-def test_invalid_value_names_the_key(clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_invalid_value_names_the_key(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("GOLDMASTERS_BIND_PORT", "not-a-port")
     with pytest.raises(ValidationError, match="bind_port"):
         Settings()  # type: ignore[call-arg]
 
 
-def test_unknown_prefixed_variable_rejected(clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_unknown_prefixed_variable_rejected(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("GOLDMASTERS_TYPO_HOTS", "127.0.0.1")
     with pytest.raises(ValidationError):
         Settings()  # type: ignore[call-arg]
@@ -51,7 +56,9 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
     }
 
 
-def test_secret_field_hidden(clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_secret_field_hidden(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("GOLDMASTERS_PROVIDER_API_KEY", "super-secret-value")
     settings = Settings()  # type: ignore[call-arg]
     assert isinstance(settings.provider_api_key, SecretStr)
@@ -60,9 +67,12 @@ def test_secret_field_hidden(clean_env: pytest.FixtureRequest, monkeypatch: pyte
 
 
 def test_yaml_source_is_live_and_last() -> None:
-    sources = Settings.settings_customise_sources(
-        Settings, object(), object(), object(), object()  # type: ignore[arg-type]
-    )
+    from typing import cast
+
+    from pydantic_settings import PydanticBaseSettingsSource
+
+    sentinel = cast(PydanticBaseSettingsSource, object())
+    sources = Settings.settings_customise_sources(Settings, sentinel, sentinel, sentinel, sentinel)
     assert isinstance(sources[-1], YamlConfigSettingsSource)
 
 
@@ -94,8 +104,10 @@ def test_hash_order_invariant(
     payload = settings.model_dump()
     reordered = dict(reversed(list(payload.items())))
     canonical = json.dumps(
-        {**{k: v for k, v in reordered.items() if k != "provider_api_key"},
-         "_hash_algorithm_version": HASH_ALGORITHM_VERSION},
+        {
+            **{k: v for k, v in reordered.items() if k != "provider_api_key"},
+            "_hash_algorithm_version": HASH_ALGORITHM_VERSION,
+        },
         sort_keys=True,
         default=str,
     )
@@ -130,16 +142,16 @@ def test_hash_algorithm_version_exposed(
 
     from goldmasters_api.settings import (
         HASH_ALGORITHM_VERSION,
-        Settings as SettingsModel,
         hash_effective_config,
+    )
+    from goldmasters_api.settings import (
+        Settings as SettingsModel,
     )
 
     assert HASH_ALGORITHM_VERSION == "1"
     assert SettingsModel.model_fields["config_version"].default == "1.0"
     settings = _settings(monkeypatch)
-    payload = {
-        k: v for k, v in settings.model_dump().items() if k != "provider_api_key"
-    }
+    payload = {k: v for k, v in settings.model_dump().items() if k != "provider_api_key"}
     digest_v2 = hashlib.sha256(
         json.dumps(
             {**payload, "_hash_algorithm_version": "2"}, sort_keys=True, default=str

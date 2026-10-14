@@ -40,7 +40,7 @@ class SentimentRecord(ContractModel):
     model_version: str | None = None
 
     @model_validator(mode="after")
-    def _validate_score(self) -> "SentimentRecord":
+    def _validate_score(self) -> SentimentRecord:
         if self.score is None:
             return self
         if not (SCORE_MIN <= self.score <= SCORE_MAX):
