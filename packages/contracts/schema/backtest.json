@@ -1,0 +1,296 @@
+{
+  "$defs": {
+    "BacktestAssumptions": {
+      "additionalProperties": false,
+      "description": "Spread/commission/slippage/fill assumptions a report must show.",
+      "properties": {
+        "commission": {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "title": "Commission",
+          "type": "string"
+        },
+        "fill_model": {
+          "title": "Fill Model",
+          "type": "string"
+        },
+        "slippage": {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "title": "Slippage",
+          "type": "string"
+        },
+        "spread": {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "title": "Spread",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spread",
+        "commission",
+        "slippage",
+        "fill_model"
+      ],
+      "title": "BacktestAssumptions",
+      "type": "object"
+    },
+    "BacktestMetric": {
+      "additionalProperties": false,
+      "description": "One metric with its definition and sample size.",
+      "properties": {
+        "definition": {
+          "title": "Definition",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "sample_size": {
+          "minimum": 0,
+          "title": "Sample Size",
+          "type": "integer"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "pattern": "^-?\\d+(\\.\\d+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "definition",
+        "sample_size"
+      ],
+      "title": "BacktestMetric",
+      "type": "object"
+    },
+    "EvidenceStatus": {
+      "description": "Schema.md \u00a72 evidence status.",
+      "enum": [
+        "valid",
+        "stale",
+        "missing",
+        "conflicted",
+        "invalid",
+        "unavailable"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "Timeframe": {
+      "description": "The closed canonical timeframe enum (D-13/D-16/D-28).\n\nMembers are the documented MetaTrader 5 period tokens (module docstring\ncites the source); a value outside this enum is rejected by a field typed\nwith it.",
+      "enum": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M10",
+        "M12",
+        "M15",
+        "M20",
+        "M30",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H6",
+        "H8",
+        "H12",
+        "D1",
+        "W1",
+        "MN1"
+      ],
+      "title": "Timeframe",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Schema.md \u00a79 backtest record, field for field.",
+  "properties": {
+    "assumptions": {
+      "$ref": "#/$defs/BacktestAssumptions"
+    },
+    "backtest_run_id": {
+      "title": "Backtest Run Id",
+      "type": "string"
+    },
+    "code_version": {
+      "title": "Code Version",
+      "type": "string"
+    },
+    "data_quality": {
+      "$ref": "#/$defs/EvidenceStatus"
+    },
+    "dataset_hash": {
+      "title": "Dataset Hash",
+      "type": "string"
+    },
+    "dataset_ref": {
+      "title": "Dataset Ref",
+      "type": "string"
+    },
+    "end": {
+      "format": "date-time",
+      "title": "End",
+      "type": "string"
+    },
+    "errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "in_sample_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "In Sample End"
+    },
+    "in_sample_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "In Sample Start"
+    },
+    "instrument_id": {
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "metrics": {
+      "items": {
+        "$ref": "#/$defs/BacktestMetric"
+      },
+      "title": "Metrics",
+      "type": "array"
+    },
+    "out_of_sample_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Out Of Sample End"
+    },
+    "out_of_sample_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Out Of Sample Start"
+    },
+    "parameter_hash": {
+      "title": "Parameter Hash",
+      "type": "string"
+    },
+    "start": {
+      "format": "date-time",
+      "title": "Start",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/EvidenceStatus"
+    },
+    "strategy_id": {
+      "title": "Strategy Id",
+      "type": "string"
+    },
+    "strategy_version": {
+      "title": "Strategy Version",
+      "type": "string"
+    },
+    "timeframe": {
+      "$ref": "#/$defs/Timeframe"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "type": "string"
+    },
+    "validation_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validation End"
+    },
+    "validation_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validation Start"
+    }
+  },
+  "required": [
+    "backtest_run_id",
+    "strategy_id",
+    "strategy_version",
+    "dataset_ref",
+    "dataset_hash",
+    "instrument_id",
+    "timeframe",
+    "start",
+    "end",
+    "timezone",
+    "data_quality",
+    "parameter_hash",
+    "assumptions",
+    "generated_at",
+    "code_version",
+    "status"
+  ],
+  "title": "BacktestRecord",
+  "type": "object"
+}

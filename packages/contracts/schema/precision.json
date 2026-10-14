@@ -1,0 +1,82 @@
+{
+  "additionalProperties": false,
+  "description": "One precision record for an (instrument, provider) pair.",
+  "properties": {
+    "decimals": {
+      "minimum": 0,
+      "title": "Decimals",
+      "type": "integer"
+    },
+    "instrument_id": {
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "provider_id": {
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "provider_spec_version": {
+      "title": "Provider Spec Version",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "superseded_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Superseded At"
+    },
+    "tick_size": {
+      "title": "Tick Size",
+      "type": "string"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "instrument_id",
+    "provider_id",
+    "tick_size",
+    "decimals",
+    "provider_spec_version",
+    "retrieved_at"
+  ],
+  "title": "PrecisionRow",
+  "type": "object"
+}

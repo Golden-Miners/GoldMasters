@@ -15,13 +15,25 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from goldmasters_contracts.envelope import Envelope
+import goldmasters_contracts
 
 __all__ = ["CONTRACTS", "canonicalise", "export_schema", "main"]
 
-#: Contract enumeration: (schema file stem, model). Plan 11 appends the
-#: remaining contracts here; the writer needs no other change.
-CONTRACTS: tuple[tuple[str, type], ...] = (("envelope", Envelope),)
+#: Contract enumeration: (schema file stem, barrel attribute name). Resolved
+#: through the package barrel so the export list and the re-export list
+#: cannot disagree silently. Plan 04's drift test byte-compares the output.
+CONTRACTS: tuple[tuple[str, str], ...] = (
+    ("envelope", "Envelope"),
+    ("market", "MarketBar"),
+    ("quote", "MarketQuote"),
+    ("precision", "PrecisionRow"),
+    ("decision", "DecisionRecord"),
+    ("journal", "JournalEntry"),
+    ("news", "NewsItem"),
+    ("sentiment", "SentimentRecord"),
+    ("backtest", "BacktestRecord"),
+    ("error", "ErrorPayload"),
+)
 
 
 def canonicalise(payload: dict[str, object]) -> str:
@@ -36,7 +48,8 @@ def export_schema(
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
-    for stem, model in CONTRACTS:
+    for stem, attribute in CONTRACTS:
+        model = getattr(goldmasters_contracts, attribute)
         schema = model.model_json_schema(mode="serialization")  # type: ignore[attr-defined]
         target = out / f"{stem}.json"
         target.write_text(canonicalise(schema), encoding="utf-8", newline="\n")

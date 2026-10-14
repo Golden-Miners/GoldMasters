@@ -1,0 +1,152 @@
+{
+  "$defs": {
+    "QualityStatus": {
+      "description": "The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.\n\n``not_evaluated`` is the only value Phase 1 may emit and is never a healthy\nvalue (D-20/D-22); thresholds and the computing code stay in Phase 2.",
+      "enum": [
+        "stale",
+        "duplicate",
+        "gap",
+        "malformed",
+        "disconnected",
+        "missing-history",
+        "unsupported",
+        "not_evaluated"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Market quote contract (Schema.md \u00a74 lines 112-119).\n\nA quote represents the current bid/ask spread. Missing bid, ask, last price,\nor volume is not invented (Schema.md:119).",
+  "properties": {
+    "ask": {
+      "anyOf": [
+        {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ask"
+    },
+    "ask_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ask Time"
+    },
+    "bid": {
+      "anyOf": [
+        {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bid"
+    },
+    "bid_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bid Time"
+    },
+    "instrument_id": {
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "last": {
+      "anyOf": [
+        {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last"
+    },
+    "last_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Time"
+    },
+    "provider_id": {
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "provider_symbol": {
+      "title": "Provider Symbol",
+      "type": "string"
+    },
+    "quality_flags": {
+      "items": {
+        "$ref": "#/$defs/QualityStatus"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    },
+    "quality_status": {
+      "$ref": "#/$defs/QualityStatus"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "spread": {
+      "anyOf": [
+        {
+          "pattern": "^-?\\d+(\\.\\d+)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Spread"
+    }
+  },
+  "required": [
+    "instrument_id",
+    "provider_id",
+    "provider_symbol",
+    "retrieved_at",
+    "quality_status"
+  ],
+  "title": "MarketQuote",
+  "type": "object"
+}

@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "ErrorCode": {
+      "description": "The closed, stable, machine-readable error-code vocabulary (D-23).",
+      "enum": [
+        "CONTRACT_VALIDATION_FAILED",
+        "UNKNOWN_CONTRACT_MAJOR",
+        "CONFIG_INVALID",
+        "UNSUPPORTED_INSTRUMENT",
+        "UNSUPPORTED_TIMEFRAME",
+        "INTERNAL_ERROR"
+      ],
+      "title": "ErrorCode",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Schema.md \u00a710, field for field: the sanitized C-09 error object.",
+  "properties": {
+    "code": {
+      "$ref": "#/$defs/ErrorCode"
+    },
+    "correlation_id": {
+      "title": "Correlation Id",
+      "type": "string"
+    },
+    "details": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Details"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "retryable": {
+      "title": "Retryable",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "code",
+    "message",
+    "retryable",
+    "correlation_id",
+    "details"
+  ],
+  "title": "ErrorPayload",
+  "type": "object"
+}

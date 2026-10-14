@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "QualityStatus": {
+      "description": "The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.\n\n``not_evaluated`` is the only value Phase 1 may emit and is never a healthy\nvalue (D-20/D-22); thresholds and the computing code stay in Phase 2.",
+      "enum": [
+        "stale",
+        "duplicate",
+        "gap",
+        "malformed",
+        "disconnected",
+        "missing-history",
+        "unsupported",
+        "not_evaluated"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    },
+    "Timeframe": {
+      "description": "The closed canonical timeframe enum (D-13/D-16/D-28).\n\nMembers are the documented MetaTrader 5 period tokens (module docstring\ncites the source); a value outside this enum is rejected by a field typed\nwith it.",
+      "enum": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M10",
+        "M12",
+        "M15",
+        "M20",
+        "M30",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H6",
+        "H8",
+        "H12",
+        "D1",
+        "W1",
+        "MN1"
+      ],
+      "title": "Timeframe",
+      "type": "string"
+    },
+    "VolumeType": {
+      "description": "Schema.md \u00a74 volume semantics \u2014 tick volume is never relabelled exchange.",
+      "enum": [
+        "tick",
+        "exchange",
+        "broker",
+        "unknown",
+        "not_available"
+      ],
+      "title": "VolumeType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Market bar contract reproducing Schema.md \u00a74 exactly.\n\nAll monetary/price fields use :data:`PriceStr` (decimal-as-string wire form).\nInvariants enforced by :meth:`_validate_bar_invariants`:\n- high >= max(open, close, low)\n- low <= min(open, close, high)\n- All prices finite and positive\n- Timestamps ordered (bar_open_time < bar_close_time if present)\n- Quality information present (no default fill per D-22)",
+  "properties": {
+    "bar_close_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bar Close Time"
+    },
+    "bar_open_time": {
+      "format": "date-time",
+      "title": "Bar Open Time",
+      "type": "string"
+    },
+    "close": {
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "title": "Close",
+      "type": "string"
+    },
+    "high": {
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "title": "High",
+      "type": "string"
+    },
+    "instrument_id": {
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "low": {
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "title": "Low",
+      "type": "string"
+    },
+    "open": {
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "title": "Open",
+      "type": "string"
+    },
+    "provider_id": {
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "provider_symbol": {
+      "title": "Provider Symbol",
+      "type": "string"
+    },
+    "quality_flags": {
+      "items": {
+        "$ref": "#/$defs/QualityStatus"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    },
+    "quality_status": {
+      "$ref": "#/$defs/QualityStatus"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "source_timezone": {
+      "title": "Source Timezone",
+      "type": "string"
+    },
+    "timeframe": {
+      "$ref": "#/$defs/Timeframe"
+    },
+    "volume": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Volume"
+    },
+    "volume_type": {
+      "$ref": "#/$defs/VolumeType",
+      "default": "not_available"
+    }
+  },
+  "required": [
+    "instrument_id",
+    "provider_id",
+    "provider_symbol",
+    "timeframe",
+    "bar_open_time",
+    "open",
+    "high",
+    "low",
+    "close",
+    "retrieved_at",
+    "source_timezone",
+    "quality_status"
+  ],
+  "title": "MarketBar",
+  "type": "object"
+}

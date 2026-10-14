@@ -1,0 +1,329 @@
+{
+  "$defs": {
+    "AgentRunStatus": {
+      "description": "Schema.md \u00a72 agent/run status.",
+      "enum": [
+        "queued",
+        "running",
+        "ok",
+        "no_setup",
+        "insufficient_data",
+        "skipped",
+        "error",
+        "timed_out",
+        "cancelled"
+      ],
+      "title": "AgentRunStatus",
+      "type": "string"
+    },
+    "Decision": {
+      "description": "Schema.md \u00a72 ``Decision`` \u2014 a research candidate, never an order.",
+      "enum": [
+        "TRADE",
+        "NO_TRADE",
+        "INSUFFICIENT_DATA"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "DecisionRecord": {
+      "additionalProperties": false,
+      "description": "Schema.md \u00a76, field for field.",
+      "properties": {
+        "agent_statuses": {
+          "additionalProperties": {
+            "$ref": "#/$defs/AgentRunStatus"
+          },
+          "title": "Agent Statuses",
+          "type": "object"
+        },
+        "conflicts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "data_as_of": {
+          "format": "date-time",
+          "title": "Data As Of",
+          "type": "string"
+        },
+        "data_quality_status": {
+          "$ref": "#/$defs/QualityStatus"
+        },
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        },
+        "decision_id": {
+          "pattern": "^dec_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Direction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "pattern": "^-?\\d+(\\.\\d+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Entry"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "invalidation_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Invalidation Conditions",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "manual_review_required": {
+          "default": true,
+          "title": "Manual Review Required",
+          "type": "boolean"
+        },
+        "reasons_for_rejection": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons For Rejection",
+          "type": "array"
+        },
+        "risk_factors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Factors",
+          "type": "array"
+        },
+        "risk_reward": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Risk Reward"
+        },
+        "run_id": {
+          "pattern": "^run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "stop_loss": {
+          "anyOf": [
+            {
+              "pattern": "^-?\\d+(\\.\\d+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Loss"
+        },
+        "strategy_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strategy Id"
+        },
+        "strategy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strategy Version"
+        },
+        "take_profits": {
+          "items": {
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "title": "Take Profits",
+          "type": "array"
+        },
+        "thesis": {
+          "title": "Thesis",
+          "type": "string"
+        },
+        "timeframe": {
+          "$ref": "#/$defs/Timeframe"
+        }
+      },
+      "required": [
+        "decision_id",
+        "run_id",
+        "instrument_id",
+        "timeframe",
+        "decision",
+        "created_at",
+        "data_as_of",
+        "thesis",
+        "data_quality_status"
+      ],
+      "title": "DecisionRecord",
+      "type": "object"
+    },
+    "Direction": {
+      "description": "Schema.md \u00a72 direction.",
+      "enum": [
+        "long",
+        "short",
+        "neutral",
+        "unknown"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "QualityStatus": {
+      "description": "The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.\n\n``not_evaluated`` is the only value Phase 1 may emit and is never a healthy\nvalue (D-20/D-22); thresholds and the computing code stay in Phase 2.",
+      "enum": [
+        "stale",
+        "duplicate",
+        "gap",
+        "malformed",
+        "disconnected",
+        "missing-history",
+        "unsupported",
+        "not_evaluated"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    },
+    "Timeframe": {
+      "description": "The closed canonical timeframe enum (D-13/D-16/D-28).\n\nMembers are the documented MetaTrader 5 period tokens (module docstring\ncites the source); a value outside this enum is rejected by a field typed\nwith it.",
+      "enum": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M10",
+        "M12",
+        "M15",
+        "M20",
+        "M30",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H6",
+        "H8",
+        "H12",
+        "D1",
+        "W1",
+        "MN1"
+      ],
+      "title": "Timeframe",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Immutable journal wrapper binding an entry id to a decision snapshot.",
+  "properties": {
+    "decision_id": {
+      "pattern": "^dec_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "journal_id": {
+      "pattern": "^journal_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Journal Id",
+      "type": "string"
+    },
+    "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "run_id": {
+      "pattern": "^run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/DecisionRecord"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "pattern": "^dec_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes"
+    }
+  },
+  "required": [
+    "journal_id",
+    "decision_id",
+    "run_id",
+    "recorded_at",
+    "snapshot"
+  ],
+  "title": "JournalEntry",
+  "type": "object"
+}

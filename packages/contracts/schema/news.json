@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "EvidenceStatus": {
+      "description": "Schema.md \u00a72 evidence status.",
+      "enum": [
+        "valid",
+        "stale",
+        "missing",
+        "conflicted",
+        "invalid",
+        "unavailable"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "InstrumentMapping": {
+      "additionalProperties": false,
+      "description": "Instrument link with rationale and confidence method.",
+      "properties": {
+        "confidence_method": {
+          "title": "Confidence Method",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "rationale",
+        "confidence_method"
+      ],
+      "title": "InstrumentMapping",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Schema.md \u00a77 news item, field for field.",
+  "properties": {
+    "access_method": {
+      "title": "Access Method",
+      "type": "string"
+    },
+    "canonical_url": {
+      "title": "Canonical Url",
+      "type": "string"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "instrument_mappings": {
+      "items": {
+        "$ref": "#/$defs/InstrumentMapping"
+      },
+      "title": "Instrument Mappings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Published At"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "source_attribution": {
+      "title": "Source Attribution",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/EvidenceStatus"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_id",
+    "canonical_url",
+    "title",
+    "retrieved_at",
+    "source_attribution",
+    "access_method",
+    "status"
+  ],
+  "title": "NewsItem",
+  "type": "object"
+}
