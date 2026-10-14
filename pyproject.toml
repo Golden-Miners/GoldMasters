@@ -15,7 +15,7 @@ package = false
 # Only the contracts distribution exists at this wave. `apps/api` is added to
 # this list by plan 08 once it creates that distribution; uv errors on a
 # declared member path that does not exist yet.
-members = ["packages/contracts"]
+members = ["packages/contracts", "apps/api"]
 
 [dependency-groups]
 dev = [

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "goldmasters-api"
+version = "0.1.0"
+description = "GoldMasters local research API skeleton (loopback-only, signals-only)."
+requires-python = "==3.14.7"
+dependencies = [
+    "goldmasters-contracts",
+    "fastapi==0.143.0",
+    "uvicorn==0.54.0",
+    "pydantic-settings==2.15.0",
+    "structlog==26.1.0",
+    "opentelemetry-sdk==1.45.1",
+    "opentelemetry-api==1.45.1",
+    "pyyaml==6.0.3",
+    "sqlalchemy==2.1.4",
+    "psycopg[binary]==3.3.6",
+    "httpx==0.28.1",
+]
+
+[tool.uv.sources]
+goldmasters-contracts = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/goldmasters_api"]
