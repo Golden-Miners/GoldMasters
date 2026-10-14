@@ -33,9 +33,7 @@ def upgrade() -> None:
         sa.Column("document", postgresql.JSONB, nullable=False),
     )
     op.create_index("ix_contract_document_run_id", "contract_document", ["run_id"])
-    op.create_index(
-        "ix_contract_document_instrument_id", "contract_document", ["instrument_id"]
-    )
+    op.create_index("ix_contract_document_instrument_id", "contract_document", ["instrument_id"])
     op.create_index("ix_contract_document_created_at", "contract_document", ["created_at"])
     op.create_index("ix_contract_document_status", "contract_document", ["status"])
 
