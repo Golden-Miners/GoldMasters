@@ -1,0 +1,26 @@
+{
+  "name": "goldmasters-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GoldMasters research console skeleton: loopback health page over generated contract types.",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1 -p 3000",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1 -p 3000",
+    "typecheck": "tsc --noEmit",
+    "gen:types": "json2ts -i ../../packages/contracts/schema/envelope.json -o src/generated/envelope.ts --no-format && json2ts -i ../../packages/contracts/schema/market.json -o src/generated/market.ts --no-format && json2ts -i ../../packages/contracts/schema/quote.json -o src/generated/quote.ts --no-format && json2ts -i ../../packages/contracts/schema/precision.json -o src/generated/precision.ts --no-format && json2ts -i ../../packages/contracts/schema/decision.json -o src/generated/decision.ts --no-format && json2ts -i ../../packages/contracts/schema/journal.json -o src/generated/journal.ts --no-format && json2ts -i ../../packages/contracts/schema/news.json -o src/generated/news.ts --no-format && json2ts -i ../../packages/contracts/schema/sentiment.json -o src/generated/sentiment.ts --no-format && json2ts -i ../../packages/contracts/schema/backtest.json -o src/generated/backtest.ts --no-format && json2ts -i ../../packages/contracts/schema/error.json -o src/generated/error.ts --no-format"
+  },
+  "dependencies": {
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "json-schema-to-typescript": "16.0.0",
+    "typescript": "7.0.2"
+  }
+}
