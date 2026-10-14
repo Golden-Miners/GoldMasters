@@ -45,7 +45,7 @@ def assert_loopback(host: str) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Resolve settings once; fail startup on a non-loopback bind."""
-    settings = Settings()
+    settings = Settings()  # type: ignore[call-arg]  # required keys arrive via env
     assert_loopback(settings.bind_host)
     app.state.settings = settings
     app.state.config_hash = hash_effective_config(settings)
