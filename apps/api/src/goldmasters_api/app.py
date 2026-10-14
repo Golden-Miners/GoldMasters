@@ -25,7 +25,7 @@ def assert_loopback(host: str) -> None:
     candidates: list[str] = [host]
     if host == "localhost":
         try:
-            _, _, _, _, infos = socket.getaddrinfo(host, None)
+            infos = socket.getaddrinfo(host, None)
         except socket.gaierror as exc:
             raise ValueError(f"bind_host {host!r} does not resolve to loopback") from exc
         candidates = sorted({info[4][0] for info in infos})
