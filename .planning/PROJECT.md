@@ -24,7 +24,7 @@ Every output is traceable to real, timestamped market data with provenance; noth
 
 ### Validated
 
-(None yet — nothing is implemented; ship to validate.)
+- ✓ **REQ-no-trade-execution** — Phase 1 (structural boundary gate: AST scan + allowlist + meta-test run in `sh scripts/gate`; no order surface in tree)
 
 ### Active
 
@@ -37,7 +37,6 @@ Every output is traceable to real, timestamped market data with provenance; noth
 - [ ] **REQ-ui-and-reports** — A React/Next.js research console over the backend API covering Overview, Instrument Workbench, Decision Detail, News & Sentiment, Strategy Lab, Backtest Results, Journal, Agent Runs, Data Providers, Settings/Model Health and System Health, with evidence freshness visible near every decision.
 - [ ] **REQ-journal-and-backtesting** — Immutable decision snapshots with append-only outcome observations, and backtests that declare dataset, range, timezone, timeframe, symbol mapping, strategy version, parameters, costs/slippage and fill model with in-sample/validation separation.
 - [ ] **REQ-local-model-support** — Ollama as the local inference runtime, configured by endpoint with model health check, provider/model status and runtime model discovery — no assumed model, hardware or context window.
-- [ ] **REQ-no-trade-execution** — V1 must not place, modify or close orders; no trading credentials, no autonomous execution, copy trading or portfolio management.
 - [ ] **REQ-no-fabricated-data** — No invented, mock or sample market, news, sentiment, backtest or signal data in production paths; missing or unavailable data is labelled as such.
 - [ ] **REQ-evidence-and-provenance** — Every decision is explained with citations/references to underlying data, timestamps, rules and conflicts, and decision traceability (percentage of decisions with complete evidence references and configuration/version metadata) is instrumented.
 
@@ -140,4 +139,4 @@ Status vocabulary: `locked` = user-confirmed (Memory.md, confirmed user decision
 After each phase: move invalidated requirements to Out of Scope with the reason, move validated requirements to Validated with the phase reference, add new requirements to Active, log new decisions in Key Decisions, and update "What This Is" if the product drifted. After each milestone: full section review, Core Value check, Out of Scope audit, and refresh Context with current state. Locked decisions (DR-01…DR-08) change only with explicit user confirmation; proposed decisions (DR-09…DR-15) become locked when confirmed against the real repository and environment.
 
 ---
-*Last updated: 2026-10-13 after ingest-driven project initialization, then milestone v1.0 started (10 documents → intel synthesis, 12 requirements, 23 constraints, 15 decision records).*
+*Last updated: 2026-10-15 after Phase 1 (11/11 plans; contract layer, loopback skeleton, boundary gate, local PG, migration round-trip, health page; REQ-no-trade-execution validated).*
