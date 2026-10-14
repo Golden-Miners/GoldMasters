@@ -64,3 +64,85 @@ def test_yaml_source_is_live_and_last() -> None:
         Settings, object(), object(), object(), object()  # type: ignore[arg-type]
     )
     assert isinstance(sources[-1], YamlConfigSettingsSource)
+
+
+def _settings(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> Settings:
+    for key, value in overrides.items():
+        monkeypatch.setenv(f"GOLDMASTERS_{key.upper()}", value)
+    return Settings()  # type: ignore[call-arg]
+
+
+def test_hash_deterministic(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from goldmasters_api.settings import hash_effective_config
+
+    settings = _settings(monkeypatch)
+    assert hash_effective_config(settings) == hash_effective_config(settings)
+
+
+def test_hash_order_invariant(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import hashlib
+    import json
+
+    from goldmasters_api.settings import HASH_ALGORITHM_VERSION, hash_effective_config
+
+    settings = _settings(monkeypatch)
+    digest = hash_effective_config(settings)
+    payload = settings.model_dump()
+    reordered = dict(reversed(list(payload.items())))
+    canonical = json.dumps(
+        {**{k: v for k, v in reordered.items() if k != "provider_api_key"},
+         "_hash_algorithm_version": HASH_ALGORITHM_VERSION},
+        sort_keys=True,
+        default=str,
+    )
+    assert hashlib.sha256(canonical.encode()).hexdigest() == digest
+
+
+def test_hash_ignores_secrets(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from goldmasters_api.settings import hash_effective_config
+
+    before = hash_effective_config(_settings(monkeypatch))
+    after = hash_effective_config(_settings(monkeypatch, provider_api_key="changed"))
+    assert before == after
+
+
+def test_hash_moves_with_non_secret(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from goldmasters_api.settings import hash_effective_config
+
+    before = hash_effective_config(_settings(monkeypatch))
+    after = hash_effective_config(_settings(monkeypatch, bind_port="8001"))
+    assert before != after
+
+
+def test_hash_algorithm_version_exposed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import hashlib
+    import json
+
+    from goldmasters_api.settings import (
+        HASH_ALGORITHM_VERSION,
+        Settings as SettingsModel,
+        hash_effective_config,
+    )
+
+    assert HASH_ALGORITHM_VERSION == "1"
+    assert SettingsModel.model_fields["config_version"].default == "1.0"
+    settings = _settings(monkeypatch)
+    payload = {
+        k: v for k, v in settings.model_dump().items() if k != "provider_api_key"
+    }
+    digest_v2 = hashlib.sha256(
+        json.dumps(
+            {**payload, "_hash_algorithm_version": "2"}, sort_keys=True, default=str
+        ).encode()
+    ).hexdigest()
+    assert digest_v2 != hash_effective_config(settings)
