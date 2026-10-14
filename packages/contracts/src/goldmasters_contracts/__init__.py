@@ -16,6 +16,12 @@ from goldmasters_contracts._base import (
     PriceStr,
     UtcDatetime,
 )
+from goldmasters_contracts.backtest import (
+    BacktestAssumptions,
+    BacktestMetric,
+    BacktestRecord,
+)
+from goldmasters_contracts.decision import DecisionRecord, Levels
 from goldmasters_contracts.enums import (
     AgentRunStatus,
     Decision,
@@ -29,7 +35,24 @@ from goldmasters_contracts.enums import (
 )
 from goldmasters_contracts.envelope import Envelope
 from goldmasters_contracts.errors import RETRYABLE_CODES, ErrorCode, ErrorPayload
-from goldmasters_contracts.ids import AgentId, DecId, IdPrefix, PrefixedId, ProviderId, RunId
+from goldmasters_contracts.ids import (
+    AgentId,
+    DecId,
+    IdPrefix,
+    JournalId,
+    PrefixedId,
+    ProviderId,
+    RunId,
+)
+from goldmasters_contracts.journal import JournalEntry
+from goldmasters_contracts.market import InstrumentId, MarketBar, MarketQuote
+from goldmasters_contracts.news import InstrumentMapping, NewsItem
+from goldmasters_contracts.precision import (
+    PrecisionLookupResult,
+    PrecisionRow,
+    PrecisionTable,
+)
+from goldmasters_contracts.sentiment import SCORE_MAX, SCORE_MIN, SentimentRecord
 from goldmasters_contracts.versions import (
     CONTRACT_VERSION_MAJOR_SUPPORTED,
     ContractVersion,
@@ -42,11 +65,15 @@ __all__ = [
     "CONTRACT_VERSION_MAJOR_SUPPORTED",
     "AgentId",
     "AgentRunStatus",
+    "BacktestAssumptions",
+    "BacktestMetric",
+    "BacktestRecord",
     "ContractModel",
     "ContractVersion",
     "DECIMAL_PATTERN",
     "DecId",
     "Decision",
+    "DecisionRecord",
     "Direction",
     "Envelope",
     "ErrorCode",
@@ -54,6 +81,17 @@ __all__ = [
     "EvidenceStatus",
     "IanaTimezone",
     "IdPrefix",
+    "InstrumentId",
+    "InstrumentMapping",
+    "JournalEntry",
+    "JournalId",
+    "Levels",
+    "MarketBar",
+    "MarketQuote",
+    "NewsItem",
+    "PrecisionLookupResult",
+    "PrecisionRow",
+    "PrecisionTable",
     "PrefixedId",
     "PriceStr",
     "ProviderId",
@@ -61,7 +99,10 @@ __all__ = [
     "QualityStatus",
     "RETRYABLE_CODES",
     "RunId",
+    "SCORE_MAX",
+    "SCORE_MIN",
     "SchemaVersionStr",
+    "SentimentRecord",
     "Timeframe",
     "TrendRegime",
     "UtcDatetime",
