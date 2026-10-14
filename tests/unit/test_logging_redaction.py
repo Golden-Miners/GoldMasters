@@ -6,9 +6,8 @@ import json
 
 import pytest
 import structlog
-from pydantic import SecretStr
-
 from goldmasters_api.logging import REDACTED, configure_logging
+from pydantic import SecretStr
 
 
 @pytest.fixture(autouse=True)

@@ -51,9 +51,7 @@ def redaction_processor(
 ) -> EventDict:
     """Mask secret-named keys, `SecretStr` values and known secrets, nested too."""
     secret_values = {
-        item.get_secret_value()
-        for item in event_dict.values()
-        if isinstance(item, SecretStr)
+        item.get_secret_value() for item in event_dict.values() if isinstance(item, SecretStr)
     }
     secret_values.discard("")
     scrubbed: EventDict = {}

@@ -31,9 +31,7 @@ def current_correlation_id() -> str | None:
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """Mint, bind, echo and clear one correlation ID per request."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         correlation_id = str(uuid.uuid4())
         structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
         span = start_request_span("http.request", correlation_id)

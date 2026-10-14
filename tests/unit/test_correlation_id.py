@@ -7,7 +7,6 @@ import pathlib
 import structlog
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
 from goldmasters_api.middleware import CorrelationIdMiddleware, current_correlation_id
 from goldmasters_api.tracing import configure_tracing, shutdown_tracing
 
