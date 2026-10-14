@@ -9,7 +9,48 @@ barrel as they add contracts; it is never replaced.
 
 from __future__ import annotations
 
-__all__ = ["CONTRACT_VERSION"]
+from goldmasters_contracts._base import (
+    DECIMAL_PATTERN,
+    ContractModel,
+    IanaTimezone,
+    PriceStr,
+    UtcDatetime,
+)
+from goldmasters_contracts.enums import (
+    AgentRunStatus,
+    Decision,
+    Direction,
+    EvidenceStatus,
+    QualityFlag,
+    QualityStatus,
+    Timeframe,
+    TrendRegime,
+    VolumeType,
+)
+from goldmasters_contracts.envelope import Envelope
+from goldmasters_contracts.errors import RETRYABLE_CODES, ErrorCode, ErrorPayload
+
+__all__ = [
+    "CONTRACT_VERSION",
+    "DECIMAL_PATTERN",
+    "RETRYABLE_CODES",
+    "AgentRunStatus",
+    "ContractModel",
+    "Decision",
+    "Direction",
+    "Envelope",
+    "ErrorCode",
+    "ErrorPayload",
+    "EvidenceStatus",
+    "IanaTimezone",
+    "PriceStr",
+    "QualityFlag",
+    "QualityStatus",
+    "Timeframe",
+    "TrendRegime",
+    "UtcDatetime",
+    "VolumeType",
+]
 
 # The contract-layer version shared by every contract (Schema.md §1; D-02/D-23).
 # It is a ``major.minor`` string: a reader accepts any ``1.x`` and rejects an

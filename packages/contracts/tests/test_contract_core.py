@@ -11,8 +11,15 @@ import json
 from decimal import Decimal
 
 import pytest
+from goldmasters_contracts import CONTRACT_VERSION, Envelope
 from goldmasters_contracts._base import DECIMAL_PATTERN, ContractModel, PriceStr
-from goldmasters_contracts.enums import QualityFlag, QualityStatus, Timeframe
+from goldmasters_contracts.enums import (
+    AgentRunStatus,
+    QualityFlag,
+    QualityStatus,
+    Timeframe,
+)
+from goldmasters_contracts.errors import RETRYABLE_CODES, ErrorCode, ErrorPayload
 from pydantic import ValidationError
 
 #: The documented provider timeframe tokens transcribed into `enums.Timeframe`.
@@ -141,3 +148,166 @@ def test_quality_not_evaluated_is_its_own_member() -> None:
 
 def test_quality_flag_shares_the_status_vocabulary() -> None:
     assert {m.value for m in QualityFlag} == {m.value for m in QualityStatus}
+
+
+# --- Task 3 fixtures: the two documented example shapes ---
+
+#: Schema.md §10 with a synthetic correlation id (no real identifier is invented).
+C09_DOCUMENT: dict[str, object] = {
+    "code": "CONTRACT_VALIDATION_FAILED",
+    "message": "Payload failed contract validation.",
+    "retryable": False,
+    "correlation_id": "01890000-0000-7000-8000-000000000000",
+    "details": None,
+}
+
+#: Schema.md §3 with synthetic identifiers and no market data.
+ENVELOPE_DOCUMENT: dict[str, object] = {
+    "schema_version": "1.0",
+    "run_id": "01890000-0000-7000-8000-000000000001",
+    "agent_name": "trend_agent",
+    "agent_version": "1.0.0",
+    "status": "ok",
+    "created_at": "2026-01-01T00:00:00Z",
+    "as_of": None,
+    "input_refs": [],
+    "evidence_refs": [],
+    "limitations": [],
+    "error": None,
+    "result": {},
+}
+
+#: The codes plan 01-01 settles; later phases add theirs by minor bump (D-23).
+PINNED_ERROR_CODES = frozenset(
+    {
+        "CONTRACT_VALIDATION_FAILED",
+        "UNKNOWN_CONTRACT_MAJOR",
+        "CONFIG_INVALID",
+        "UNSUPPORTED_INSTRUMENT",
+        "UNSUPPORTED_TIMEFRAME",
+        "INTERNAL_ERROR",
+    }
+)
+
+
+# --- Test 7: the C-09 error payload (Schema.md §10; D-12/D-23) ---
+
+
+def test_error_payload_accepts_the_documented_document() -> None:
+    payload = ErrorPayload.model_validate_json(json.dumps(C09_DOCUMENT))
+    assert payload.code is ErrorCode.CONTRACT_VALIDATION_FAILED
+    assert payload.retryable is False
+    assert payload.details is None
+    assert payload.model_dump_json() == json.dumps(C09_DOCUMENT, separators=(",", ":"))
+
+
+def test_error_payload_rejects_an_unknown_extra_field() -> None:
+    with pytest.raises(ValidationError):
+        ErrorPayload.model_validate_json(
+            json.dumps({**C09_DOCUMENT, "unexpected": "x"})
+        )
+
+
+def test_error_payload_rejects_a_missing_code() -> None:
+    without_code = {k: v for k, v in C09_DOCUMENT.items() if k != "code"}
+    with pytest.raises(ValidationError):
+        ErrorPayload.model_validate_json(json.dumps(without_code))
+
+
+def test_error_payload_rejects_a_non_boolean_retryable() -> None:
+    with pytest.raises(ValidationError):
+        ErrorPayload.model_validate_json(
+            json.dumps({**C09_DOCUMENT, "retryable": "no"})
+        )
+
+
+# --- Test 8: the closed ErrorCode vocabulary (D-23) ---
+
+
+def test_error_code_pins_the_settled_vocabulary() -> None:
+    assert PINNED_ERROR_CODES <= {code.value for code in ErrorCode}
+    assert all(isinstance(code.retryable, bool) for code in ErrorCode)
+
+
+def test_retryable_is_per_code_not_a_constant() -> None:
+    assert {code.retryable for code in ErrorCode} == {False, True}
+    assert RETRYABLE_CODES == frozenset(code for code in ErrorCode if code.retryable)
+    assert ErrorCode.INTERNAL_ERROR.retryable is True
+    assert ErrorCode.CONTRACT_VALIDATION_FAILED.retryable is False
+
+
+# --- Test 9: retryable comes from the code, never the caller (T-01-26) ---
+
+
+def test_retryable_comes_from_the_code_not_the_caller() -> None:
+    overridden = ErrorPayload.model_validate_json(
+        json.dumps({**C09_DOCUMENT, "retryable": True})
+    )
+    assert overridden.retryable is False
+
+    retryable = ErrorPayload.model_validate_json(
+        json.dumps({**C09_DOCUMENT, "code": "INTERNAL_ERROR", "retryable": False})
+    )
+    assert retryable.retryable is True
+
+
+def test_retryable_is_derived_when_the_document_omits_it() -> None:
+    without_retryable = {k: v for k, v in C09_DOCUMENT.items() if k != "retryable"}
+    payload = ErrorPayload.model_validate_json(json.dumps(without_retryable))
+    assert payload.retryable is ErrorCode.CONTRACT_VALIDATION_FAILED.retryable
+
+
+# --- Test 10: the agent envelope (Schema.md §3; D-06/D-12) ---
+
+
+def test_envelope_accepts_the_documented_document() -> None:
+    envelope = Envelope.model_validate_json(json.dumps(ENVELOPE_DOCUMENT))
+    assert envelope.status is AgentRunStatus.OK
+    assert envelope.schema_version == CONTRACT_VERSION
+    assert envelope.error is None
+    assert envelope.as_of is None
+    assert envelope.model_dump_json() == json.dumps(
+        ENVELOPE_DOCUMENT, separators=(",", ":")
+    )
+
+
+def test_envelope_rejects_an_unknown_extra_field() -> None:
+    with pytest.raises(ValidationError):
+        Envelope.model_validate_json(
+            json.dumps({**ENVELOPE_DOCUMENT, "unexpected": "x"})
+        )
+
+
+# --- Test 11: the package barrel (D-06) ---
+
+
+def test_barrel_reexports_every_module_surface() -> None:
+    import goldmasters_contracts as contracts
+
+    for name in (
+        "CONTRACT_VERSION",
+        "ContractModel",
+        "PriceStr",
+        "UtcDatetime",
+        "IanaTimezone",
+        "DECIMAL_PATTERN",
+        "Decision",
+        "AgentRunStatus",
+        "EvidenceStatus",
+        "Direction",
+        "TrendRegime",
+        "QualityStatus",
+        "QualityFlag",
+        "VolumeType",
+        "Timeframe",
+        "ErrorCode",
+        "ErrorPayload",
+        "RETRYABLE_CODES",
+        "Envelope",
+    ):
+        assert name in contracts.__all__, name
+        assert hasattr(contracts, name), name
+
+    from goldmasters_contracts.envelope import Envelope as SubmoduleEnvelope
+
+    assert contracts.Envelope is SubmoduleEnvelope
