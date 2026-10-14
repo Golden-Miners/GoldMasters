@@ -7,6 +7,15 @@ from fastapi.testclient import TestClient
 from goldmasters_api.app import assert_loopback, create_app
 
 
+@pytest.fixture(autouse=True)
+def _database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Required key since 01-10: point the suite at an unreachable localhost DB."""
+    monkeypatch.setenv(
+        "GOLDMASTERS_DATABASE_URL",
+        "postgresql+psycopg://127.0.0.1:5432/goldmasters",
+    )
+
+
 def test_health_returns_five_chain_fields() -> None:
     with TestClient(create_app()) as client:
         response = client.get("/health")
