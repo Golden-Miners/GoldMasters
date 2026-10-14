@@ -1,2 +1,4 @@
 # Next.js build output — regenerable, never committed.
 .next/
+next-env.d.ts
+tsconfig.tsbuildinfo
