@@ -51,7 +51,7 @@ if ((Test-Path $ZipPath) -and (Test-Path $LockPath)) {
   }
   $actual = Get-Sha256 $ZipPath
   if ($actual -ne $recorded['sha256']) {
-    throw "pgsql.zip sha256 $actual differs from recorded $($recorded['sha256']). Possible swapped artifact — aborting."
+    throw "pgsql.zip sha256 $actual differs from recorded $($recorded['sha256']). Possible swapped artifact -- aborting."
   }
   Write-Host "STEP provision ok (cached, hash verified)"
 } else {

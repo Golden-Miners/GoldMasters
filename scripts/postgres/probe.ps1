@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Falsification probe: provision → init → start → query → stop, for real.
+  Falsification probe: provision -> init -> start -> query -> stop, for real.
 .DESCRIPTION
   Prints one machine-readable STEP line per stage and fails loudly naming the
   exact step on error. Never falls back to a machine-wide install. Its output
