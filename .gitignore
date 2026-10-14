@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node / Next.js
+node_modules/
+
+# Generated TypeScript from the committed JSON Schema — build output, never
+# committed (D-10; plan 07 regenerates it).
+apps/web/src/generated/
+
+# Logs
+logs/
+
+# Local environment. Real secrets live here and are never committed; the
+# committed template is .env.example (D-36; Schema.md §11).
+.env
+.env.local
+
+# Repo-local PostgreSQL binaries and data (D-29) — nothing machine-wide.
+vendor/
+
+# Portable PostgreSQL runtime files (D-29): the server lock and initdb's
+# password file, both created under the repo-local data directory.
+postmaster.pid
+*.pgpass
+*.pwfile
+
+# OS / editor
+Thumbs.db
+.DS_Store

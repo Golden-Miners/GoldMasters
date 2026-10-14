@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "goldmasters-contracts"
+version = "0.1.0"
+description = "Pure Pydantic contract models for GoldMasters (D-03/D-08/D-42)."
+# D-42: the same exact interpreter pin as the workspace root.
+requires-python = "==3.14.7"
+# D-08: the audited minimum. `tzdata` is explicit because a clean venv does not
+# carry IANA timezone data on Windows, and Schema.md §1 line 10 requires
+# preserved IANA source timezones.
+dependencies = [
+    "pydantic==2.14.1",
+    "tzdata==2026.5",
+]
+
+[tool.hatch.build.targets.wheel]
+# Make the sole import root explicit so plan 04's purity walk has exactly one
+# tree to scan.
+packages = ["src/goldmasters_contracts"]
