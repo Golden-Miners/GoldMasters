@@ -60,9 +60,7 @@ def test_decimal_fields_are_strings() -> None:
                             f"{path}: number union"
                         )
             if node.get("type") == "number":
-                assert path.startswith("sentiment.json/properties/score"), (
-                    f"{path}: number"
-                )
+                assert path.startswith("sentiment.json/properties/score"), f"{path}: number"
             for key, value in node.items():
                 walk(value, f"{path}/{key}")
         elif isinstance(node, list):
