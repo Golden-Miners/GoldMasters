@@ -29,13 +29,23 @@ from goldmasters_contracts.enums import (
 )
 from goldmasters_contracts.envelope import Envelope
 from goldmasters_contracts.errors import RETRYABLE_CODES, ErrorCode, ErrorPayload
+from goldmasters_contracts.ids import AgentId, DecId, IdPrefix, PrefixedId, ProviderId, RunId
+from goldmasters_contracts.versions import (
+    CONTRACT_VERSION_MAJOR_SUPPORTED,
+    ContractVersion,
+    SchemaVersionStr,
+    parse_contract_version,
+)
 
 __all__ = [
     "CONTRACT_VERSION",
-    "DECIMAL_PATTERN",
-    "RETRYABLE_CODES",
+    "CONTRACT_VERSION_MAJOR_SUPPORTED",
+    "AgentId",
     "AgentRunStatus",
     "ContractModel",
+    "ContractVersion",
+    "DECIMAL_PATTERN",
+    "DecId",
     "Decision",
     "Direction",
     "Envelope",
@@ -43,13 +53,18 @@ __all__ = [
     "ErrorPayload",
     "EvidenceStatus",
     "IanaTimezone",
+    "IdPrefix",
+    "PrefixedId",
     "PriceStr",
-    "QualityFlag",
-    "QualityStatus",
+    "ProviderId",
+    "RETRYABLE_CODES",
+    "RunId",
+    "SchemaVersionStr",
     "Timeframe",
     "TrendRegime",
     "UtcDatetime",
     "VolumeType",
+    "parse_contract_version",
 ]
 
 # The contract-layer version shared by every contract (Schema.md §1; D-02/D-23).
