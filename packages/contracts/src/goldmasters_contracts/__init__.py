@@ -57,6 +57,8 @@ __all__ = [
     "PrefixedId",
     "PriceStr",
     "ProviderId",
+    "QualityFlag",
+    "QualityStatus",
     "RETRYABLE_CODES",
     "RunId",
     "SchemaVersionStr",

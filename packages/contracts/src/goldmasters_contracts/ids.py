@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import re
 import uuid
+from collections.abc import Callable
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import AfterValidator, BeforeValidator, WithJsonSchema
 from typing_extensions import Annotated as TypedAnnotated
@@ -37,6 +38,7 @@ class IdPrefix(StrEnum):
     RUN = "run_"
     DEC = "dec_"
     AGENT = "agent_"
+    JOURNAL = "journal_"
 
 
 #: Pattern for a stable lowercase snake_case provider key (D-25).
@@ -64,7 +66,7 @@ ProviderId = Annotated[
 ]
 
 
-def _prefixed_id_validator(prefix: IdPrefix):
+def _prefixed_id_validator(prefix: IdPrefix) -> Callable[[str], str]:
     """Create a validator for a specific prefix."""
 
     def _validate(value: str) -> str:
@@ -89,7 +91,7 @@ def _prefixed_id_validator(prefix: IdPrefix):
     return _validate
 
 
-def PrefixedId(prefix: IdPrefix):
+def PrefixedId(prefix: IdPrefix) -> Any:
     """Return an annotated string type that validates a prefixed UUID.
 
     Args:
@@ -116,3 +118,4 @@ def PrefixedId(prefix: IdPrefix):
 RunId = PrefixedId(IdPrefix.RUN)
 DecId = PrefixedId(IdPrefix.DEC)
 AgentId = PrefixedId(IdPrefix.AGENT)
+JournalId = PrefixedId(IdPrefix.JOURNAL)
