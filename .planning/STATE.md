@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 ## Current Position
 
 Phase: 2 — Market Data and Provider Selection
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-15 — Phase 1 complete, transitioned to Phase 2
+Plan: 02-04 complete (Wave 3; all 4 plans done)
+Status: Phase 2 implementation complete pending operator live_mt5 run (BLOCKED) + verification
+Last activity: 2026-10-15 — 02-04 executed: precision provenance, hash coverage, contracts, live scaffold
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Last activity: 2026-10-15 — Phase 1 complete, transitioned to Phase 2
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 11 | - | - |
+| 2 | 4 (02-01…02-04 done) | - | - |
 
 **Recent Trend:**
 - Last 5 plans: none
