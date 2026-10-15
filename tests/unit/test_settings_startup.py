@@ -88,6 +88,10 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "session_overlap_utc",
         "session_major_utc",
         "session_asia_utc",
+        # Phase 3 D-3.1/D-3.2 policy keys (03-01 tracer).
+        "tick_rounding_mode",
+        "max_risk_percent_per_idea",
+        "min_risk_reward_ratio",
     }
 
 
@@ -267,6 +271,8 @@ def test_hash_moves_with_every_d59_key(
         "session_asia_utc": "00:00-07:00",
         "weekend_close_utc": "Fri 21:00-Sun 21:00",
         "daily_break_utc": "21:00-22:30",
+        "max_risk_percent_per_idea": "1.0",
+        "min_risk_reward_ratio": "2.0",
     }
     baseline = hash_effective_config(_settings(monkeypatch))
     assert set(mutations) <= set(Settings.model_fields)
@@ -282,3 +288,37 @@ def test_hash_moves_with_every_d59_key(
             monkeypatch.delenv(env_name)
         else:
             monkeypatch.setenv(env_name, previous)
+
+
+def test_phase3_policy_keys_fail_closed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-3.1/D-3.2/D-36: a non-locked rounding mode or non-positive limit names its key."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    monkeypatch.setenv("GOLDMASTERS_TICK_ROUNDING_MODE", "HALF_EVEN")
+    with pytest.raises(PydanticValidationError, match="tick_rounding_mode"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_TICK_ROUNDING_MODE")
+    for key in ("MAX_RISK_PERCENT_PER_IDEA", "MIN_RISK_REWARD_RATIO"):
+        monkeypatch.setenv(f"GOLDMASTERS_{key}", "0")
+        with pytest.raises(PydanticValidationError, match=key.lower()):
+            Settings()  # type: ignore[call-arg]
+        monkeypatch.delenv(f"GOLDMASTERS_{key}")
+
+
+def test_hash_covers_phase3_policy_keys(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-3.1: every new policy key joins the hashed config; empty reads as unset."""
+    from goldmasters_api.settings import hash_effective_config
+
+    baseline = hash_effective_config(_settings(monkeypatch))
+    assert _settings(monkeypatch).tick_rounding_mode == "ROUND_HALF_UP"
+    # tick_rounding_mode admits no other value, so its coverage is shown by
+    # presence in the hashed payload: the placeholders move the digest.
+    assert (
+        hash_effective_config(_settings(monkeypatch, max_risk_percent_per_idea="1.0")) != baseline
+    )
+    assert hash_effective_config(_settings(monkeypatch, min_risk_reward_ratio="2.0")) != baseline
+    assert _settings(monkeypatch, max_risk_percent_per_idea="").max_risk_percent_per_idea is None

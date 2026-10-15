@@ -21,6 +21,7 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
@@ -466,12 +467,27 @@ class Mt5Adapter:
                 build = version[1] if version is not None else "unknown"
             except Exception:  # noqa: BLE001 — build provenance degrades, read continues
                 build = "unknown"
+            # D-3.4: contract size persists as a decimal string; an omitted
+            # descriptor field stays None (unknown provenance), never a guess.
+            raw_contract_size = getattr(info, "trade_contract_size", None)
+            contract_size: str | None = None
+            if raw_contract_size is not None:
+                try:
+                    size = Decimal(str(raw_contract_size))
+                except InvalidOperation, ValueError, TypeError:
+                    return _failure_for("malformed", "trade_contract_size is not a decimal value")
+                if not size.is_finite() or size <= 0:
+                    return _failure_for(
+                        "malformed", "trade_contract_size must be finite and positive"
+                    )
+                contract_size = format(size, "f")
             try:
                 return PrecisionRow(
                     instrument_id=instrument_id,
                     provider_id=PROVIDER_ID,
                     tick_size=str(info.point),
                     decimals=int(info.digits),
+                    contract_size=contract_size,
                     provider_spec_version=f"build {build}",
                     retrieved_at=now,
                     valid_from=now,

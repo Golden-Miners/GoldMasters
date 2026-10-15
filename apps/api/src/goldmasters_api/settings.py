@@ -84,6 +84,14 @@ class Settings(BaseSettings):
     weekend_close_utc: str = "Fri 21:00-Sun 22:00"
     daily_break_utc: str = "21:00-22:00"
 
+    # Phase 3 D-3.1/D-3.2 policy keys. The rounding mode is an operator
+    # acknowledgement of the locked ROUND_HALF_UP (anything else fails
+    # closed); the risk placeholders stay None until a strategy set is
+    # approved — no threshold literal lives in code.
+    tick_rounding_mode: str = "ROUND_HALF_UP"
+    max_risk_percent_per_idea: float | None = None
+    min_risk_reward_ratio: float | None = None
+
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod
     def _window_specs_parse(cls, value: str) -> str:
@@ -109,6 +117,32 @@ class Settings(BaseSettings):
         from services.mt5_adapter.validation import parse_daily_window
 
         parse_daily_window(value)
+        return value
+
+    @field_validator("tick_rounding_mode", mode="after")
+    @classmethod
+    def _rounding_mode_acknowledged(cls, value: str) -> str:
+        """Fail closed unless the operator acknowledges the locked mode (D-3.2)."""
+        if value != "ROUND_HALF_UP":
+            raise ValueError(f"tick_rounding_mode {value!r} is not the locked D-3.2 mode")
+        return value
+
+    @field_validator("max_risk_percent_per_idea", "min_risk_reward_ratio", mode="before")
+    @classmethod
+    def _empty_placeholder_means_unset(cls, value: Any) -> Any:
+        """An empty template entry reads as unset, never as zero (D-3.1)."""
+        if value == "":
+            return None
+        return value
+
+    @field_validator("max_risk_percent_per_idea", "min_risk_reward_ratio", mode="after")
+    @classmethod
+    def _risk_placeholders_positive(cls, value: float | None) -> float | None:
+        """Fail closed on a non-positive risk placeholder (D-3.1, D-36)."""
+        import math
+
+        if value is not None and (not math.isfinite(value) or value <= 0):
+            raise ValueError("risk placeholder must be finite and positive when set")
         return value
 
     @model_validator(mode="before")

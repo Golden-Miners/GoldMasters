@@ -28,3 +28,7 @@ daily_break_utc: "21:00-22:00"
 session_overlap_utc: "13:00-16:30"
 session_major_utc: "08:00-13:00,16:30-21:00"
 session_asia_utc: "00:00-08:00"
+# Phase 3 D-3.2 acknowledgement default: the locked tick-quantization mode.
+# Risk-limit placeholders stay operator-confirmed env-only (None until a
+# strategy set is approved per D-3.1), so they are intentionally absent here.
+tick_rounding_mode: ROUND_HALF_UP

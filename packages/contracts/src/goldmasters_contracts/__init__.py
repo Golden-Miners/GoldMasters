@@ -114,5 +114,7 @@ __all__ = [
 # It is a ``major.minor`` string: a reader accepts any ``1.x`` and rejects an
 # unknown major, so a document written at ``1.0`` stays readable and replayable
 # by a later ``1.x`` build. Bumped to ``1.1`` for the Phase 2 ``QualityStatus.OK``
-# enum addition (vocabularies only grow — a minor bump per D-23).
-CONTRACT_VERSION = "1.1"
+# enum addition, and to ``1.2`` for the Phase 3 optional ``contract_size``
+# decimal-string column on ``PrecisionRow`` (vocabularies/optional fields only
+# grow — a minor bump per D-23).
+CONTRACT_VERSION = "1.2"

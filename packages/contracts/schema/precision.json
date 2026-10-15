@@ -2,6 +2,18 @@
   "additionalProperties": false,
   "description": "One precision record for an (instrument, provider) pair.",
   "properties": {
+    "contract_size": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Contract Size"
+    },
     "decimals": {
       "minimum": 0,
       "title": "Decimals",

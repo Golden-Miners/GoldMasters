@@ -8,10 +8,11 @@ lookup at a payload ``retrieved_at`` resolves the row in force (D-26); the
 zero-row table still answers unknown (D-19); a malformed spec fails
 validation, never a default row.
 
-Known limit (open item for Phase 3): ``PrecisionRow`` carries no
-contract-size column and plan 02-04 forbids a contracts change, so
-``trade_contract_size`` — observed on the descriptor — is not persisted.
-Build + ``retrieved_at`` is the recorded provenance (D-24).
+Known limit closed by Phase 3 (03-01 Task 3, D-3.4): ``PrecisionRow`` carries
+an optional decimal-string ``contract_size`` column (``None`` = unknown
+provenance, minor-bump contracts change per D-23), and ``trade_contract_size``
+observed on the descriptor persists through this spec path.
+Build + ``retrieved_at`` remains the recorded provenance (D-24).
 """
 
 from __future__ import annotations
@@ -144,6 +145,30 @@ def test_zero_row_table_lookup_answers_unknown() -> None:
     assert PrecisionTable().lookup("xauusd", "mt5").status == "unknown"
     assert PrecisionTable().lookup("xauusd", "mt5", at=FIXTURE_T1).status == "unknown"
     assert PrecisionTable().lookup("silver", "mt5", at=FIXTURE_T1).status == "unknown"
+
+
+def test_contract_size_persists_from_descriptor() -> None:
+    """D-3.4: ``trade_contract_size`` observed on the descriptor persists as decimal string."""
+    result = _spec(FIXTURE_symbol_info(FIXTURE_T1), FIXTURE_T1)
+    assert not isinstance(result, AdapterFailure)
+    assert result.contract_size == "100.0"
+
+
+def test_contract_size_none_when_provider_omits_it() -> None:
+    """D-3.4: an omitted descriptor field stays None (unknown provenance), never a guess."""
+    info = FIXTURE_symbol_info(FIXTURE_T1)
+    del info.trade_contract_size
+    result = _spec(info, FIXTURE_T1)
+    assert not isinstance(result, AdapterFailure)
+    assert result.contract_size is None
+
+
+def test_contract_size_malformed_never_a_default() -> None:
+    """D-3.4: a non-decimal contract size fails the read visibly, never a default row."""
+    result = _spec(FIXTURE_symbol_info(FIXTURE_T1, trade_contract_size="bad"), FIXTURE_T1)
+    assert isinstance(result, AdapterFailure)
+    assert result.kind == "malformed"
+    assert result.code.retryable is False
 
 
 def test_malformed_spec_fails_validation_never_a_default_row() -> None:

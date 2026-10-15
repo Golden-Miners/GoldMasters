@@ -37,6 +37,9 @@ class PrecisionRow(ContractModel):
     provider_id: ProviderId
     tick_size: str
     decimals: int = Field(ge=0)
+    # Optional decimal-string contract size (D-3.4); ``None`` means the
+    # provider omitted it (unknown provenance) — never a guessed size.
+    contract_size: str | None = None
     provider_spec_version: str
     retrieved_at: UtcDatetime
     superseded_at: UtcDatetime | None = None
