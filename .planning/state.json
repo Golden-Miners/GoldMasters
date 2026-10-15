@@ -1,0 +1,53 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.0 — Research Signal Team",
+  "phases": [
+    {
+      "number": "1",
+      "name": "Contracts and Foundation",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Market Data and Provider Selection",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Deterministic Analysis, Strategy Rules and Risk Gates",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "LangGraph Orchestration and Local Model Runtime",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "News, Sentiment and CEO Decision Contract",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "Journal, Persistence and Backtesting",
+      "status": "pending"
+    },
+    {
+      "number": "7",
+      "name": "Research Console UI and Reports",
+      "status": "pending"
+    },
+    {
+      "number": "8",
+      "name": "Hardening, Data-Integrity Verification and Release Gate",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step (plan phase 2)",
+    "reason": "Phase 2 of 8 — needs a plan"
+  },
+  "updated_at": "2026-10-14T20:30:21.243Z"
+}

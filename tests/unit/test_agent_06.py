@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pathlib
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 import pytest
 from goldmasters_contracts import Levels, QualityStatus, Timeframe, TrendRegime

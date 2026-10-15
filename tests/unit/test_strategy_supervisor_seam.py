@@ -29,8 +29,14 @@ from src.goldmasters.strategies.agent_08 import STRATEGY_ID as ID_08
 from src.goldmasters.strategies.agent_09 import STRATEGY_ID as ID_09
 from src.goldmasters.strategies.agent_10 import (
     STRATEGY_ID as ID_10,
+)
+from src.goldmasters.strategies.agent_10 import (
     Agent10Params,
+)
+from src.goldmasters.strategies.agent_10 import (
     eligibility as eligibility_10,
+)
+from src.goldmasters.strategies.agent_10 import (
     evaluate as evaluate_10,
 )
 from src.goldmasters.strategies.base import (

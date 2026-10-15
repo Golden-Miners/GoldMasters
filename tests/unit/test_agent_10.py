@@ -142,10 +142,16 @@ def test_non_defined_leg_is_not_applicable_never_no_setup(
 
 def test_defined_leg_cites_missing_source_not_spot() -> None:
     """The leg matching this instrument names the missing source, never a price read."""
-    by_instrument = {"xauusd": "commodity-curve", "eurusd": "forex-carry", "btcusd": "crypto-funding"}
+    by_instrument = {
+        "xauusd": "commodity-curve",
+        "eurusd": "forex-carry",
+        "btcusd": "crypto-funding",
+    }
     for instrument, leg in by_instrument.items():
         assert leg_for_instrument(instrument) == leg
-        evaluation = evaluate(_bars(FIXTURE_TRENDING), make_ctx(instrument_id=instrument), _params())
+        evaluation = evaluate(
+            _bars(FIXTURE_TRENDING), make_ctx(instrument_id=instrument), _params()
+        )
         check = next(c for c in evaluation.rule_checks if c.rule_id == leg)
         assert check.verdict == "unknown"
         assert "never inferred from spot" in check.reason

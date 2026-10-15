@@ -304,7 +304,17 @@ def rule_breakout_expiry(
             {},
         )
     ordered = list(bars)
-    elapsed = (ordered[-1].bar_close_time - ordered[count - 1].bar_close_time).total_seconds() / 60
+    start_close = ordered[count - 1].bar_close_time
+    end_close = ordered[-1].bar_close_time
+    if start_close is None or end_close is None:
+        return _check(
+            "breakout-expiry",
+            "unknown",
+            "expiry indeterminate without bar close times",
+            "fail-closed: bar close time unknown",
+            {},
+        )
+    elapsed = (end_close - start_close).total_seconds() / 60
     inputs = {"elapsed_minutes": str(elapsed), "expiry_minutes": str(params.expiry_minutes)}
     if elapsed <= params.expiry_minutes:
         return _check(
