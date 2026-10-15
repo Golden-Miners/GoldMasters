@@ -206,3 +206,79 @@ def test_no_fixture_symbol_leaks_into_production_paths() -> None:
             if "FIXTURE_" in path.read_text(encoding="utf-8"):
                 offenders.append(str(path.relative_to(repo)))
     assert offenders == []
+
+
+class _StateTerminal(_LiveFakeTerminal):
+    """Knobbed gateway double forcing one probe state per setting."""
+
+    def __init__(
+        self,
+        *,
+        state: str,
+    ) -> None:
+        super().__init__()
+        self._state = state
+
+    def initialize(self) -> bool:
+        self.calls.append("initialize")
+        return self._state != "terminal-closed"
+
+    def copy_rates_from_pos(
+        self, symbol: str, timeframe: str, start_pos: int, count: int
+    ) -> list[dict[str, Any]] | None:
+        self.calls.append(f"copy_rates_from_pos:{symbol}:{timeframe}")
+        if self._state == "disconnected":
+            return None
+        if self._state == "missing-history":
+            return None
+        return _live_rows(count - 1)
+
+    def last_error(self) -> tuple[int, str]:
+        self.calls.append("last_error")
+        if self._state == "missing-history":
+            return (-4, "no history")
+        return (-1, "generic fail")
+
+    def symbol_info(self, symbol: str) -> SimpleNamespace | None:
+        self.calls.append(f"symbol_info:{symbol}")
+        if self._state == "unsupported-symbol":
+            return None
+        return super().symbol_info(symbol)
+
+
+@pytest.mark.parametrize(
+    ("state", "status"),
+    [
+        ("connected", "connected"),
+        ("terminal-closed", "terminal-closed"),
+        ("disconnected", "disconnected"),
+        ("missing-history", "missing-history"),
+        ("unsupported-symbol", "unsupported-symbol"),
+    ],
+)
+def test_health_provider_covers_all_five_states(state: str, status: str) -> None:
+    with TestClient(create_app(gateway=_StateTerminal(state=state))) as client:
+        body = client.get("/health").json()
+    provider = body["provider"]
+    assert set(provider) == {
+        "provider_id",
+        "status",
+        "market_open",
+        "terminal_build",
+        "last_bar_close_time",
+        "last_quote_time",
+        "checked_at",
+    }
+    assert provider["provider_id"] == "mt5"
+    assert provider["status"] == status
+
+
+def test_bars_quote_keep_canonical_id_separate_from_provider_symbol() -> None:
+    with _client() as client:
+        bars = client.get("/v1/market/bars?instrument_id=xauusd&timeframe=H1").json()
+        quote = client.get("/v1/market/quote?instrument_id=xauusd").json()
+    assert bars and all(b["instrument_id"] == "xauusd" for b in bars)
+    assert all(b["provider_symbol"] == "XAUUSD" for b in bars)
+    assert all(b["instrument_id"] != b["provider_symbol"] for b in bars)
+    assert quote["provider_symbol"] == "XAUUSD"
+    assert quote["instrument_id"] == "xauusd"

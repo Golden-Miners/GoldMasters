@@ -234,3 +234,51 @@ def test_malformed_window_specs_fail_closed(
         with pytest.raises(PydanticValidationError, match=key.split("GOLDMASTERS_")[1].lower()):
             Settings()  # type: ignore[call-arg]
         monkeypatch.delenv(key)
+
+
+def test_hash_moves_with_every_d59_key(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-15/D-27/D-59: each threshold/session/selection key joins the hashed config.
+
+    One mutation per key; a silent type-based exclusion would leave the digest
+    unchanged and fail this test.
+    """
+    from goldmasters_api.settings import hash_effective_config
+
+    mutations = {
+        "provider_id": "mt5_backup",
+        "instrument_id": "eurusd",
+        "mt5_symbol": "XAUUSDm",
+        "timeframe": "H4",
+        "mt5_server_timezone": "Europe/Athens",
+        "mt5_probe_timeout_seconds": "3.0",
+        "mt5_retry_attempts": "2",
+        "mt5_retry_delay_ms": "600",
+        "mt5_bars_count": "11",
+        "bar_stale_closed_bars": "3",
+        "bar_stale_grace_seconds": "301",
+        "quote_stale_seconds_overlap": "31",
+        "quote_stale_seconds_major": "61",
+        "quote_stale_seconds_asia": "181",
+        "quote_stale_seconds_offhours": "301",
+        "session_overlap_utc": "13:00-16:00",
+        "session_major_utc": "08:00-13:00,16:30-20:00",
+        "session_asia_utc": "00:00-07:00",
+        "weekend_close_utc": "Fri 21:00-Sun 21:00",
+        "daily_break_utc": "21:00-22:30",
+    }
+    baseline = hash_effective_config(_settings(monkeypatch))
+    assert set(mutations) <= set(Settings.model_fields)
+    for key, value in mutations.items():
+        env_name = f"GOLDMASTERS_{key.upper()}"
+        import os
+
+        previous = os.environ.get(env_name)
+        monkeypatch.setenv(env_name, value)
+        digest = hash_effective_config(Settings())  # type: ignore[call-arg]
+        assert digest != baseline, f"hash is blind to D-59 key {key}"
+        if previous is None:
+            monkeypatch.delenv(env_name)
+        else:
+            monkeypatch.setenv(env_name, previous)
