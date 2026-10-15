@@ -32,8 +32,8 @@ from tests.unit.agent_fixtures import (
 
 # FIXTURE squeeze: volatile open, compressed middle, one-bar upside push.
 FIXTURE_SQUEEZE = [
-    make_bar(close=c, high=h, low=l, open_=o, index=i)
-    for i, (o, c, h, l) in enumerate(
+    make_bar(close=c, high=h, low=lo, open_=o, index=i)
+    for i, (o, c, h, lo) in enumerate(
         [
             ("100", "104", "104.5", "99.5"),
             ("104", "100", "104.5", "99.5"),
@@ -78,8 +78,8 @@ def test_all_pass_long_yields_stamped_setup() -> None:
 
 def _flat_push_end() -> list:
     return [
-        make_bar(close=c, high=h, low=l, open_=o, index=i)
-        for i, (o, c, h, l) in enumerate(
+        make_bar(close=c, high=h, low=lo, open_=o, index=i)
+        for i, (o, c, h, lo) in enumerate(
             [
                 ("100", "104", "104.5", "99.5"),
                 ("104", "100", "104.5", "99.5"),
@@ -96,8 +96,8 @@ def _flat_push_end() -> list:
 
 def _gapped_push_end() -> list:
     tail = [
-        make_bar(close=c, high=h, low=l, open_=o, index=i)
-        for i, (o, c, h, l) in enumerate(
+        make_bar(close=c, high=h, low=lo, open_=o, index=i)
+        for i, (o, c, h, lo) in enumerate(
             [
                 ("100", "104", "104.5", "99.5"),
                 ("104", "100", "104.5", "99.5"),

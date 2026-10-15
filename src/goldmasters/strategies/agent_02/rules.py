@@ -225,7 +225,10 @@ def rule_signal_expiry(
             {},
         )
     ordered = list(bars)
-    window = ordered[len(ordered) - params.expiry_bars :] if params.expiry_bars < len(ordered) else ordered
+    if params.expiry_bars is not None and params.expiry_bars < len(ordered):
+        window = ordered[len(ordered) - params.expiry_bars :]
+    else:
+        window = ordered
     closes = [bar.close for bar in ordered]
     extreme = max(closes) if direction == Direction.LONG else min(closes)
     fresh = any(bar.close == extreme for bar in window)

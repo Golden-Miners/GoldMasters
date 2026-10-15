@@ -150,7 +150,9 @@ def test_no_look_ahead() -> None:
     prefix = bars[:5]
     before = evaluate(prefix, ctx, _params(min_bars=4))
     assert evaluate(prefix, ctx, _params(min_bars=4)) == before
-    assert average_true_range(prefix, period=2) == average_true_range([*prefix, bars[5]][:5], period=2)
+    assert average_true_range(prefix, period=2) == average_true_range(
+        [*prefix, bars[5]][:5], period=2
+    )
     assert params.lookbacks == (2, 4)
 
 

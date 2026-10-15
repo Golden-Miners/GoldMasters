@@ -38,9 +38,12 @@ FIXTURE_BASE = [
     ("100.1", "100.2", "99.8"),
     ("100.3", "100.5", "100.0"),
 ]
-FIXTURE_BREAK_LONG = [make_bar(close=c, high=h, low=l, index=i) for i, (c, h, l) in enumerate(
-    [*FIXTURE_BASE, ("101", "102", "100.2"), ("101.5", "102.5", "100.9")]
-)]
+FIXTURE_BREAK_LONG = [
+    make_bar(close=c, high=h, low=lo, index=i)
+    for i, (c, h, lo) in enumerate(
+        [*FIXTURE_BASE, ("101", "102", "100.2"), ("101.5", "102.5", "100.9")]
+    )
+]
 FIXTURE_SHORT_BASE = [
     ("100", "100.4", "99.6"),
     ("99.8", "100.1", "99.7"),
@@ -49,8 +52,10 @@ FIXTURE_SHORT_BASE = [
     ("99.7", "99.9", "99.5"),
 ]
 FIXTURE_BREAK_SHORT = [
-    make_bar(close=c, high=h, low=l, index=i)
-    for i, (c, h, l) in enumerate([*FIXTURE_SHORT_BASE, ("99", "99.8", "98.5"), ("98.5", "99.1", "98.0")])
+    make_bar(close=c, high=h, low=lo, index=i)
+    for i, (c, h, lo) in enumerate(
+        [*FIXTURE_SHORT_BASE, ("99", "99.8", "98.5"), ("98.5", "99.1", "98.0")]
+    )
 ]
 
 
@@ -92,8 +97,8 @@ def test_all_pass_short_yields_stamped_setup() -> None:
 
 def _long_variant(last_two: list[tuple[str, str, str]]) -> list:
     return [
-        make_bar(close=c, high=h, low=l, index=i)
-        for i, (c, h, l) in enumerate([*FIXTURE_BASE, *last_two])
+        make_bar(close=c, high=h, low=lo, index=i)
+        for i, (c, h, lo) in enumerate([*FIXTURE_BASE, *last_two])
     ]
 
 
@@ -101,8 +106,18 @@ def test_each_rule_fail_yields_no_setup() -> None:
     flat = bars_from_closes(["100"] * 7)
     cases = [
         ("break", flat, TrendRegime.UPTREND, {}),
-        ("confirmation", _long_variant([("100.2", "100.4", "99.9"), ("101.5", "102.5", "100.9")]), TrendRegime.UPTREND, {}),
-        ("buffer", _long_variant([("100.51", "100.7", "100.3"), ("100.51", "100.7", "100.3")]), TrendRegime.UPTREND, {}),
+        (
+            "confirmation",
+            _long_variant([("100.2", "100.4", "99.9"), ("101.5", "102.5", "100.9")]),
+            TrendRegime.UPTREND,
+            {},
+        ),
+        (
+            "buffer",
+            _long_variant([("100.51", "100.7", "100.3"), ("100.51", "100.7", "100.3")]),
+            TrendRegime.UPTREND,
+            {},
+        ),
         ("regime", FIXTURE_BREAK_LONG, TrendRegime.DOWNTREND, {}),
         ("freshness", FIXTURE_BREAK_LONG, TrendRegime.UPTREND, {"exit_bars": 1}),
     ]

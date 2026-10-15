@@ -60,7 +60,9 @@ def prior_channel(bars: Sequence[MarketBar], params: Agent03Params) -> Channel |
         return None
     if len(ordered) < params.channel_bars + params.confirm_bars:
         return None
-    window = ordered[len(ordered) - params.channel_bars - params.confirm_bars : len(ordered) - params.confirm_bars]
+    start = len(ordered) - params.channel_bars - params.confirm_bars
+    stop = len(ordered) - params.confirm_bars
+    window = ordered[start:stop]
     highs = [bar.high for bar in window]
     lows = [bar.low for bar in window]
     upper = max(highs)

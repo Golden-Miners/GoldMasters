@@ -39,26 +39,52 @@ strategy_agent_01_instruments: []
 strategy_agent_01_timeframes: []
 strategy_agent_01_regimes: []
 strategy_agent_01_min_bars:
+# Phase 3.2 Agent 1 trend-following numerics: operator-confirmed placeholders (null blocks).
+strategy_agent_01_fast_period:
+strategy_agent_01_slow_period:
+strategy_agent_01_htf_timeframe:
+strategy_agent_01_adx_min:
+strategy_agent_01_confirm_bars:
 strategy_agent_02_enabled: false
 strategy_agent_02_instruments: []
 strategy_agent_02_timeframes: []
 strategy_agent_02_regimes: []
 strategy_agent_02_min_bars:
+# Phase 3.2 Agent 2 time-series-momentum numerics: placeholders (null/empty blocks).
+strategy_agent_02_lookbacks: []
+strategy_agent_02_entry_threshold:
+strategy_agent_02_vol_lookback:
+strategy_agent_02_max_hold_bars:
+strategy_agent_02_expiry_bars:
 strategy_agent_03_enabled: false
 strategy_agent_03_instruments: []
 strategy_agent_03_timeframes: []
 strategy_agent_03_regimes: []
 strategy_agent_03_min_bars:
+# Phase 3.2 Agent 3 donchian-breakout numerics: placeholders (null blocks).
+strategy_agent_03_channel_bars:
+strategy_agent_03_buffer_ticks:
+strategy_agent_03_confirm_bars:
+strategy_agent_03_exit_bars:
 strategy_agent_04_enabled: false
 strategy_agent_04_instruments: []
 strategy_agent_04_timeframes: []
 strategy_agent_04_regimes: []
 strategy_agent_04_min_bars:
+# Phase 3.2 Agent 4 vol-expansion-breakout numerics: placeholders (null blocks).
+strategy_agent_04_vol_lookback:
+strategy_agent_04_compression_pctile:
+strategy_agent_04_confirm_bars:
 strategy_agent_05_enabled: false
 strategy_agent_05_instruments: []
 strategy_agent_05_timeframes: []
 strategy_agent_05_regimes: []
 strategy_agent_05_min_bars:
+# Phase 3.2 Agent 5 trend-pullback-continuation numerics: placeholders (null blocks).
+strategy_agent_05_trend_period:
+strategy_agent_05_pullback_ma:
+strategy_agent_05_confirm_bars:
+strategy_agent_05_expiry_bars:
 strategy_agent_06_enabled: false
 strategy_agent_06_instruments: []
 strategy_agent_06_timeframes: []

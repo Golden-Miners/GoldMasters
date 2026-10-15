@@ -85,7 +85,9 @@ def test_each_rule_fail_yields_no_setup() -> None:
         ("trend-intact", FIXTURE_PULLBACK, TrendRegime.DOWNTREND, {}),
     ]
     for label, closes, regime, override in cases:
-        evaluation = evaluate(bars_from_closes(closes), make_ctx(regime=regime), _params(**override))
+        evaluation = evaluate(
+            bars_from_closes(closes), make_ctx(regime=regime), _params(**override)
+        )
         assert evaluation.setup_found is False, label
         assert evaluation.candidate_levels is None, label
 

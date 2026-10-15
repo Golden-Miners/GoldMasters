@@ -13,8 +13,14 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
-from goldmasters_contracts import Levels, MarketBar, QualityStatus, Timeframe, VolumeType
-from goldmasters_contracts import TrendRegime
+from goldmasters_contracts import (
+    Levels,
+    MarketBar,
+    QualityStatus,
+    Timeframe,
+    TrendRegime,
+    VolumeType,
+)
 from pydantic import ValidationError
 
 from src.goldmasters.strategies.base import (
@@ -197,9 +203,11 @@ def test_evaluation_rejects_bad_version_and_empty_checks() -> None:
         )
 
 
-# The exact approved-agent set. Empty in phase 3.1 (framework only); each
-# agent phase extends this set as it ships its package.
-EXPECTED_APPROVED_STRATEGIES: frozenset[str] = frozenset()
+# The exact approved-agent set. Agents 1-5 shipped in phase 3.2 (framework only
+# before); each later agent phase extends this set as it ships its package.
+EXPECTED_APPROVED_STRATEGIES: frozenset[str] = frozenset(
+    {"agent_01", "agent_02", "agent_03", "agent_04", "agent_05"}
+)
 
 
 def test_strategy_registry_lists_approved_agents() -> None:
