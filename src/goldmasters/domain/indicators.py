@@ -26,6 +26,9 @@ __all__ = [
     "average_loss",
     "average_true_range",
     "ema_close",
+    "rsi_close",
+    "sma_close",
+    "stdev_close",
 ]
 
 
@@ -49,7 +52,7 @@ def _checked_period(period: int) -> None:
 def _true_ranges(bars: list[MarketBar]) -> list[Decimal]:
     """Per-bar true range from the second bar on (needs a previous close)."""
     ranges: list[Decimal] = []
-    for previous, bar in zip(bars, bars[1:]):
+    for previous, bar in zip(bars, bars[1:], strict=False):
         high_low = bar.high - bar.low
         high_prev = abs(bar.high - previous.close)
         low_prev = abs(bar.low - previous.close)
@@ -92,7 +95,7 @@ def ema_close(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
 
 def _close_changes(bars: list[MarketBar]) -> list[Decimal]:
     """Close-to-close moves from the second bar on."""
-    return [bar.close - previous.close for previous, bar in zip(bars, bars[1:])]
+    return [bar.close - previous.close for previous, bar in zip(bars, bars[1:], strict=False)]
 
 
 def average_gain(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
@@ -125,3 +128,54 @@ def average_loss(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
     window = changes[len(changes) - period :]
     downward = [-change if change < 0 else Decimal(0) for change in window]
     return sum(downward, Decimal(0)) / Decimal(period)
+
+
+def sma_close(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
+    """Decimal mean of the last ``period`` closes; ``None`` when short."""
+
+    ordered = _checked_bars(bars)
+    _checked_period(period)
+    if len(ordered) < period:
+        return None
+    window = [bar.close for bar in ordered[len(ordered) - period :]]
+    return sum(window, Decimal(0)) / Decimal(period)
+
+
+def stdev_close(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
+    """Population standard deviation of the last ``period`` closes.
+
+    ``None`` when short (insufficient_data, never a default); an exactly flat
+    window yields ``Decimal(0)`` — the caller decides whether no dispersion
+    is a fail or an unknown.
+    """
+
+    ordered = _checked_bars(bars)
+    _checked_period(period)
+    if len(ordered) < period:
+        return None
+    window = [bar.close for bar in ordered[len(ordered) - period :]]
+    mean = sum(window, Decimal(0)) / Decimal(period)
+    variance = sum((close - mean) ** 2 for close in window) / Decimal(period)
+    return variance.sqrt()
+
+
+def rsi_close(bars: Sequence[MarketBar], *, period: int) -> Decimal | None:
+    """Wilder-style relative strength over the last ``period`` changes.
+
+    Built on :func:`average_gain` / :func:`average_loss` (needs ``period + 1``
+    bars); ``None`` when short or when the window is exactly flat — a flat
+    window has no relative strength, never a default 50.
+    """
+
+    ordered = _checked_bars(bars)
+    _checked_period(period)
+    gain = average_gain(ordered, period=period)
+    loss = average_loss(ordered, period=period)
+    if gain is None or loss is None:
+        return None
+    if loss == 0:
+        return Decimal(100) if gain > 0 else None
+    if gain == 0:
+        return Decimal(0)
+    relative = gain / loss
+    return Decimal(100) - Decimal(100) / (Decimal(1) + relative)
