@@ -321,6 +321,9 @@ class Settings(BaseSettings):
     strategy_agent_10_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_10_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_10_min_bars: FailClosedMinBars = None
+    # Phase 3.5 Agent 10 carry-term-structure numerics (operator spec §Agent 10).
+    strategy_agent_10_max_data_age_hours: FailClosedDecimal = None
+    strategy_agent_10_min_history_points: FailClosedCount = None
 
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod

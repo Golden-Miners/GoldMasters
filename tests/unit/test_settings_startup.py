@@ -185,6 +185,8 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "strategy_agent_10_timeframes",
         "strategy_agent_10_regimes",
         "strategy_agent_10_min_bars",
+        "strategy_agent_10_max_data_age_hours",
+        "strategy_agent_10_min_history_points",
     }
 
 
@@ -418,6 +420,8 @@ def test_hash_moves_with_every_d59_key(
             "strategy_agent_09_sweep_tol_ticks": "2",
             "strategy_agent_09_disp_body_min_atr": "1.0",
             "strategy_agent_09_expiry_bars": "5",
+            "strategy_agent_10_max_data_age_hours": "24",
+            "strategy_agent_10_min_history_points": "50",
         }
     )
     baseline = hash_effective_config(_settings(monkeypatch))
@@ -510,6 +514,8 @@ def test_strategy_numeric_params_fail_closed(
     assert settings.strategy_agent_09_sweep_tol_ticks is None
     assert settings.strategy_agent_09_disp_body_min_atr is None
     assert settings.strategy_agent_09_expiry_bars is None
+    assert settings.strategy_agent_10_max_data_age_hours is None
+    assert settings.strategy_agent_10_min_history_points is None
     assert (
         _settings(monkeypatch, strategy_agent_02_lookbacks="10, 20").strategy_agent_02_lookbacks
         == [10, 20]
@@ -540,6 +546,8 @@ def test_strategy_numeric_params_fail_closed(
         ("GOLDMASTERS_STRATEGY_AGENT_09_SWEEP_TOL_TICKS", "0"),
         ("GOLDMASTERS_STRATEGY_AGENT_09_DISP_BODY_MIN_ATR", "0"),
         ("GOLDMASTERS_STRATEGY_AGENT_09_EXPIRY_BARS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_10_MAX_DATA_AGE_HOURS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_10_MIN_HISTORY_POINTS", "0"),
     ):
         monkeypatch.setenv(key, bad)
         with pytest.raises(PydanticValidationError, match=key.split("GOLDMASTERS_")[1].lower()):

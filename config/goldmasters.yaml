@@ -134,3 +134,5 @@ strategy_agent_10_instruments: []
 strategy_agent_10_timeframes: []
 strategy_agent_10_regimes: []
 strategy_agent_10_min_bars:
+strategy_agent_10_max_data_age_hours:
+strategy_agent_10_min_history_points:
