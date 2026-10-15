@@ -124,6 +124,11 @@ strategy_agent_09_instruments: []
 strategy_agent_09_timeframes: []
 strategy_agent_09_regimes: []
 strategy_agent_09_min_bars:
+strategy_agent_09_swing_bars:
+strategy_agent_09_equal_tol_ticks:
+strategy_agent_09_sweep_tol_ticks:
+strategy_agent_09_disp_body_min_atr:
+strategy_agent_09_expiry_bars:
 strategy_agent_10_enabled: false
 strategy_agent_10_instruments: []
 strategy_agent_10_timeframes: []

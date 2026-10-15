@@ -310,6 +310,12 @@ class Settings(BaseSettings):
     strategy_agent_09_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_09_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_09_min_bars: FailClosedMinBars = None
+    # Phase 3.4 Agent 9 smc-ict-liquidity-sweep numerics (operator spec §Agent 9).
+    strategy_agent_09_swing_bars: FailClosedCount = None
+    strategy_agent_09_equal_tol_ticks: FailClosedCount = None
+    strategy_agent_09_sweep_tol_ticks: FailClosedCount = None
+    strategy_agent_09_disp_body_min_atr: FailClosedDecimal = None
+    strategy_agent_09_expiry_bars: FailClosedCount = None
     strategy_agent_10_enabled: bool = False
     strategy_agent_10_instruments: CsvInstruments = Field(default_factory=list)
     strategy_agent_10_timeframes: CsvTimeframes = Field(default_factory=list)

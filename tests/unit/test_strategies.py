@@ -204,8 +204,8 @@ def test_evaluation_rejects_bad_version_and_empty_checks() -> None:
 
 
 # The exact approved-agent set. Agents 1-5 shipped in phase 3.2, agents 6-8
-# in phase 3.3 (framework only before); each later agent phase extends this
-# set as it ships its package.
+# in phase 3.3, agent 9 in phase 3.4 (framework only before); each later
+# agent phase extends this set as it ships its package.
 EXPECTED_APPROVED_STRATEGIES: frozenset[str] = frozenset(
     {
         "agent_01",
@@ -216,6 +216,7 @@ EXPECTED_APPROVED_STRATEGIES: frozenset[str] = frozenset(
         "agent_06",
         "agent_07",
         "agent_08",
+        "agent_09",
     }
 )
 
