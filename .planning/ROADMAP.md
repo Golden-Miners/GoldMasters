@@ -22,7 +22,7 @@ GoldMasters is built from its contracts outward. Phase 1 freezes the machine-che
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Contracts and Foundation** - Freeze the schema contract layer, stand up the local skeleton, and enforce the research-only boundary structurally
+- [x] **Phase 1: Contracts and Foundation** - Freeze the schema contract layer, stand up the local skeleton, and enforce the research-only boundary structurally (completed 2026-10-15)
 - [ ] **Phase 2: Market Data and Provider Selection** - Explicitly selected providers deliver validated, provenance-stamped bars - or fail visibly
 - [ ] **Phase 3: Deterministic Analysis, Strategy Rules and Risk Gates** - All levels, risk/reward and eligibility come from versioned code with rule-by-rule evidence
 - [ ] **Phase 4: LangGraph Orchestration and Local Model Runtime** - A bounded, run-tracked graph executes the specialist roles against a discovered local model and fails closed
@@ -45,29 +45,29 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Configuration is validated at startup, `.env.example` contains no real secret values, and logs and traces are structured, correlation-ID stamped and redacted.
   5. The PostgreSQL migration applies and rolls back, and formatting, linting, typing and unit checks run in CI and fail the build on violation — with the exact commands and their results recorded.
 
-**Plans:** 11 plans
+**Plans:** 11/11 plans complete
 **Wave 1**
-- [ ] 01-01-PLAN.md — Tracer: uv workspace + contracts core (shared base, decimal wire form, enums, C-09 errors, envelope) + core contract tests
+- [x] 01-01-PLAN.md — Tracer: uv workspace + contracts core (shared base, decimal wire form, enums, C-09 errors, envelope) + core contract tests
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-03-PLAN.md — Version and identity rules + market bar/quote, precision table, decision and journal contracts + contract tests
-- [ ] 01-08-PLAN.md — Tracer: end-to-end contract envelope → committed JSON Schema → FastAPI settings/lifespan/loopback guard/health spine
+- [x] 01-03-PLAN.md — Version and identity rules + market bar/quote, precision table, decision and journal contracts + contract tests
+- [x] 01-08-PLAN.md — Tracer: end-to-end contract envelope → committed JSON Schema → FastAPI settings/lifespan/loopback guard/health spine
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-02-PLAN.md — Signals-only boundary scan + negative meta-test + dependency allowlist + tool configs + one `scripts/gate` + tracked hook (CI intent recorded as a build-failing local gate; no hosted workflow file)
-- [ ] 01-05-PLAN.md — Portable repo-local PostgreSQL provisioning + falsification probe + one `scripts/stack` command
-- [ ] 01-10-PLAN.md — Configuration surface: explicit validated settings, fail-loud startup, effective-config hash, `config/goldmasters.yaml` and `.env.example`
-- [ ] 01-11-PLAN.md — News, sentiment and backtest contracts + final package barrel + complete committed schema export + `.gitattributes`
+- [x] 01-02-PLAN.md — Signals-only boundary scan + negative meta-test + dependency allowlist + tool configs + one `scripts/gate` + tracked hook (CI intent recorded as a build-failing local gate; no hosted workflow file)
+- [x] 01-05-PLAN.md — Portable repo-local PostgreSQL provisioning + falsification probe + one `scripts/stack` command
+- [x] 01-10-PLAN.md — Configuration surface: explicit validated settings, fail-loud startup, effective-config hash, `config/goldmasters.yaml` and `.env.example`
+- [x] 01-11-PLAN.md — News, sentiment and backtest contracts + final package barrel + complete committed schema export + `.gitattributes`
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 01-04-PLAN.md — Contract evidence: purity test + committed-schema drift test + golden conformance suite over shared accepted/rejected cases
-- [ ] 01-09-PLAN.md — Observability: structured JSON logging with redaction + per-request correlation ID + local on-disk traces
+- [x] 01-04-PLAN.md — Contract evidence: purity test + committed-schema drift test + golden conformance suite over shared accepted/rejected cases
+- [x] 01-09-PLAN.md — Observability: structured JSON logging with redaction + per-request correlation ID + local on-disk traces
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 01-06-PLAN.md — Hand-written Alembic migration (apply + rollback) + throwaway per-run DB fixture + persistence round-trip tests
+- [x] 01-06-PLAN.md — Hand-written Alembic migration (apply + rollback) + throwaway per-run DB fixture + persistence round-trip tests
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 01-07-PLAN.md — Next.js client skeleton + TypeScript generation from committed schema + health page + run/evidence docs
+- [x] 01-07-PLAN.md — Next.js client skeleton + TypeScript generation from committed schema + health page + run/evidence docs
 
 **Cross-cutting constraints:**
 - FLAGGED ASSUMPTION (unresolved edge, category=boundary, req=REQ-no-trade-execution): the exact behaviour at each min/max/threshold and one step either side is NOT yet specified; Phase 1 records this as an open assumption rather than inventing thresholds.
@@ -87,7 +87,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Freshness/ordering/duplicate/gap/OHLC/finite validation runs on every retrieval, and a stale, malformed or disconnected feed produces a non-healthy quality status or INSUFFICIENT_DATA downstream — never a synthesized candle.
   6. Provider health reports terminal-closed, disconnected, missing-history and unsupported-symbol states distinctly, with contract tests and failure tests recorded.
 
-**Plans**: TBD
+**Plans:** 4 plans (Wave 1: 02-01 tracer; Wave 2: 02-02 validation, 02-03 health; Wave 3: 02-04 precision/contracts/live) + COVERAGE.md + 02-VALIDATION.md
 
 ### Phase 3: Deterministic Analysis, Strategy Rules and Risk Gates
 
@@ -183,7 +183,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Contracts and Foundation | 0/0 | Not started | - |
+| 1. Contracts and Foundation | 11/11 | Complete    | 2026-10-15 |
 | 2. Market Data and Provider Selection | 0/0 | Not started | - |
 | 3. Deterministic Analysis, Strategy Rules and Risk Gates | 0/0 | Not started | - |
 | 4. LangGraph Orchestration and Local Model Runtime | 0/0 | Not started | - |
