@@ -276,16 +276,35 @@ class Settings(BaseSettings):
     strategy_agent_06_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_06_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_06_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 6 session-opening-range numerics (operator spec §Agent 6).
+    strategy_agent_06_session_name: FailClosedText = None
+    strategy_agent_06_session_tz: FailClosedText = None
+    strategy_agent_06_range_minutes: FailClosedCount = None
+    strategy_agent_06_buffer_ticks: FailClosedCount = None
+    strategy_agent_06_expiry_minutes: FailClosedCount = None
+    strategy_agent_06_max_spread_ticks: FailClosedCount = None
     strategy_agent_07_enabled: bool = False
     strategy_agent_07_instruments: CsvInstruments = Field(default_factory=list)
     strategy_agent_07_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_07_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_07_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 7 mean-reversion numerics (operator spec §Agent 7).
+    strategy_agent_07_basis_period: FailClosedCount = None
+    strategy_agent_07_band_width: FailClosedDecimal = None
+    strategy_agent_07_z_min: FailClosedDecimal = None
+    strategy_agent_07_rsi_period: FailClosedCount = None
+    strategy_agent_07_rsi_extreme: FailClosedDecimal = None
+    strategy_agent_07_confirm_bars: FailClosedCount = None
     strategy_agent_08_enabled: bool = False
     strategy_agent_08_instruments: CsvInstruments = Field(default_factory=list)
     strategy_agent_08_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_08_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_08_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 8 vwap-reversion numerics (operator spec §Agent 8).
+    strategy_agent_08_session_name: FailClosedText = None
+    strategy_agent_08_session_tz: FailClosedText = None
+    strategy_agent_08_band_sigmas: FailClosedDecimal = None
+    strategy_agent_08_min_volume_bars: FailClosedCount = None
     strategy_agent_09_enabled: bool = False
     strategy_agent_09_instruments: CsvInstruments = Field(default_factory=list)
     strategy_agent_09_timeframes: CsvTimeframes = Field(default_factory=list)

@@ -90,16 +90,35 @@ strategy_agent_06_instruments: []
 strategy_agent_06_timeframes: []
 strategy_agent_06_regimes: []
 strategy_agent_06_min_bars:
+# Phase 3.3 Agent 6 session-opening-range numerics: placeholders (null blocks).
+strategy_agent_06_session_name:
+strategy_agent_06_session_tz:
+strategy_agent_06_range_minutes:
+strategy_agent_06_buffer_ticks:
+strategy_agent_06_expiry_minutes:
+strategy_agent_06_max_spread_ticks:
 strategy_agent_07_enabled: false
 strategy_agent_07_instruments: []
 strategy_agent_07_timeframes: []
 strategy_agent_07_regimes: []
 strategy_agent_07_min_bars:
+# Phase 3.3 Agent 7 mean-reversion numerics: placeholders (null blocks).
+strategy_agent_07_basis_period:
+strategy_agent_07_band_width:
+strategy_agent_07_z_min:
+strategy_agent_07_rsi_period:
+strategy_agent_07_rsi_extreme:
+strategy_agent_07_confirm_bars:
 strategy_agent_08_enabled: false
 strategy_agent_08_instruments: []
 strategy_agent_08_timeframes: []
 strategy_agent_08_regimes: []
 strategy_agent_08_min_bars:
+# Phase 3.3 Agent 8 vwap-reversion numerics: placeholders (null blocks).
+strategy_agent_08_session_name:
+strategy_agent_08_session_tz:
+strategy_agent_08_band_sigmas:
+strategy_agent_08_min_volume_bars:
 strategy_agent_09_enabled: false
 strategy_agent_09_instruments: []
 strategy_agent_09_timeframes: []

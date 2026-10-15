@@ -144,16 +144,32 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "strategy_agent_06_timeframes",
         "strategy_agent_06_regimes",
         "strategy_agent_06_min_bars",
+        "strategy_agent_06_session_name",
+        "strategy_agent_06_session_tz",
+        "strategy_agent_06_range_minutes",
+        "strategy_agent_06_buffer_ticks",
+        "strategy_agent_06_expiry_minutes",
+        "strategy_agent_06_max_spread_ticks",
         "strategy_agent_07_enabled",
         "strategy_agent_07_instruments",
         "strategy_agent_07_timeframes",
         "strategy_agent_07_regimes",
         "strategy_agent_07_min_bars",
+        "strategy_agent_07_basis_period",
+        "strategy_agent_07_band_width",
+        "strategy_agent_07_z_min",
+        "strategy_agent_07_rsi_period",
+        "strategy_agent_07_rsi_extreme",
+        "strategy_agent_07_confirm_bars",
         "strategy_agent_08_enabled",
         "strategy_agent_08_instruments",
         "strategy_agent_08_timeframes",
         "strategy_agent_08_regimes",
         "strategy_agent_08_min_bars",
+        "strategy_agent_08_session_name",
+        "strategy_agent_08_session_tz",
+        "strategy_agent_08_band_sigmas",
+        "strategy_agent_08_min_volume_bars",
         "strategy_agent_09_enabled",
         "strategy_agent_09_instruments",
         "strategy_agent_09_timeframes",
@@ -376,6 +392,22 @@ def test_hash_moves_with_every_d59_key(
             "strategy_agent_05_pullback_ma": "10",
             "strategy_agent_05_confirm_bars": "2",
             "strategy_agent_05_expiry_bars": "5",
+            "strategy_agent_06_session_name": "london",
+            "strategy_agent_06_session_tz": "UTC",
+            "strategy_agent_06_range_minutes": "120",
+            "strategy_agent_06_buffer_ticks": "2",
+            "strategy_agent_06_expiry_minutes": "480",
+            "strategy_agent_06_max_spread_ticks": "5",
+            "strategy_agent_07_basis_period": "5",
+            "strategy_agent_07_band_width": "1.0",
+            "strategy_agent_07_z_min": "1.0",
+            "strategy_agent_07_rsi_period": "5",
+            "strategy_agent_07_rsi_extreme": "30",
+            "strategy_agent_07_confirm_bars": "1",
+            "strategy_agent_08_session_name": "london",
+            "strategy_agent_08_session_tz": "UTC",
+            "strategy_agent_08_band_sigmas": "1.0",
+            "strategy_agent_08_min_volume_bars": "5",
         }
     )
     baseline = hash_effective_config(_settings(monkeypatch))
@@ -457,6 +489,12 @@ def test_strategy_numeric_params_fail_closed(
     assert settings.strategy_agent_03_channel_bars is None
     assert settings.strategy_agent_04_compression_pctile is None
     assert settings.strategy_agent_05_trend_period is None
+    assert settings.strategy_agent_06_session_name is None
+    assert settings.strategy_agent_06_range_minutes is None
+    assert settings.strategy_agent_07_basis_period is None
+    assert settings.strategy_agent_07_band_width is None
+    assert settings.strategy_agent_08_band_sigmas is None
+    assert settings.strategy_agent_08_min_volume_bars is None
     assert (
         _settings(monkeypatch, strategy_agent_02_lookbacks="10, 20").strategy_agent_02_lookbacks
         == [10, 20]
@@ -476,6 +514,12 @@ def test_strategy_numeric_params_fail_closed(
         ("GOLDMASTERS_STRATEGY_AGENT_03_BUFFER_TICKS", "-2"),
         ("GOLDMASTERS_STRATEGY_AGENT_04_COMPRESSION_PCTILE", "0"),
         ("GOLDMASTERS_STRATEGY_AGENT_05_PULLBACK_MA", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_06_RANGE_MINUTES", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_06_BUFFER_TICKS", "-2"),
+        ("GOLDMASTERS_STRATEGY_AGENT_07_BAND_WIDTH", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_07_RSI_EXTREME", "-30"),
+        ("GOLDMASTERS_STRATEGY_AGENT_08_BAND_SIGMAS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_08_MIN_VOLUME_BARS", "0"),
     ):
         monkeypatch.setenv(key, bad)
         with pytest.raises(PydanticValidationError, match=key.split("GOLDMASTERS_")[1].lower()):
