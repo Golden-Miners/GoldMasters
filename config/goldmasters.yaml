@@ -32,3 +32,55 @@ session_asia_utc: "00:00-08:00"
 # Risk-limit placeholders stay operator-confirmed env-only (None until a
 # strategy set is approved per D-3.1), so they are intentionally absent here.
 tick_rounding_mode: ROUND_HALF_UP
+# Phase 3.1 strategy-agent scaffold: fail-closed defaults (disabled, empty
+# lists mean none, null min_bars means unset). Operator overrides win.
+strategy_agent_01_enabled: false
+strategy_agent_01_instruments: []
+strategy_agent_01_timeframes: []
+strategy_agent_01_regimes: []
+strategy_agent_01_min_bars:
+strategy_agent_02_enabled: false
+strategy_agent_02_instruments: []
+strategy_agent_02_timeframes: []
+strategy_agent_02_regimes: []
+strategy_agent_02_min_bars:
+strategy_agent_03_enabled: false
+strategy_agent_03_instruments: []
+strategy_agent_03_timeframes: []
+strategy_agent_03_regimes: []
+strategy_agent_03_min_bars:
+strategy_agent_04_enabled: false
+strategy_agent_04_instruments: []
+strategy_agent_04_timeframes: []
+strategy_agent_04_regimes: []
+strategy_agent_04_min_bars:
+strategy_agent_05_enabled: false
+strategy_agent_05_instruments: []
+strategy_agent_05_timeframes: []
+strategy_agent_05_regimes: []
+strategy_agent_05_min_bars:
+strategy_agent_06_enabled: false
+strategy_agent_06_instruments: []
+strategy_agent_06_timeframes: []
+strategy_agent_06_regimes: []
+strategy_agent_06_min_bars:
+strategy_agent_07_enabled: false
+strategy_agent_07_instruments: []
+strategy_agent_07_timeframes: []
+strategy_agent_07_regimes: []
+strategy_agent_07_min_bars:
+strategy_agent_08_enabled: false
+strategy_agent_08_instruments: []
+strategy_agent_08_timeframes: []
+strategy_agent_08_regimes: []
+strategy_agent_08_min_bars:
+strategy_agent_09_enabled: false
+strategy_agent_09_instruments: []
+strategy_agent_09_timeframes: []
+strategy_agent_09_regimes: []
+strategy_agent_09_min_bars:
+strategy_agent_10_enabled: false
+strategy_agent_10_instruments: []
+strategy_agent_10_timeframes: []
+strategy_agent_10_regimes: []
+strategy_agent_10_min_bars:

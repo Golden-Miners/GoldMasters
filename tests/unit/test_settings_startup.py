@@ -92,6 +92,57 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "tick_rounding_mode",
         "max_risk_percent_per_idea",
         "min_risk_reward_ratio",
+        # Phase 3.1 strategy-agent scaffold rows (03.1-01 framework).
+        "strategy_agent_01_enabled",
+        "strategy_agent_01_instruments",
+        "strategy_agent_01_timeframes",
+        "strategy_agent_01_regimes",
+        "strategy_agent_01_min_bars",
+        "strategy_agent_02_enabled",
+        "strategy_agent_02_instruments",
+        "strategy_agent_02_timeframes",
+        "strategy_agent_02_regimes",
+        "strategy_agent_02_min_bars",
+        "strategy_agent_03_enabled",
+        "strategy_agent_03_instruments",
+        "strategy_agent_03_timeframes",
+        "strategy_agent_03_regimes",
+        "strategy_agent_03_min_bars",
+        "strategy_agent_04_enabled",
+        "strategy_agent_04_instruments",
+        "strategy_agent_04_timeframes",
+        "strategy_agent_04_regimes",
+        "strategy_agent_04_min_bars",
+        "strategy_agent_05_enabled",
+        "strategy_agent_05_instruments",
+        "strategy_agent_05_timeframes",
+        "strategy_agent_05_regimes",
+        "strategy_agent_05_min_bars",
+        "strategy_agent_06_enabled",
+        "strategy_agent_06_instruments",
+        "strategy_agent_06_timeframes",
+        "strategy_agent_06_regimes",
+        "strategy_agent_06_min_bars",
+        "strategy_agent_07_enabled",
+        "strategy_agent_07_instruments",
+        "strategy_agent_07_timeframes",
+        "strategy_agent_07_regimes",
+        "strategy_agent_07_min_bars",
+        "strategy_agent_08_enabled",
+        "strategy_agent_08_instruments",
+        "strategy_agent_08_timeframes",
+        "strategy_agent_08_regimes",
+        "strategy_agent_08_min_bars",
+        "strategy_agent_09_enabled",
+        "strategy_agent_09_instruments",
+        "strategy_agent_09_timeframes",
+        "strategy_agent_09_regimes",
+        "strategy_agent_09_min_bars",
+        "strategy_agent_10_enabled",
+        "strategy_agent_10_instruments",
+        "strategy_agent_10_timeframes",
+        "strategy_agent_10_regimes",
+        "strategy_agent_10_min_bars",
     }
 
 
@@ -274,6 +325,12 @@ def test_hash_moves_with_every_d59_key(
         "max_risk_percent_per_idea": "1.0",
         "min_risk_reward_ratio": "2.0",
     }
+    for agent in ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"):
+        mutations[f"strategy_agent_{agent}_enabled"] = "true"
+        mutations[f"strategy_agent_{agent}_instruments"] = "xauusd"
+        mutations[f"strategy_agent_{agent}_timeframes"] = "H1"
+        mutations[f"strategy_agent_{agent}_regimes"] = "uptrend"
+        mutations[f"strategy_agent_{agent}_min_bars"] = "20"
     baseline = hash_effective_config(_settings(monkeypatch))
     assert set(mutations) <= set(Settings.model_fields)
     for key, value in mutations.items():
@@ -305,6 +362,37 @@ def test_phase3_policy_keys_fail_closed(
         with pytest.raises(PydanticValidationError, match=key.lower()):
             Settings()  # type: ignore[call-arg]
         monkeypatch.delenv(f"GOLDMASTERS_{key}")
+
+
+def test_strategy_scaffold_fail_closed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """03.1-01: scaffold rows default disabled/none/unset; bad members name the key."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    settings = Settings()  # type: ignore[call-arg]
+    assert settings.strategy_agent_01_enabled is False
+    assert settings.strategy_agent_01_instruments == []
+    assert settings.strategy_agent_01_timeframes == []
+    assert settings.strategy_agent_01_regimes == []
+    assert settings.strategy_agent_01_min_bars is None
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_TIMEFRAMES", "H1,NOPE")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_timeframes"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_TIMEFRAMES")
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_REGIMES", "sideways")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_regimes"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_REGIMES")
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_MIN_BARS", "0")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_min_bars"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_MIN_BARS")
+    assert (
+        _settings(monkeypatch, strategy_agent_01_instruments="xauusd, eurusd")
+        .strategy_agent_01_instruments
+        == ["xauusd", "eurusd"]
+    )
 
 
 def test_hash_covers_phase3_policy_keys(

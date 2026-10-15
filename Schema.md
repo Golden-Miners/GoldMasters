@@ -206,6 +206,41 @@ Each strategy evaluation returns:
 
 A strategy cannot become approved because an LLM recommends it; require explicit review and tests.
 
+### Strategy evaluation protocol (Phase 3.1 framework)
+
+Every approved agent implements `evaluate(bars, ctx)` — the only strategy
+entry point. `bars` are the sole price input (closed bars only); `ctx` is a
+`MarketContext` carrying non-price context only: `instrument_id`,
+`provider_id`, `timeframe`, `regime`, `quality_status`, `quality_flags`,
+`volume_type` (tick is never relabelled exchange), `tick_size` /
+`contract_size` as decimal strings (`None` means unknown — skip alignment,
+never a default), `bar_count`, and `now_utc`. No price or volume data lives
+in `ctx`.
+
+Agent outcomes map to exactly one adapter status with the locked table:
+
+| Adapter status | `StrategyEvaluation` | agent/run status | Gate input? |
+|---|---|---|---|
+| `SETUP_FOUND` | `setup_found=True` + levels (validator-enforced) | `ok` | Yes — candidate flows to `evaluate_gate` |
+| `NO_SETUP` | `setup_found=False`, null levels | `no_setup` | No (recorded with rule_checks) |
+| `INSUFFICIENT_DATA` | `setup_found=False`, null levels, reason cites cause | `insufficient_data` | No |
+| `NOT_APPLICABLE` | `setup_found=False`, null levels, reason cites scope mismatch | `skipped` | No — never reaches gate |
+
+Any rule fail or unknown still means no setup and null levels — the
+`StrategyEvaluation` validator is unchanged and every state satisfies it.
+The agent/run status enum gains no new member: `NOT_APPLICABLE` maps to the
+verbatim `skipped` member.
+
+Agent selection uses the eligibility matrix (`EligibilityRule` per agent:
+`strategy_id`, `enabled`, `instruments`, `timeframes`, `regimes`,
+`min_bars`): disabled rows yield `disabled`; any instrument/timeframe/regime
+mismatch yields `not_applicable` (an empty instrument list means none, never
+all). Bar count never excludes — below `min_bars` the agent reports
+`INSUFFICIENT_DATA` at evaluate time. Matrix values arrive via declared
+`GOLDMASTERS_STRATEGY_<ID>_*` settings; every key is declared or startup
+rejects it. Agents import `strategies/base`, `domain.*` and
+`risk.levels.build_candidate_levels` only — never each other.
+
 ## 9. Backtest contract
 
 - `backtest_run_id`, strategy ID/version, dataset reference/hash

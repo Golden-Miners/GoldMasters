@@ -19,12 +19,20 @@ import hashlib
 import json
 import os
 import typing
-from typing import Any
+from typing import Annotated, Any
 
-from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe
-from pydantic import SecretStr, field_validator, model_validator
+from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe, TrendRegime
+from pydantic import (
+    AfterValidator,
+    BeforeValidator,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import (
     BaseSettings,
+    NoDecode,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
     YamlConfigSettingsSource,
@@ -35,6 +43,55 @@ __all__ = ["HASH_ALGORITHM_VERSION", "Settings", "hash_effective_config"]
 #: Version of the hash canonicalisation. Bumping this changes every digest by
 #: construction, so a canonicalisation change is detectable, never silent.
 HASH_ALGORITHM_VERSION = "1"
+
+
+def _split_strategy_list(value: Any) -> Any:
+    """Comma-separated env text reads as a list; empty/unset reads as none.
+
+    Lists arrive via ``GOLDMASTERS_STRATEGY_AGENT_<NN>_*`` variables, where a
+    bare ``.env`` template carries the empty string. An empty list means
+    none (never "all" by default) so the eligibility matrix stays
+    fail-closed. Non-string sequences pass through for item validation.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return value
+
+
+#: Comma-separated instrument ids; empty means none.
+#: ``NoDecode`` keeps the raw env text for the comma split (pydantic-settings
+#: would otherwise demand JSON for a complex field).
+CsvInstruments = Annotated[list[str], NoDecode, BeforeValidator(_split_strategy_list)]
+
+#: Comma-separated canonical timeframes; unknown members fail startup.
+CsvTimeframes = Annotated[list[Timeframe], NoDecode, BeforeValidator(_split_strategy_list)]
+
+#: Comma-separated regime labels; unknown members fail startup.
+CsvRegimes = Annotated[list[TrendRegime], NoDecode, BeforeValidator(_split_strategy_list)]
+
+
+def _empty_min_bars_means_unset(value: Any) -> Any:
+    """An empty template entry reads as unset, never as zero (D-3.1)."""
+    if value == "":
+        return None
+    return value
+
+
+def _min_bars_positive_or_unset(value: int | None) -> int | None:
+    """Fail closed on a non-positive minimum bar count (D-3.1, D-36)."""
+    if value is not None and (isinstance(value, bool) or value < 1):
+        raise ValueError("strategy min_bars must be a positive int when set")
+    return value
+
+
+#: Minimum-bar placeholder: None blocks, never defaults (D-3.1).
+FailClosedMinBars = Annotated[
+    int | None,
+    BeforeValidator(_empty_min_bars_means_unset),
+    AfterValidator(_min_bars_positive_or_unset),
+]
 
 
 class Settings(BaseSettings):
@@ -91,6 +148,62 @@ class Settings(BaseSettings):
     tick_rounding_mode: str = "ROUND_HALF_UP"
     max_risk_percent_per_idea: float | None = None
     min_risk_reward_ratio: float | None = None
+
+    # Phase 3.1 strategy-agent scaffold (03.1-RESEARCH.md locked shape). One
+    # five-field row per agent (ENABLED flag, instrument list, timeframe
+    # list, regime list, min_bars); every row is fail-closed until the
+    # operator sets it — disabled, empty (none, never all), None (blocks).
+    # Numeric rule params stay per-agent-phase (operator spec), never here.
+    strategy_agent_01_enabled: bool = False
+    strategy_agent_01_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_01_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_01_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_01_min_bars: FailClosedMinBars = None
+    strategy_agent_02_enabled: bool = False
+    strategy_agent_02_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_02_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_02_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_02_min_bars: FailClosedMinBars = None
+    strategy_agent_03_enabled: bool = False
+    strategy_agent_03_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_03_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_03_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_03_min_bars: FailClosedMinBars = None
+    strategy_agent_04_enabled: bool = False
+    strategy_agent_04_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_04_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_04_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_04_min_bars: FailClosedMinBars = None
+    strategy_agent_05_enabled: bool = False
+    strategy_agent_05_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_05_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_05_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_05_min_bars: FailClosedMinBars = None
+    strategy_agent_06_enabled: bool = False
+    strategy_agent_06_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_06_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_06_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_06_min_bars: FailClosedMinBars = None
+    strategy_agent_07_enabled: bool = False
+    strategy_agent_07_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_07_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_07_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_07_min_bars: FailClosedMinBars = None
+    strategy_agent_08_enabled: bool = False
+    strategy_agent_08_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_08_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_08_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_08_min_bars: FailClosedMinBars = None
+    strategy_agent_09_enabled: bool = False
+    strategy_agent_09_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_09_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_09_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_09_min_bars: FailClosedMinBars = None
+    strategy_agent_10_enabled: bool = False
+    strategy_agent_10_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_10_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_10_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_10_min_bars: FailClosedMinBars = None
 
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod

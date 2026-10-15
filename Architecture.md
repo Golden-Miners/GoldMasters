@@ -200,7 +200,9 @@ goldmasters/
         providers/       # provider interfaces and adapters
         news/            # source adapters and normalization
       domain/            # typed domain models and rules
-      strategies/        # versioned deterministic strategy logic
+      strategies/        # strategy framework (base.py: MarketContext, 4-state
+                         # adapter, eligibility matrix, evaluate(bars, ctx))
+                         # plus one versioned package per approved agent
       risk/              # hard gates and numeric validation
       backtesting/       # event-driven or documented bar-based engine
       persistence/       # repositories and migrations
