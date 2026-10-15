@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 ## Current Position
 
 Phase: 3 — Deterministic Analysis, Strategy Rules and Risk Gates
-Plan: 03-02 complete (Wave 2: structure.py, regime.py, strategies/base.py + 22 contract tests)
+Plan: 03-03 complete (Wave 3: risk/levels.py, risk/gate.py, docs/roles.md + 21 tests)
 Status: Phase 2 implementation complete pending operator live_mt5 run (BLOCKED) + verification
-Last activity: 2026-10-15 — 03-02 executed: strict-extreme swings, ordinal TrendRegime (UNKNOWN fail-closed), no-setup-on-fail interface; 344 passed, 2 skipped
+Last activity: 2026-10-15 — 03-03 executed: code-computed levels (R:R recomputed, null-when-unknown), fail-closed gate sole path to TRADE, 14-role matrix; 365 passed, 2 skipped
 
 ## Performance Metrics
 
@@ -87,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-15T15:30:00Z
-Stopped at: Completed 03-02-PLAN.md (Phase 3 Wave 2 structure/regime/strategy-interface)
+Last session: 2026-10-15T16:00:00Z
+Stopped at: Completed 03-03-PLAN.md (Phase 3 Wave 3 levels/risk-gate/role-matrix)
 Resume file: None

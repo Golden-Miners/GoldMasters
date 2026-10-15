@@ -102,7 +102,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. The deterministic risk/validation gate enforces level ordering, configured risk limits, data quality and required evidence — and can block a candidate before any decision is produced.
   6. Every specialist role (Market Analyst, Trend, Instrument, Strategy Supervisor and Strategy Agents, Signaling, News, Sentiment, Research, Backtesting, Trade Journal, Monitoring, CEO, Risk/Validation Gate) has a documented single responsibility, typed I/O, version, timeout and failure status; Monitoring emits no trading recommendation; no role can overwrite or erase another's findings.
 
-**Plans**: Wave 1: 03-01 tracer done (conventions, contract-size column, settings surface); Wave 2: 03-02 done (structure/regime primitives + strategy interface, 22 tests, full suite green); remaining waves TBD
+**Plans**: Wave 1: 03-01 tracer done (conventions, contract-size column, settings surface); Wave 2: 03-02 done (structure/regime primitives + strategy interface, 22 tests, full suite green); Wave 3: 03-03 done (levels + risk gate + role matrix, 21 tests, 365 passed); remaining waves TBD
 
 ### Phase 4: LangGraph Orchestration and Local Model Runtime
 
