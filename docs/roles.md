@@ -41,3 +41,28 @@ must never infer that a failed agent agreed (Rules §3.4).
 | Monitoring | Report feed/node health and activity only — **no trading recommendation** | heartbeats/statuses → health report (`monitor_id`, `observed_at`, `watched`, `health`, `limitations`) | 0.1.0 | operator-set, bounded | `error`/`timed_out` on lost heartbeat; a silent monitor is never read as agreement |
 | CEO | Final research decision-maker; cannot bypass validation, quality, or risk gates (Rules §2.5) | `StrategyEvaluation[]` + `GateVerdict` + `agent_statuses` → `DecisionRecord` (`TRADE` only on passed verdict with complete levels; `manual_review_required` always `True`) | 0.1.0 | operator-set, bounded | `insufficient_data` when evidence is missing or conflicted |
 | Risk/Validation Gate | Deterministic, fail-closed validation: ordering → risk limits → quality → evidence; sole path to TRADE-eligible levels | `StrategyEvaluation` + `Direction` + `TrendRegime` + `QualityStatus`/flags + evidence map + `GOLDMASTERS_` risk policy → `GateVerdict(passed, reasons_for_rejection, levels-or-None, conflicts)` | 0.1.0 | operator-set, bounded (pure function, no I/O) | `passed=False` with `reasons_for_rejection` on any policy failure; malformed inputs raise via contract constructors |
+
+## Approved strategy agents (Phase 3.5 close-out)
+
+One row per shipped package; `strategy_id` + semver `strategy_version` +
+`code_hash` stamp match code exactly, versions bump on any rule change.
+Agent 10 (`carry-term-structure`) is the contract-first exemplar other
+agents are reviewed against: contract plus scope legs plus
+`NOT_APPLICABLE` legs landed before rule composition. The Phase 4
+supervisor consumes `eligible_agents` verdicts plus each eligible row's
+`EligibilityRule` scope (PRD §6.4) — pinned by
+`tests/unit/test_strategy_supervisor_seam.py` with no supervisor, node, or
+graph code built.
+
+| Package | `strategy_id` | Version | Matrix scope (operator-set, fail-closed) |
+|---|---|---|---|
+| `agent_01` | `trend-following` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_01_*` |
+| `agent_02` | `time-series-momentum` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_02_*` |
+| `agent_03` | `donchian-breakout` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_03_*` |
+| `agent_04` | `vol-expansion-breakout` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_04_*` |
+| `agent_05` | `trend-pullback-continuation` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_05_*` |
+| `agent_06` | `session-opening-range` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_06_*` |
+| `agent_07` | `mean-reversion` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_07_*` |
+| `agent_08` | `vwap-reversion` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_08_*` |
+| `agent_09` | `smc-ict-liquidity-sweep` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_09_*` |
+| `agent_10` | `carry-term-structure` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_10_*`; forex/crypto/commodity legs `NOT_APPLICABLE`-first |

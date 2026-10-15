@@ -203,6 +203,16 @@ goldmasters/
       strategies/        # strategy framework (base.py: MarketContext, 4-state
                          # adapter, eligibility matrix, evaluate(bars, ctx))
                          # plus one versioned package per approved agent
+                         # agent_01 trend-following, agent_02
+                         # time-series-momentum, agent_03 donchian-breakout,
+                         # agent_04 vol-expansion-breakout, agent_05
+                         # trend-pullback-continuation, agent_06
+                         # session-opening-range, agent_07 mean-reversion,
+                         # agent_08 vwap-reversion, agent_09
+                         # smc-ict-liquidity-sweep, agent_10
+                         # carry-term-structure (all 1.0.0; agent 10 is the
+                         # contract-first exemplar; seam contract-tested
+                         # with no Phase 4 code)
       risk/              # hard gates and numeric validation
       backtesting/       # event-driven or documented bar-based engine
       persistence/       # repositories and migrations
