@@ -22,7 +22,7 @@ import typing
 from typing import Any
 
 from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -75,11 +75,41 @@ class Settings(BaseSettings):
     quote_stale_seconds_major: int = 60
     quote_stale_seconds_asia: int = 180
     quote_stale_seconds_offhours: int = 300
-    # Tracer stubs: opaque UTC-window strings the full session/weekend table
-    # (plan 02-02) parses; the quote-session windows stay fixed in code until
-    # then (FLAGGED ASSUMPTION, 02-01 plan must-haves).
+    # Session windows (UTC, standard-time basis; DST ±1h is operator-confirmed
+    # against the broker per D-57 — retune here, never in code). Off-hours is
+    # whatever remains; the weekend window short-circuits thresholds entirely.
+    session_overlap_utc: str = "13:00-16:30"
+    session_major_utc: str = "08:00-13:00,16:30-21:00"
+    session_asia_utc: str = "00:00-08:00"
     weekend_close_utc: str = "Fri 21:00-Sun 22:00"
     daily_break_utc: str = "21:00-22:00"
+
+    @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
+    @classmethod
+    def _window_specs_parse(cls, value: str) -> str:
+        """Fail closed on a malformed session window (D-36, D-59)."""
+        from services.mt5_adapter.validation import parse_session_windows
+
+        parse_session_windows(value)
+        return value
+
+    @field_validator("weekend_close_utc", mode="after")
+    @classmethod
+    def _weekend_spec_parses(cls, value: str) -> str:
+        """Fail closed on a malformed weekend window (D-36, D-58)."""
+        from services.mt5_adapter.validation import parse_weekend_window
+
+        parse_weekend_window(value)
+        return value
+
+    @field_validator("daily_break_utc", mode="after")
+    @classmethod
+    def _break_spec_parses(cls, value: str) -> str:
+        """Fail closed on a malformed daily-break window (D-36, D-58)."""
+        from services.mt5_adapter.validation import parse_daily_window
+
+        parse_daily_window(value)
+        return value
 
     @model_validator(mode="before")
     @classmethod

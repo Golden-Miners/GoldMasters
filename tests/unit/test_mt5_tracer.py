@@ -383,8 +383,10 @@ def test_gap_and_duplicate_flagged_not_dropped_silently() -> None:
     assert len(result) == 4  # duplicate dropped, first kept and flagged
     by_hour = {b.bar_open_time.hour: b for b in result}
     assert QualityStatus.DUPLICATE in by_hour[12].quality_flags
-    assert QualityStatus.GAP in by_hour[14].quality_flags
-    assert by_hour[14].quality_status == QualityStatus.GAP
+    # 02-02 contract: a mid-week (Tuesday) gap classifies missing-history, not
+    # a plain gap flag — the range re-fetch cannot fill it, so the stamp stands.
+    assert QualityStatus.MISSING_HISTORY in by_hour[14].quality_flags
+    assert by_hour[14].quality_status == QualityStatus.MISSING_HISTORY
 
 
 def test_out_of_order_bar_is_malformed() -> None:

@@ -62,6 +62,11 @@ def _adapter_from(request: Request) -> Mt5Adapter:
         quote_major_seconds=settings.quote_stale_seconds_major,
         quote_asia_seconds=settings.quote_stale_seconds_asia,
         quote_offhours_seconds=settings.quote_stale_seconds_offhours,
+        session_overlap_utc=settings.session_overlap_utc,
+        session_major_utc=settings.session_major_utc,
+        session_asia_utc=settings.session_asia_utc,
+        weekend_close_utc=settings.weekend_close_utc,
+        daily_break_utc=settings.daily_break_utc,
     )
 
 

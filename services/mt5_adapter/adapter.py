@@ -17,6 +17,7 @@ asserted at runtime and absence fails the read visibly.
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -36,6 +37,8 @@ from services.mt5_adapter import normalize
 from services.mt5_adapter.normalize import NormalizationError
 from services.mt5_adapter.terminal import TerminalGateway
 from services.mt5_adapter.validation import (
+    is_weekend_closed,
+    missing_opens,
     quote_stale_limit_for,
     validate_bars,
     validate_quote,
@@ -47,7 +50,6 @@ __all__ = [
     "INSTRUMENT_SYMBOL_MAP",
     "PROVIDER_ID",
     "Mt5Adapter",
-    "in_weekend_close",
     "probe_mt5",
 ]
 
@@ -91,6 +93,18 @@ def _map_last_error(code: int) -> ProviderKind:
     return "disconnected"
 
 
+def _gap_spans(bars: Sequence[MarketBar]) -> list[tuple[datetime, datetime, list[datetime]]]:
+    """One ``(start, end, missing-opens)`` span per bar stamped ``missing-history``."""
+    spans: list[tuple[datetime, datetime, list[datetime]]] = []
+    previous_open: datetime | None = None
+    for bar in bars:
+        if QualityStatus.MISSING_HISTORY in bar.quality_flags and previous_open is not None:
+            missing = missing_opens(previous_open, bar.bar_open_time)
+            spans.append((previous_open, bar.bar_open_time, missing))
+        previous_open = bar.bar_open_time
+    return spans
+
+
 def _failure_for(kind: ProviderKind, message: str) -> AdapterFailure:
     """Tracer C-09 map: transient reads retryable, quality reads not.
 
@@ -122,6 +136,11 @@ class Mt5Adapter:
         quote_major_seconds: int = 60,
         quote_asia_seconds: int = 180,
         quote_offhours_seconds: int = 300,
+        session_overlap_utc: str = "13:00-16:30",
+        session_major_utc: str = "08:00-13:00,16:30-21:00",
+        session_asia_utc: str = "00:00-08:00",
+        weekend_close_utc: str = "Fri 21:00-Sun 22:00",
+        daily_break_utc: str = "21:00-22:00",
     ) -> None:
         self._gateway = gateway
         self._server_timezone = server_timezone
@@ -132,6 +151,9 @@ class Mt5Adapter:
         self._stale_grace_seconds = bar_stale_grace_seconds
         self._quote_limits = (quote_overlap_seconds, quote_major_seconds, quote_asia_seconds)
         self._quote_offhours = quote_offhours_seconds
+        self._session_windows = (session_overlap_utc, session_major_utc, session_asia_utc)
+        self._weekend_spec = weekend_close_utc
+        self._break_spec = daily_break_utc
 
     # -- selection (no gateway touch on failure) ---------------------------
 
@@ -216,10 +238,9 @@ class Mt5Adapter:
         except Exception:  # noqa: BLE001 — attach failure is a value, never raises
             return _failure_for("terminal-closed", "mt5 terminal is not reachable")
         if not attached:
-            kind = self._capture_error()
-            if kind not in ("terminal-closed", "disconnected"):
-                kind = "terminal-closed"
-            return _failure_for(kind, "mt5 terminal is not reachable")
+            # A failed attach reads terminal-closed regardless of last_error
+            # (02-03 precedence top; code mapping applies to mid-session reads).
+            return _failure_for("terminal-closed", "mt5 terminal is not reachable")
         return self._check_read_only()
 
     def _fetch_rows(
@@ -266,7 +287,10 @@ class Mt5Adapter:
         if guard is not None:
             return guard
         try:
-            info = self._gateway.symbol_info(resolved)
+            try:
+                info = self._gateway.symbol_info(resolved)
+            except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
+                return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
             if info is None:
                 return _failure_for("unsupported", f"symbol {resolved!r} is not exposed")
             if not getattr(info, "visible", False):
@@ -292,17 +316,68 @@ class Mt5Adapter:
                 )
             except NormalizationError as exc:
                 return AdapterFailure(ErrorCode.CONFIG_INVALID, "malformed", str(exc))
-            return tuple(
-                validate_bars(
-                    bars,
-                    now_utc=now,
-                    stale_closed_bars=self._stale_closed_bars,
-                    stale_grace_seconds=self._stale_grace_seconds,
-                    precision_table=precision_table,
-                )
+            stamped = validate_bars(
+                bars,
+                now_utc=now,
+                stale_closed_bars=self._stale_closed_bars,
+                stale_grace_seconds=self._stale_grace_seconds,
+                precision_table=precision_table,
+                weekend_spec=self._weekend_spec,
+                break_spec=self._break_spec,
             )
+            return tuple(self._backfill_gaps(stamped, resolved, timeframe, now))
         finally:
             self._gateway.shutdown()
+
+    def _backfill_gaps(
+        self, bars: list[MarketBar], symbol: str, timeframe: str, now: datetime
+    ) -> list[MarketBar]:
+        """One ``copy_rates_range`` re-fetch per unexpected gap, then re-validate.
+
+        Backfill path only (never the hot path): fills actually-returned closed
+        bars into missing spans, never synthesizes. Only hour-opens in the
+        missing set are merged — a forming bar or any out-of-span row the
+        terminal returns is ignored. First-pass ``MALFORMED``/``DUPLICATE``
+        evidence is preserved across the merge; a failed re-fetch keeps the
+        ``missing-history`` stamp.
+        """
+        gaps = _gap_spans(bars)
+        if not gaps:
+            return bars
+        filled: dict[datetime, MarketBar] = {bar.bar_open_time: bar for bar in bars}
+        for span_start, span_end, missing in gaps:
+            try:
+                rows = self._gateway.copy_rates_range(symbol, timeframe, span_start, span_end)
+            except Exception:  # noqa: BLE001 — a failed re-fetch keeps missing-history
+                continue
+            if not rows:
+                continue
+            try:
+                extra = normalize.normalize_bars(
+                    sorted(rows, key=lambda row: float(row["time"])),
+                    instrument_id=bars[0].instrument_id,
+                    provider_symbol=symbol,
+                    timeframe=timeframe,
+                    server_timezone=self._server_timezone,
+                    retrieved_at=now,
+                    forming_first=False,
+                )
+            except NormalizationError, KeyError, TypeError, ValueError:
+                continue
+            wanted = set(missing)
+            for bar in extra:
+                if bar.bar_open_time in wanted and bar.bar_open_time not in filled:
+                    filled[bar.bar_open_time] = bar
+        merged = [filled[key] for key in sorted(filled)]
+        return validate_bars(
+            merged,
+            now_utc=now,
+            stale_closed_bars=self._stale_closed_bars,
+            stale_grace_seconds=self._stale_grace_seconds,
+            weekend_spec=self._weekend_spec,
+            break_spec=self._break_spec,
+            preserve={bar.bar_open_time: list(bar.quality_flags) for bar in bars},
+        )
 
     def get_latest_quote(
         self, instrument_id: str, *, now_utc: datetime | None = None
@@ -345,10 +420,20 @@ class Mt5Adapter:
             except NormalizationError as exc:
                 return AdapterFailure(ErrorCode.CONFIG_INVALID, "malformed", str(exc))
             overlap, major, asia = self._quote_limits
+            overlap_w, major_w, asia_w = self._session_windows
             limit = quote_stale_limit_for(
-                now, overlap=overlap, major=major, asia=asia, offhours=self._quote_offhours
+                now,
+                overlap=overlap,
+                major=major,
+                asia=asia,
+                offhours=self._quote_offhours,
+                overlap_windows=overlap_w,
+                major_windows=major_w,
+                asia_windows=asia_w,
             )
-            return validate_quote(quote, now_utc=now, stale_seconds=limit)
+            return validate_quote(
+                quote, now_utc=now, stale_seconds=limit, weekend_spec=self._weekend_spec
+            )
         finally:
             self._gateway.shutdown()
 
@@ -364,7 +449,10 @@ class Mt5Adapter:
         if guard is not None:
             return guard
         try:
-            info = self._gateway.symbol_info(resolved)
+            try:
+                info = self._gateway.symbol_info(resolved)
+            except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
+                return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
             if info is None or not getattr(info, "visible", False):
                 return _failure_for("unsupported", f"symbol {resolved!r} is not exposed")
             for field in ("digits", "point"):
@@ -426,21 +514,6 @@ class Mt5Adapter:
                 pass
 
 
-def in_weekend_close(moment_utc: datetime) -> bool:
-    """Weekend-close stub: Sat, Sun before 22:00 UTC, Fri from 21:00 UTC.
-
-    Tracer approximation of ``GOLDMASTERS_WEEKEND_CLOSE_UTC``; the full
-    calendar table is plan 02-02 detail (FLAGGED ASSUMPTION).
-    """
-    moment = moment_utc.astimezone(UTC)
-    minutes = moment.hour * 60 + moment.minute
-    if moment.weekday() == 5:
-        return True
-    if moment.weekday() == 6:
-        return minutes < 22 * 60
-    return moment.weekday() == 4 and minutes >= 21 * 60
-
-
 def _provider_object(
     status: str,
     *,
@@ -463,7 +536,11 @@ def _provider_object(
 
 
 def _probe_once(
-    gateway: TerminalGateway, server_timezone: str, bars_count: int, now: datetime
+    gateway: TerminalGateway,
+    server_timezone: str,
+    bars_count: int,
+    now: datetime,
+    weekend_spec: str,
 ) -> dict[str, object]:
     """Single bounded probe pass; every failure maps to a status, never raises."""
     adapter = Mt5Adapter(gateway, server_timezone=server_timezone, bars_count=bars_count)
@@ -498,10 +575,17 @@ def _probe_once(
         quote_time = instant.astimezone(UTC).isoformat() if instant is not None else None
         if quote.quality_status != QualityStatus.OK:
             failure_kind = failure_kind or QualityStatus.STALE
-    weekend = in_weekend_close(now)
+    weekend = is_weekend_closed(now, weekend_spec)
     if failure_kind is not None and not weekend:
+        status = {
+            QualityStatus.STALE: "disconnected",
+            QualityStatus.MALFORMED: "disconnected",
+            QualityStatus.MISSING_HISTORY: "missing-history",
+            QualityStatus.UNSUPPORTED: "unsupported-symbol",
+            QualityStatus.DISCONNECTED: "disconnected",
+        }[failure_kind]
         return _provider_object(
-            "disconnected",
+            status,
             market_open=True,
             terminal_build=build,
             last_bar_close_time=bars[-1].bar_close_time.astimezone(UTC).isoformat()
@@ -529,6 +613,7 @@ def probe_mt5(
     timeout_seconds: float = 2.0,
     bars_count: int = 2,
     now_utc: datetime | None = None,
+    weekend_spec: str = "Fri 21:00-Sun 22:00",
 ) -> dict[str, object]:
     """Bounded provider probe for ``GET /health`` (follows ``probe_database``).
 
@@ -538,7 +623,9 @@ def probe_mt5(
     now = now_utc or datetime.now(UTC)
     try:
         with ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(_probe_once, gateway, server_timezone, bars_count, now)
+            future = pool.submit(
+                _probe_once, gateway, server_timezone, bars_count, now, weekend_spec
+            )
             result = future.result(timeout=timeout_seconds)
             if isinstance(result, dict):
                 return result

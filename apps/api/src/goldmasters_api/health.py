@@ -52,6 +52,7 @@ def health(request: Request) -> dict[str, object]:
         server_timezone=settings.mt5_server_timezone,
         timeout_seconds=settings.mt5_probe_timeout_seconds,
         bars_count=settings.mt5_bars_count,
+        weekend_spec=settings.weekend_close_utc,
     )
     return {
         "status": "ok",

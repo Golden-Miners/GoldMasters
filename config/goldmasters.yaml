@@ -25,3 +25,6 @@ quote_stale_seconds_asia: 180
 quote_stale_seconds_offhours: 300
 weekend_close_utc: "Fri 21:00-Sun 22:00"
 daily_break_utc: "21:00-22:00"
+session_overlap_utc: "13:00-16:30"
+session_major_utc: "08:00-13:00,16:30-21:00"
+session_asia_utc: "00:00-08:00"

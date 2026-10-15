@@ -84,6 +84,10 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "quote_stale_seconds_offhours",
         "weekend_close_utc",
         "daily_break_utc",
+        # Phase 2 D-57/D-59 session windows (02-02).
+        "session_overlap_utc",
+        "session_major_utc",
+        "session_asia_utc",
     }
 
 
@@ -213,3 +217,20 @@ def test_hash_algorithm_version_exposed(
         ).encode()
     ).hexdigest()
     assert digest_v2 != hash_effective_config(settings)
+
+
+def test_malformed_window_specs_fail_closed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-36: a malformed session/weekend/break window names its key, never defaults."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    for key, bad in (
+        ("GOLDMASTERS_SESSION_OVERLAP_UTC", "13:00"),
+        ("GOLDMASTERS_WEEKEND_CLOSE_UTC", "Friday-Sunday"),
+        ("GOLDMASTERS_DAILY_BREAK_UTC", "21:00-21:00,22:00-23:00"),
+    ):
+        monkeypatch.setenv(key, bad)
+        with pytest.raises(PydanticValidationError, match=key.split("GOLDMASTERS_")[1].lower()):
+            Settings()  # type: ignore[call-arg]
+        monkeypatch.delenv(key)

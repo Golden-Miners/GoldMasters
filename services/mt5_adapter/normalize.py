@@ -81,14 +81,17 @@ def normalize_bars(
     timeframe: str,
     server_timezone: str,
     retrieved_at: datetime,
+    forming_first: bool = True,
 ) -> list[MarketBar]:
     """Normalize closed bars into chronological contract order.
 
     Terminal order is newest-first with the ``pos-0`` still-forming bar at
     index 0: it is dropped, and the remaining closed bars are reversed into
-    chronological order for validation. Raises :class:`NormalizationError`
-    on an empty input or a row that cannot satisfy the contract invariants
-    (the adapter maps empties to missing-history before reaching here).
+    chronological order for validation. Backfill rows (already chronological,
+    no forming bar) pass ``forming_first=False``. Raises
+    :class:`NormalizationError` on an empty input or a row that cannot satisfy
+    the contract invariants (the adapter maps empties to missing-history
+    before reaching here).
     """
     try:
         bar_seconds = _TIMEFRAME_SECONDS[timeframe]
@@ -101,7 +104,8 @@ def normalize_bars(
     except ValueError as exc:
         raise NormalizationError(f"unsupported timeframe for normalization: {timeframe}") from exc
     bars: list[MarketBar] = []
-    for row in reversed(rows[1:]):
+    ordered = reversed(rows[1:]) if forming_first else iter(rows)
+    for row in ordered:
         try:
             open_time = server_to_utc(float(row["time"]), server_timezone)
             bar = MarketBar(

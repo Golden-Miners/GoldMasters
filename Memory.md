@@ -86,3 +86,5 @@
 
 - 02-01 tracer DONE: `services/mt5_adapter/` + bars/quote endpoints + provider health + reworked boundary scan. Evidence: full `uv run pytest` green (213), `ruff check/format` clean, `mypy --strict .` clean (57 files).
 - Next: 02-02 + 02-03 (Wave 2). `live_mt5` operator run still pending (no terminal here; field names + py3.14 wheel must-verify-first).
+- 02-02 + 02-03 DONE (Wave 2, same session): full validation policy, session quotes, weekend classifier, gap backfill, 5 health states, single retry, code table, redaction. Evidence: full pytest green, ruff + mypy strict clean.
+- Next: 02-04 (Wave 3: precision, hash, contracts, live scaffold).
