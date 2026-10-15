@@ -10,7 +10,7 @@ tick-alignment, never a default tick (Phase-2 precedent).
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from zoneinfo import ZoneInfo
 
@@ -21,6 +21,7 @@ __all__ = [
     "quantize_for_instrument",
     "quantize_to_tick",
     "server_wall_to_utc",
+    "session_local_date",
     "utc_adjacent",
 ]
 
@@ -102,3 +103,17 @@ def check_bar_order(bar_open_times: Sequence[datetime]) -> QualityStatus | None:
             return QualityStatus.MALFORMED
         previous = open_time
     return None
+
+
+def session_local_date(instant: datetime, session_tz: str) -> date:
+    """Local calendar day of an instant in a named IANA session timezone.
+
+    DST-safe by construction: the zoneinfo database converts the instant, so
+    no fixed offset is ever assumed — spring-forward gaps and fall-back folds
+    land on the correct local day. An unknown zone raises
+    ``ZoneInfoNotFoundError`` (the caller fails closed); a naive instant
+    raises ``ValueError`` (the ``utc_adjacent`` precedent).
+    """
+    if instant.tzinfo is None or instant.tzinfo.utcoffset(instant) is None:
+        raise ValueError("instant must be timezone-aware")
+    return instant.astimezone(ZoneInfo(session_tz)).date()

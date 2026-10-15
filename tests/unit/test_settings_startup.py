@@ -92,6 +92,101 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "tick_rounding_mode",
         "max_risk_percent_per_idea",
         "min_risk_reward_ratio",
+        # Phase 3.1 strategy-agent scaffold rows (03.1-01 framework).
+        "strategy_agent_01_enabled",
+        "strategy_agent_01_instruments",
+        "strategy_agent_01_timeframes",
+        "strategy_agent_01_regimes",
+        "strategy_agent_01_min_bars",
+        "strategy_agent_01_fast_period",
+        "strategy_agent_01_slow_period",
+        "strategy_agent_01_htf_timeframe",
+        "strategy_agent_01_adx_min",
+        "strategy_agent_01_confirm_bars",
+        "strategy_agent_02_enabled",
+        "strategy_agent_02_instruments",
+        "strategy_agent_02_timeframes",
+        "strategy_agent_02_regimes",
+        "strategy_agent_02_min_bars",
+        "strategy_agent_02_lookbacks",
+        "strategy_agent_02_entry_threshold",
+        "strategy_agent_02_vol_lookback",
+        "strategy_agent_02_max_hold_bars",
+        "strategy_agent_02_expiry_bars",
+        "strategy_agent_03_enabled",
+        "strategy_agent_03_instruments",
+        "strategy_agent_03_timeframes",
+        "strategy_agent_03_regimes",
+        "strategy_agent_03_min_bars",
+        "strategy_agent_03_channel_bars",
+        "strategy_agent_03_buffer_ticks",
+        "strategy_agent_03_confirm_bars",
+        "strategy_agent_03_exit_bars",
+        "strategy_agent_04_enabled",
+        "strategy_agent_04_instruments",
+        "strategy_agent_04_timeframes",
+        "strategy_agent_04_regimes",
+        "strategy_agent_04_min_bars",
+        "strategy_agent_04_vol_lookback",
+        "strategy_agent_04_compression_pctile",
+        "strategy_agent_04_confirm_bars",
+        "strategy_agent_05_enabled",
+        "strategy_agent_05_instruments",
+        "strategy_agent_05_timeframes",
+        "strategy_agent_05_regimes",
+        "strategy_agent_05_min_bars",
+        "strategy_agent_05_trend_period",
+        "strategy_agent_05_pullback_ma",
+        "strategy_agent_05_confirm_bars",
+        "strategy_agent_05_expiry_bars",
+        "strategy_agent_06_enabled",
+        "strategy_agent_06_instruments",
+        "strategy_agent_06_timeframes",
+        "strategy_agent_06_regimes",
+        "strategy_agent_06_min_bars",
+        "strategy_agent_06_session_name",
+        "strategy_agent_06_session_tz",
+        "strategy_agent_06_range_minutes",
+        "strategy_agent_06_buffer_ticks",
+        "strategy_agent_06_expiry_minutes",
+        "strategy_agent_06_max_spread_ticks",
+        "strategy_agent_07_enabled",
+        "strategy_agent_07_instruments",
+        "strategy_agent_07_timeframes",
+        "strategy_agent_07_regimes",
+        "strategy_agent_07_min_bars",
+        "strategy_agent_07_basis_period",
+        "strategy_agent_07_band_width",
+        "strategy_agent_07_z_min",
+        "strategy_agent_07_rsi_period",
+        "strategy_agent_07_rsi_extreme",
+        "strategy_agent_07_confirm_bars",
+        "strategy_agent_08_enabled",
+        "strategy_agent_08_instruments",
+        "strategy_agent_08_timeframes",
+        "strategy_agent_08_regimes",
+        "strategy_agent_08_min_bars",
+        "strategy_agent_08_session_name",
+        "strategy_agent_08_session_tz",
+        "strategy_agent_08_band_sigmas",
+        "strategy_agent_08_min_volume_bars",
+        "strategy_agent_09_enabled",
+        "strategy_agent_09_instruments",
+        "strategy_agent_09_timeframes",
+        "strategy_agent_09_regimes",
+        "strategy_agent_09_min_bars",
+        "strategy_agent_09_swing_bars",
+        "strategy_agent_09_equal_tol_ticks",
+        "strategy_agent_09_sweep_tol_ticks",
+        "strategy_agent_09_disp_body_min_atr",
+        "strategy_agent_09_expiry_bars",
+        "strategy_agent_10_enabled",
+        "strategy_agent_10_instruments",
+        "strategy_agent_10_timeframes",
+        "strategy_agent_10_regimes",
+        "strategy_agent_10_min_bars",
+        "strategy_agent_10_max_data_age_hours",
+        "strategy_agent_10_min_history_points",
     }
 
 
@@ -274,6 +369,61 @@ def test_hash_moves_with_every_d59_key(
         "max_risk_percent_per_idea": "1.0",
         "min_risk_reward_ratio": "2.0",
     }
+    for agent in ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"):
+        mutations[f"strategy_agent_{agent}_enabled"] = "true"
+        mutations[f"strategy_agent_{agent}_instruments"] = "xauusd"
+        mutations[f"strategy_agent_{agent}_timeframes"] = "H1"
+        mutations[f"strategy_agent_{agent}_regimes"] = "uptrend"
+        mutations[f"strategy_agent_{agent}_min_bars"] = "20"
+    # Phase 3.2 agent 1-5 rule numerics join the hashed config (operator placeholders).
+    mutations.update(
+        {
+            "strategy_agent_01_fast_period": "3",
+            "strategy_agent_01_slow_period": "5",
+            "strategy_agent_01_htf_timeframe": "H4",
+            "strategy_agent_01_adx_min": "0.5",
+            "strategy_agent_01_confirm_bars": "2",
+            "strategy_agent_02_lookbacks": "10,20",
+            "strategy_agent_02_entry_threshold": "0.02",
+            "strategy_agent_02_vol_lookback": "14",
+            "strategy_agent_02_max_hold_bars": "20",
+            "strategy_agent_02_expiry_bars": "5",
+            "strategy_agent_03_channel_bars": "20",
+            "strategy_agent_03_buffer_ticks": "2",
+            "strategy_agent_03_confirm_bars": "2",
+            "strategy_agent_03_exit_bars": "10",
+            "strategy_agent_04_vol_lookback": "14",
+            "strategy_agent_04_compression_pctile": "0.25",
+            "strategy_agent_04_confirm_bars": "2",
+            "strategy_agent_05_trend_period": "50",
+            "strategy_agent_05_pullback_ma": "10",
+            "strategy_agent_05_confirm_bars": "2",
+            "strategy_agent_05_expiry_bars": "5",
+            "strategy_agent_06_session_name": "london",
+            "strategy_agent_06_session_tz": "UTC",
+            "strategy_agent_06_range_minutes": "120",
+            "strategy_agent_06_buffer_ticks": "2",
+            "strategy_agent_06_expiry_minutes": "480",
+            "strategy_agent_06_max_spread_ticks": "5",
+            "strategy_agent_07_basis_period": "5",
+            "strategy_agent_07_band_width": "1.0",
+            "strategy_agent_07_z_min": "1.0",
+            "strategy_agent_07_rsi_period": "5",
+            "strategy_agent_07_rsi_extreme": "30",
+            "strategy_agent_07_confirm_bars": "1",
+            "strategy_agent_08_session_name": "london",
+            "strategy_agent_08_session_tz": "UTC",
+            "strategy_agent_08_band_sigmas": "1.0",
+            "strategy_agent_08_min_volume_bars": "5",
+            "strategy_agent_09_swing_bars": "2",
+            "strategy_agent_09_equal_tol_ticks": "2",
+            "strategy_agent_09_sweep_tol_ticks": "2",
+            "strategy_agent_09_disp_body_min_atr": "1.0",
+            "strategy_agent_09_expiry_bars": "5",
+            "strategy_agent_10_max_data_age_hours": "24",
+            "strategy_agent_10_min_history_points": "50",
+        }
+    )
     baseline = hash_effective_config(_settings(monkeypatch))
     assert set(mutations) <= set(Settings.model_fields)
     for key, value in mutations.items():
@@ -305,6 +455,104 @@ def test_phase3_policy_keys_fail_closed(
         with pytest.raises(PydanticValidationError, match=key.lower()):
             Settings()  # type: ignore[call-arg]
         monkeypatch.delenv(f"GOLDMASTERS_{key}")
+
+
+def test_strategy_scaffold_fail_closed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """03.1-01: scaffold rows default disabled/none/unset; bad members name the key."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    settings = Settings()  # type: ignore[call-arg]
+    assert settings.strategy_agent_01_enabled is False
+    assert settings.strategy_agent_01_instruments == []
+    assert settings.strategy_agent_01_timeframes == []
+    assert settings.strategy_agent_01_regimes == []
+    assert settings.strategy_agent_01_min_bars is None
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_TIMEFRAMES", "H1,NOPE")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_timeframes"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_TIMEFRAMES")
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_REGIMES", "sideways")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_regimes"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_REGIMES")
+    monkeypatch.setenv("GOLDMASTERS_STRATEGY_AGENT_01_MIN_BARS", "0")
+    with pytest.raises(PydanticValidationError, match="strategy_agent_01_min_bars"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_MIN_BARS")
+    assert (
+        _settings(monkeypatch, strategy_agent_01_instruments="xauusd, eurusd")
+        .strategy_agent_01_instruments
+        == ["xauusd", "eurusd"]
+    )
+
+
+def test_strategy_numeric_params_fail_closed(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """03.2-01: rule numerics default unset/empty; bad members name the key."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    settings = Settings()  # type: ignore[call-arg]
+    assert settings.strategy_agent_01_fast_period is None
+    assert settings.strategy_agent_01_htf_timeframe is None
+    assert settings.strategy_agent_01_adx_min is None
+    assert settings.strategy_agent_02_lookbacks == []
+    assert settings.strategy_agent_02_entry_threshold is None
+    assert settings.strategy_agent_03_channel_bars is None
+    assert settings.strategy_agent_04_compression_pctile is None
+    assert settings.strategy_agent_05_trend_period is None
+    assert settings.strategy_agent_06_session_name is None
+    assert settings.strategy_agent_06_range_minutes is None
+    assert settings.strategy_agent_07_basis_period is None
+    assert settings.strategy_agent_07_band_width is None
+    assert settings.strategy_agent_08_band_sigmas is None
+    assert settings.strategy_agent_08_min_volume_bars is None
+    assert settings.strategy_agent_09_swing_bars is None
+    assert settings.strategy_agent_09_equal_tol_ticks is None
+    assert settings.strategy_agent_09_sweep_tol_ticks is None
+    assert settings.strategy_agent_09_disp_body_min_atr is None
+    assert settings.strategy_agent_09_expiry_bars is None
+    assert settings.strategy_agent_10_max_data_age_hours is None
+    assert settings.strategy_agent_10_min_history_points is None
+    assert (
+        _settings(monkeypatch, strategy_agent_02_lookbacks="10, 20").strategy_agent_02_lookbacks
+        == [10, 20]
+    )
+    assert (
+        _settings(
+            monkeypatch, strategy_agent_01_htf_timeframe="H4"
+        ).strategy_agent_01_htf_timeframe
+        == "H4"
+    )
+    for key, bad in (
+        ("GOLDMASTERS_STRATEGY_AGENT_01_FAST_PERIOD", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_01_ADX_MIN", "-0.5"),
+        ("GOLDMASTERS_STRATEGY_AGENT_02_LOOKBACKS", "10,0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_02_LOOKBACKS", "ten"),
+        ("GOLDMASTERS_STRATEGY_AGENT_02_ENTRY_THRESHOLD", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_03_BUFFER_TICKS", "-2"),
+        ("GOLDMASTERS_STRATEGY_AGENT_04_COMPRESSION_PCTILE", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_05_PULLBACK_MA", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_06_RANGE_MINUTES", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_06_BUFFER_TICKS", "-2"),
+        ("GOLDMASTERS_STRATEGY_AGENT_07_BAND_WIDTH", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_07_RSI_EXTREME", "-30"),
+        ("GOLDMASTERS_STRATEGY_AGENT_08_BAND_SIGMAS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_08_MIN_VOLUME_BARS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_09_SWING_BARS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_09_EQUAL_TOL_TICKS", "-2"),
+        ("GOLDMASTERS_STRATEGY_AGENT_09_SWEEP_TOL_TICKS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_09_DISP_BODY_MIN_ATR", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_09_EXPIRY_BARS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_10_MAX_DATA_AGE_HOURS", "0"),
+        ("GOLDMASTERS_STRATEGY_AGENT_10_MIN_HISTORY_POINTS", "0"),
+    ):
+        monkeypatch.setenv(key, bad)
+        with pytest.raises(PydanticValidationError, match=key.split("GOLDMASTERS_")[1].lower()):
+            Settings()  # type: ignore[call-arg]
+        monkeypatch.delenv(key)
 
 
 def test_hash_covers_phase3_policy_keys(

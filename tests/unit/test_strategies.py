@@ -13,17 +13,40 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
-from goldmasters_contracts import Levels, MarketBar, QualityStatus, Timeframe, VolumeType
+from goldmasters_contracts import (
+    Levels,
+    MarketBar,
+    QualityStatus,
+    Timeframe,
+    TrendRegime,
+    VolumeType,
+)
 from pydantic import ValidationError
 
-from src.goldmasters.strategies import base
 from src.goldmasters.strategies.base import (
+    MarketContext,
     RuleCheck,
     Strategy,
     StrategyEvaluation,
     build_evaluation,
     hash_rule_source,
 )
+
+
+def _double_ctx() -> MarketContext:
+    return MarketContext(
+        instrument_id="xauusd",
+        provider_id="mt5",
+        timeframe=Timeframe.H1,
+        regime=TrendRegime.UNKNOWN,
+        quality_status=QualityStatus.OK,
+        quality_flags=[],
+        volume_type=VolumeType.TICK,
+        tick_size=None,
+        contract_size=None,
+        bar_count=1,
+        now_utc=datetime(2026, 1, 6, 12, 0, tzinfo=UTC),
+    )
 
 
 def _double_levels() -> Levels:
@@ -74,12 +97,12 @@ class _TestDoubleStrategy:
     def __init__(self, verdicts: Sequence[str]) -> None:
         self._verdicts = list(verdicts)
 
-    def evaluate(self, bars: Sequence[MarketBar]) -> StrategyEvaluation:
+    def evaluate(self, bars: Sequence[MarketBar], ctx: MarketContext) -> StrategyEvaluation:
         checks = [
             RuleCheck(
                 rule_id=f"rule-{i + 1}",
                 verdict=verdict,  # type: ignore[arg-type]
-                inputs={"bars": str(len(bars))},
+                inputs={"bars": str(len(bars)), "regime": ctx.regime.value},
                 evidence=f"double evidence for rule-{i + 1}",
                 reason=f"double verdict {verdict}",
             )
@@ -100,7 +123,7 @@ def test_double_satisfies_strategy_protocol() -> None:
 
 
 def test_all_pass_yields_setup_with_levels_and_stamp() -> None:
-    evaluation = _TestDoubleStrategy(["pass", "pass"]).evaluate(_double_bars())
+    evaluation = _TestDoubleStrategy(["pass", "pass"]).evaluate(_double_bars(), _double_ctx())
     assert evaluation.setup_found is True
     assert evaluation.candidate_levels is not None
     assert evaluation.strategy_id == "test-double"
@@ -111,14 +134,14 @@ def test_all_pass_yields_setup_with_levels_and_stamp() -> None:
 
 
 def test_single_fail_yields_no_setup_and_null_levels() -> None:
-    evaluation = _TestDoubleStrategy(["pass", "fail"]).evaluate(_double_bars())
+    evaluation = _TestDoubleStrategy(["pass", "fail"]).evaluate(_double_bars(), _double_ctx())
     assert evaluation.setup_found is False
     assert evaluation.candidate_levels is None
     assert evaluation.rule_checks[1].verdict == "fail"
 
 
 def test_unknown_rule_yields_no_setup_and_null_levels() -> None:
-    evaluation = _TestDoubleStrategy(["pass", "unknown"]).evaluate(_double_bars())
+    evaluation = _TestDoubleStrategy(["pass", "unknown"]).evaluate(_double_bars(), _double_ctx())
     assert evaluation.setup_found is False
     assert evaluation.candidate_levels is None
 
@@ -180,10 +203,33 @@ def test_evaluation_rejects_bad_version_and_empty_checks() -> None:
         )
 
 
-def test_no_strategy_packages_exist_only_the_interface() -> None:
-    """D-3.1: zero approved-strategy code — only base.py and __init__.py ship."""
+# The exact approved-agent set. Agents 1-5 shipped in phase 3.2, agents 6-8
+# in phase 3.3, agent 9 in phase 3.4, agent 10 in phase 3.5 (framework only
+# before); the workstream closes at all ten.
+EXPECTED_APPROVED_STRATEGIES: frozenset[str] = frozenset(
+    {
+        "agent_01",
+        "agent_02",
+        "agent_03",
+        "agent_04",
+        "agent_05",
+        "agent_06",
+        "agent_07",
+        "agent_08",
+        "agent_09",
+        "agent_10",
+    }
+)
+
+
+def test_strategy_registry_lists_approved_agents() -> None:
+    """D-3.1: the registry test names exactly the approved agent packages so far."""
     strategies_dir = (
         pathlib.Path(__file__).resolve().parents[2] / "src" / "goldmasters" / "strategies"
     )
-    assert sorted(p.name for p in strategies_dir.glob("*.py")) == ["__init__.py", "base.py"]
-    assert base.__name__ == "src.goldmasters.strategies.base"
+    approved = frozenset(
+        entry.name
+        for entry in strategies_dir.iterdir()
+        if entry.is_dir() and (entry / "__init__.py").is_file()
+    )
+    assert approved == EXPECTED_APPROVED_STRATEGIES

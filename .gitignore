@@ -30,3 +30,9 @@ postmaster.pid
 # OS / editor
 Thumbs.db
 .DS_Store
+
+# Ruflo local secrets and runtime data
+.env.*.local
+.claude-flow/data/
+.claude-flow/logs/
+.claude-flow/sessions/

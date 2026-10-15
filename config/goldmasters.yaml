@@ -32,3 +32,107 @@ session_asia_utc: "00:00-08:00"
 # Risk-limit placeholders stay operator-confirmed env-only (None until a
 # strategy set is approved per D-3.1), so they are intentionally absent here.
 tick_rounding_mode: ROUND_HALF_UP
+# Phase 3.1 strategy-agent scaffold: fail-closed defaults (disabled, empty
+# lists mean none, null min_bars means unset). Operator overrides win.
+strategy_agent_01_enabled: false
+strategy_agent_01_instruments: []
+strategy_agent_01_timeframes: []
+strategy_agent_01_regimes: []
+strategy_agent_01_min_bars:
+# Phase 3.2 Agent 1 trend-following numerics: operator-confirmed placeholders (null blocks).
+strategy_agent_01_fast_period:
+strategy_agent_01_slow_period:
+strategy_agent_01_htf_timeframe:
+strategy_agent_01_adx_min:
+strategy_agent_01_confirm_bars:
+strategy_agent_02_enabled: false
+strategy_agent_02_instruments: []
+strategy_agent_02_timeframes: []
+strategy_agent_02_regimes: []
+strategy_agent_02_min_bars:
+# Phase 3.2 Agent 2 time-series-momentum numerics: placeholders (null/empty blocks).
+strategy_agent_02_lookbacks: []
+strategy_agent_02_entry_threshold:
+strategy_agent_02_vol_lookback:
+strategy_agent_02_max_hold_bars:
+strategy_agent_02_expiry_bars:
+strategy_agent_03_enabled: false
+strategy_agent_03_instruments: []
+strategy_agent_03_timeframes: []
+strategy_agent_03_regimes: []
+strategy_agent_03_min_bars:
+# Phase 3.2 Agent 3 donchian-breakout numerics: placeholders (null blocks).
+strategy_agent_03_channel_bars:
+strategy_agent_03_buffer_ticks:
+strategy_agent_03_confirm_bars:
+strategy_agent_03_exit_bars:
+strategy_agent_04_enabled: false
+strategy_agent_04_instruments: []
+strategy_agent_04_timeframes: []
+strategy_agent_04_regimes: []
+strategy_agent_04_min_bars:
+# Phase 3.2 Agent 4 vol-expansion-breakout numerics: placeholders (null blocks).
+strategy_agent_04_vol_lookback:
+strategy_agent_04_compression_pctile:
+strategy_agent_04_confirm_bars:
+strategy_agent_05_enabled: false
+strategy_agent_05_instruments: []
+strategy_agent_05_timeframes: []
+strategy_agent_05_regimes: []
+strategy_agent_05_min_bars:
+# Phase 3.2 Agent 5 trend-pullback-continuation numerics: placeholders (null blocks).
+strategy_agent_05_trend_period:
+strategy_agent_05_pullback_ma:
+strategy_agent_05_confirm_bars:
+strategy_agent_05_expiry_bars:
+strategy_agent_06_enabled: false
+strategy_agent_06_instruments: []
+strategy_agent_06_timeframes: []
+strategy_agent_06_regimes: []
+strategy_agent_06_min_bars:
+# Phase 3.3 Agent 6 session-opening-range numerics: placeholders (null blocks).
+strategy_agent_06_session_name:
+strategy_agent_06_session_tz:
+strategy_agent_06_range_minutes:
+strategy_agent_06_buffer_ticks:
+strategy_agent_06_expiry_minutes:
+strategy_agent_06_max_spread_ticks:
+strategy_agent_07_enabled: false
+strategy_agent_07_instruments: []
+strategy_agent_07_timeframes: []
+strategy_agent_07_regimes: []
+strategy_agent_07_min_bars:
+# Phase 3.3 Agent 7 mean-reversion numerics: placeholders (null blocks).
+strategy_agent_07_basis_period:
+strategy_agent_07_band_width:
+strategy_agent_07_z_min:
+strategy_agent_07_rsi_period:
+strategy_agent_07_rsi_extreme:
+strategy_agent_07_confirm_bars:
+strategy_agent_08_enabled: false
+strategy_agent_08_instruments: []
+strategy_agent_08_timeframes: []
+strategy_agent_08_regimes: []
+strategy_agent_08_min_bars:
+# Phase 3.3 Agent 8 vwap-reversion numerics: placeholders (null blocks).
+strategy_agent_08_session_name:
+strategy_agent_08_session_tz:
+strategy_agent_08_band_sigmas:
+strategy_agent_08_min_volume_bars:
+strategy_agent_09_enabled: false
+strategy_agent_09_instruments: []
+strategy_agent_09_timeframes: []
+strategy_agent_09_regimes: []
+strategy_agent_09_min_bars:
+strategy_agent_09_swing_bars:
+strategy_agent_09_equal_tol_ticks:
+strategy_agent_09_sweep_tol_ticks:
+strategy_agent_09_disp_body_min_atr:
+strategy_agent_09_expiry_bars:
+strategy_agent_10_enabled: false
+strategy_agent_10_instruments: []
+strategy_agent_10_timeframes: []
+strategy_agent_10_regimes: []
+strategy_agent_10_min_bars:
+strategy_agent_10_max_data_age_hours:
+strategy_agent_10_min_history_points:

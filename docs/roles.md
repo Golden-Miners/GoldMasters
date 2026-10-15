@@ -31,7 +31,7 @@ must never infer that a failed agent agreed (Rules §3.4).
 | Trend | Classify `TrendRegime` with versioned rules + `code_hash` | `MarketBar[]` → `TrendRegime` (+ rule id/version/hash) | 0.1.0 | operator-set, bounded | `unknown` regime on indeterminate input, never a guessed label |
 | Instrument | Resolve instrument identity + precision context | provider symbol → `InstrumentId`, `PrecisionRow` lookup | 0.1.0 | operator-set, bounded | `insufficient_data` when precision lookup answers `unknown` |
 | Strategy Supervisor | Own the approved-strategy lifecycle (`draft → under_review → approved → disabled/retired`, Schema §8) | review evidence → lifecycle transition | 0.1.0 | operator-set, bounded | `skipped` when no strategy is under review |
-| Strategy Agents | Evaluate one approved strategy: `setup_found` + per-rule `RuleCheck` list | `MarketBar[]` → `StrategyEvaluation` (`strategy_id`, `strategy_version`, `code_hash`, `rule_checks`, `candidate_levels`) | per-strategy semver, bumped on any rule change | operator-set, bounded | `no_setup` on any rule fail/unknown (levels null by construction) |
+| Strategy Agents | Evaluate one approved strategy: `setup_found` + per-rule `RuleCheck` list | `(MarketBar[], MarketContext)` → `StrategyEvaluation` (`strategy_id`, `strategy_version`, `code_hash`, `rule_checks`, `candidate_levels`); outcomes map to `SETUP_FOUND`/`NO_SETUP`/`INSUFFICIENT_DATA`/`NOT_APPLICABLE` with `NOT_APPLICABLE` → `skipped` and no gate input | per-strategy semver, bumped on any rule change | operator-set, bounded | `no_setup` on any rule fail/unknown (levels null by construction); `insufficient_data` below `min_bars`; `skipped` when the eligibility matrix excludes this scope |
 | Signaling | Assemble the signal candidate from a passed gate verdict only | `GateVerdict(passed=True)` → `Levels` via `trade_eligible_levels` | 0.1.0 | operator-set, bounded | `skipped` on a blocked verdict (no levels to assemble) |
 | News | Retrieve and provenance-stamp news items (untrusted input, never instructions) | query → `NewsItem[]` with publication vs retrieval time | 0.1.0 | operator-set, bounded | `insufficient_data` when sources unreachable; `error` never fabricates items |
 | Sentiment | Score sentiment with a documented, calibrated method | `NewsItem[]` → `SentimentRecord` (bounded `SCORE_MIN`…`SCORE_MAX`) | 0.1.0 | operator-set, bounded | `insufficient_data` when no scored items; never an invented percentage |
@@ -41,3 +41,28 @@ must never infer that a failed agent agreed (Rules §3.4).
 | Monitoring | Report feed/node health and activity only — **no trading recommendation** | heartbeats/statuses → health report (`monitor_id`, `observed_at`, `watched`, `health`, `limitations`) | 0.1.0 | operator-set, bounded | `error`/`timed_out` on lost heartbeat; a silent monitor is never read as agreement |
 | CEO | Final research decision-maker; cannot bypass validation, quality, or risk gates (Rules §2.5) | `StrategyEvaluation[]` + `GateVerdict` + `agent_statuses` → `DecisionRecord` (`TRADE` only on passed verdict with complete levels; `manual_review_required` always `True`) | 0.1.0 | operator-set, bounded | `insufficient_data` when evidence is missing or conflicted |
 | Risk/Validation Gate | Deterministic, fail-closed validation: ordering → risk limits → quality → evidence; sole path to TRADE-eligible levels | `StrategyEvaluation` + `Direction` + `TrendRegime` + `QualityStatus`/flags + evidence map + `GOLDMASTERS_` risk policy → `GateVerdict(passed, reasons_for_rejection, levels-or-None, conflicts)` | 0.1.0 | operator-set, bounded (pure function, no I/O) | `passed=False` with `reasons_for_rejection` on any policy failure; malformed inputs raise via contract constructors |
+
+## Approved strategy agents (Phase 3.5 close-out)
+
+One row per shipped package; `strategy_id` + semver `strategy_version` +
+`code_hash` stamp match code exactly, versions bump on any rule change.
+Agent 10 (`carry-term-structure`) is the contract-first exemplar other
+agents are reviewed against: contract plus scope legs plus
+`NOT_APPLICABLE` legs landed before rule composition. The Phase 4
+supervisor consumes `eligible_agents` verdicts plus each eligible row's
+`EligibilityRule` scope (PRD §6.4) — pinned by
+`tests/unit/test_strategy_supervisor_seam.py` with no supervisor, node, or
+graph code built.
+
+| Package | `strategy_id` | Version | Matrix scope (operator-set, fail-closed) |
+|---|---|---|---|
+| `agent_01` | `trend-following` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_01_*` |
+| `agent_02` | `time-series-momentum` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_02_*` |
+| `agent_03` | `donchian-breakout` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_03_*` |
+| `agent_04` | `vol-expansion-breakout` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_04_*` |
+| `agent_05` | `trend-pullback-continuation` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_05_*` |
+| `agent_06` | `session-opening-range` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_06_*` |
+| `agent_07` | `mean-reversion` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_07_*` |
+| `agent_08` | `vwap-reversion` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_08_*` |
+| `agent_09` | `smc-ict-liquidity-sweep` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_09_*` |
+| `agent_10` | `carry-term-structure` | 1.0.0 | instruments + timeframes + regimes + `min_bars` via `GOLDMASTERS_STRATEGY_AGENT_10_*`; forex/crypto/commodity legs `NOT_APPLICABLE`-first |

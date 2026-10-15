@@ -19,12 +19,21 @@ import hashlib
 import json
 import os
 import typing
-from typing import Any
+from decimal import Decimal
+from typing import Annotated, Any
 
-from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe
-from pydantic import SecretStr, field_validator, model_validator
+from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe, TrendRegime
+from pydantic import (
+    AfterValidator,
+    BeforeValidator,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import (
     BaseSettings,
+    NoDecode,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
     YamlConfigSettingsSource,
@@ -35,6 +44,119 @@ __all__ = ["HASH_ALGORITHM_VERSION", "Settings", "hash_effective_config"]
 #: Version of the hash canonicalisation. Bumping this changes every digest by
 #: construction, so a canonicalisation change is detectable, never silent.
 HASH_ALGORITHM_VERSION = "1"
+
+
+def _split_strategy_list(value: Any) -> Any:
+    """Comma-separated env text reads as a list; empty/unset reads as none.
+
+    Lists arrive via ``GOLDMASTERS_STRATEGY_AGENT_<NN>_*`` variables, where a
+    bare ``.env`` template carries the empty string. An empty list means
+    none (never "all" by default) so the eligibility matrix stays
+    fail-closed. Non-string sequences pass through for item validation.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return value
+
+
+#: Comma-separated instrument ids; empty means none.
+#: ``NoDecode`` keeps the raw env text for the comma split (pydantic-settings
+#: would otherwise demand JSON for a complex field).
+CsvInstruments = Annotated[list[str], NoDecode, BeforeValidator(_split_strategy_list)]
+
+#: Comma-separated canonical timeframes; unknown members fail startup.
+CsvTimeframes = Annotated[list[Timeframe], NoDecode, BeforeValidator(_split_strategy_list)]
+
+#: Comma-separated regime labels; unknown members fail startup.
+CsvRegimes = Annotated[list[TrendRegime], NoDecode, BeforeValidator(_split_strategy_list)]
+
+
+def _empty_min_bars_means_unset(value: Any) -> Any:
+    """An empty template entry reads as unset, never as zero (D-3.1)."""
+    if value == "":
+        return None
+    return value
+
+
+def _min_bars_positive_or_unset(value: int | None) -> int | None:
+    """Fail closed on a non-positive minimum bar count (D-3.1, D-36)."""
+    if value is not None and (isinstance(value, bool) or value < 1):
+        raise ValueError("strategy min_bars must be a positive int when set")
+    return value
+
+
+#: Minimum-bar placeholder: None blocks, never defaults (D-3.1).
+FailClosedMinBars = Annotated[
+    int | None,
+    BeforeValidator(_empty_min_bars_means_unset),
+    AfterValidator(_min_bars_positive_or_unset),
+]
+
+
+def _count_positive_or_unset(value: int | None) -> int | None:
+    """Fail closed on a non-positive rule count (D-3.1, D-36)."""
+    if value is not None and (isinstance(value, bool) or value < 1):
+        raise ValueError("strategy rule count must be a positive int when set")
+    return value
+
+
+#: Rule-window placeholder (periods, spans, horizons): None blocks, never defaults.
+FailClosedCount = Annotated[
+    int | None,
+    BeforeValidator(_empty_min_bars_means_unset),
+    AfterValidator(_count_positive_or_unset),
+]
+
+
+def _decimal_positive_or_unset(value: Decimal | None) -> Decimal | None:
+    """Fail closed on a non-positive rule threshold (D-3.1, D-36)."""
+    if value is not None and value <= 0:
+        raise ValueError("strategy rule threshold must be positive when set")
+    return value
+
+
+#: Rule-threshold placeholder (multiples, fractions, return cutoffs): None blocks.
+FailClosedDecimal = Annotated[
+    Decimal | None,
+    BeforeValidator(_empty_min_bars_means_unset),
+    AfterValidator(_decimal_positive_or_unset),
+]
+
+#: Rule-label placeholder (e.g. higher timeframe): empty reads as unset, never a default.
+FailClosedText = Annotated[
+    str | None,
+    BeforeValidator(_empty_min_bars_means_unset),
+]
+
+
+def _split_positive_int_list(value: Any) -> Any:
+    """Comma-separated env text reads as positive ints; empty/unset reads as none.
+
+    An empty lookback list means none (never a default window) so the owning
+    agent fails closed. Non-positive or non-integer members fail startup
+    naming the field.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        items = [item.strip() for item in value.split(",") if item.strip()]
+        try:
+            parsed = [int(item) for item in items]
+        except ValueError as err:
+            raise ValueError(f"expected comma-separated positive ints, got {value!r}") from err
+        value = parsed
+    else:
+        value = list(value)
+    if any(isinstance(item, bool) or not isinstance(item, int) or item < 1 for item in value):
+        raise ValueError(f"expected comma-separated positive ints, got {value!r}")
+    return value
+
+
+#: Comma-separated positive-int windows (e.g. momentum lookbacks); empty means none.
+#: ``NoDecode`` keeps the raw env text for the comma split, mirroring CsvInstruments.
+CsvPositiveInts = Annotated[list[int], NoDecode, BeforeValidator(_split_positive_int_list)]
 
 
 class Settings(BaseSettings):
@@ -91,6 +213,117 @@ class Settings(BaseSettings):
     tick_rounding_mode: str = "ROUND_HALF_UP"
     max_risk_percent_per_idea: float | None = None
     min_risk_reward_ratio: float | None = None
+
+    # Phase 3.1 strategy-agent scaffold (03.1-RESEARCH.md locked shape). One
+    # five-field row per agent (ENABLED flag, instrument list, timeframe
+    # list, regime list, min_bars); every row is fail-closed until the
+    # operator sets it — disabled, empty (none, never all), None (blocks).
+    # Numeric rule params stay per-agent-phase (operator spec), never here.
+    strategy_agent_01_enabled: bool = False
+    strategy_agent_01_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_01_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_01_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_01_min_bars: FailClosedMinBars = None
+    # Phase 3.2 Agent 1 trend-following numerics (operator spec §Agent 1).
+    # Placeholders until the operator confirms values; None blocks, never defaults.
+    strategy_agent_01_fast_period: FailClosedCount = None
+    strategy_agent_01_slow_period: FailClosedCount = None
+    strategy_agent_01_htf_timeframe: FailClosedText = None
+    strategy_agent_01_adx_min: FailClosedDecimal = None
+    strategy_agent_01_confirm_bars: FailClosedCount = None
+    strategy_agent_02_enabled: bool = False
+    strategy_agent_02_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_02_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_02_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_02_min_bars: FailClosedMinBars = None
+    # Phase 3.2 Agent 2 time-series-momentum numerics (operator spec §Agent 2).
+    strategy_agent_02_lookbacks: CsvPositiveInts = Field(default_factory=list)
+    strategy_agent_02_entry_threshold: FailClosedDecimal = None
+    strategy_agent_02_vol_lookback: FailClosedCount = None
+    strategy_agent_02_max_hold_bars: FailClosedCount = None
+    strategy_agent_02_expiry_bars: FailClosedCount = None
+    strategy_agent_03_enabled: bool = False
+    strategy_agent_03_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_03_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_03_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_03_min_bars: FailClosedMinBars = None
+    # Phase 3.2 Agent 3 donchian-breakout numerics (operator spec §Agent 3).
+    strategy_agent_03_channel_bars: FailClosedCount = None
+    strategy_agent_03_buffer_ticks: FailClosedCount = None
+    strategy_agent_03_confirm_bars: FailClosedCount = None
+    strategy_agent_03_exit_bars: FailClosedCount = None
+    strategy_agent_04_enabled: bool = False
+    strategy_agent_04_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_04_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_04_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_04_min_bars: FailClosedMinBars = None
+    # Phase 3.2 Agent 4 vol-expansion-breakout numerics (operator spec §Agent 4).
+    strategy_agent_04_vol_lookback: FailClosedCount = None
+    strategy_agent_04_compression_pctile: FailClosedDecimal = None
+    strategy_agent_04_confirm_bars: FailClosedCount = None
+    strategy_agent_05_enabled: bool = False
+    strategy_agent_05_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_05_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_05_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_05_min_bars: FailClosedMinBars = None
+    # Phase 3.2 Agent 5 trend-pullback-continuation numerics (operator spec §Agent 5).
+    strategy_agent_05_trend_period: FailClosedCount = None
+    strategy_agent_05_pullback_ma: FailClosedCount = None
+    strategy_agent_05_confirm_bars: FailClosedCount = None
+    strategy_agent_05_expiry_bars: FailClosedCount = None
+    strategy_agent_06_enabled: bool = False
+    strategy_agent_06_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_06_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_06_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_06_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 6 session-opening-range numerics (operator spec §Agent 6).
+    strategy_agent_06_session_name: FailClosedText = None
+    strategy_agent_06_session_tz: FailClosedText = None
+    strategy_agent_06_range_minutes: FailClosedCount = None
+    strategy_agent_06_buffer_ticks: FailClosedCount = None
+    strategy_agent_06_expiry_minutes: FailClosedCount = None
+    strategy_agent_06_max_spread_ticks: FailClosedCount = None
+    strategy_agent_07_enabled: bool = False
+    strategy_agent_07_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_07_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_07_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_07_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 7 mean-reversion numerics (operator spec §Agent 7).
+    strategy_agent_07_basis_period: FailClosedCount = None
+    strategy_agent_07_band_width: FailClosedDecimal = None
+    strategy_agent_07_z_min: FailClosedDecimal = None
+    strategy_agent_07_rsi_period: FailClosedCount = None
+    strategy_agent_07_rsi_extreme: FailClosedDecimal = None
+    strategy_agent_07_confirm_bars: FailClosedCount = None
+    strategy_agent_08_enabled: bool = False
+    strategy_agent_08_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_08_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_08_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_08_min_bars: FailClosedMinBars = None
+    # Phase 3.3 Agent 8 vwap-reversion numerics (operator spec §Agent 8).
+    strategy_agent_08_session_name: FailClosedText = None
+    strategy_agent_08_session_tz: FailClosedText = None
+    strategy_agent_08_band_sigmas: FailClosedDecimal = None
+    strategy_agent_08_min_volume_bars: FailClosedCount = None
+    strategy_agent_09_enabled: bool = False
+    strategy_agent_09_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_09_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_09_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_09_min_bars: FailClosedMinBars = None
+    # Phase 3.4 Agent 9 smc-ict-liquidity-sweep numerics (operator spec §Agent 9).
+    strategy_agent_09_swing_bars: FailClosedCount = None
+    strategy_agent_09_equal_tol_ticks: FailClosedCount = None
+    strategy_agent_09_sweep_tol_ticks: FailClosedCount = None
+    strategy_agent_09_disp_body_min_atr: FailClosedDecimal = None
+    strategy_agent_09_expiry_bars: FailClosedCount = None
+    strategy_agent_10_enabled: bool = False
+    strategy_agent_10_instruments: CsvInstruments = Field(default_factory=list)
+    strategy_agent_10_timeframes: CsvTimeframes = Field(default_factory=list)
+    strategy_agent_10_regimes: CsvRegimes = Field(default_factory=list)
+    strategy_agent_10_min_bars: FailClosedMinBars = None
+    # Phase 3.5 Agent 10 carry-term-structure numerics (operator spec §Agent 10).
+    strategy_agent_10_max_data_age_hours: FailClosedDecimal = None
+    strategy_agent_10_min_history_points: FailClosedCount = None
 
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod
