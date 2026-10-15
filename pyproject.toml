@@ -28,6 +28,7 @@ dev = [
 testpaths = ["tests", "packages/contracts/tests"]
 pythonpath = ["."]
 addopts = "-q --no-header"
+markers = ["live_mt5: operator-run MT5 live-terminal verification (R-10; skipped by default)"]
 
 [tool.mypy]
 strict = true
