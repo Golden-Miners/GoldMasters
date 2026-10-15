@@ -24,10 +24,27 @@ from sqlalchemy.engine import make_url
 REPO = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(autouse=True)
+def _mt5_server_timezone_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Supply the required server-timezone key so unit suites stay hermetic.
+
+    ``GOLDMASTERS_MT5_SERVER_TIMEZONE`` is required with no default
+    (fail-closed startup); production still fails without it, but tests pin
+    ``UTC`` unless a module overrides it. A test proving the fail-closed
+    behavior deletes the variable explicitly.
+    """
+    monkeypatch.setenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", "UTC")
+
+
 def _working_url() -> str:
     """Resolve the working URL through the API's Settings (D-27)."""
+    import os
+
     from goldmasters_api.settings import Settings
 
+    # Session-scoped fixtures run outside function-scoped autouse defaults;
+    # pin the required server-timezone key here so DB tests stay hermetic.
+    os.environ.setdefault("GOLDMASTERS_MT5_SERVER_TIMEZONE", "UTC")
     try:
         return Settings().database_url  # type: ignore[call-arg]
     except Exception as exc:

@@ -1,9 +1,27 @@
 # GoldMasters versioned non-secret defaults (D-15).
 # Lowest-priority settings source: environment and `.env` override these.
-# Declares NO required key (database_url stays environment-only so its
-# absence still fails startup) and NO secret value.
+# Declares NO required key (database_url and mt5_server_timezone stay
+# environment-only so their absence still fails startup) and NO secret value.
 bind_host: 127.0.0.1
 bind_port: 8000
 trace_file_path: logs/traces.jsonl
 log_level: INFO
 config_version: "1.0"
+# Phase 2 D-59 market-data defaults (02-RESEARCH.md §5). The server timezone
+# is intentionally absent: it is required with no default.
+provider_id: mt5
+instrument_id: xauusd
+mt5_symbol: XAUUSD
+timeframe: H1
+mt5_probe_timeout_seconds: 2.0
+mt5_retry_attempts: 1
+mt5_retry_delay_ms: 500
+mt5_bars_count: 10
+bar_stale_closed_bars: 2
+bar_stale_grace_seconds: 300
+quote_stale_seconds_overlap: 30
+quote_stale_seconds_major: 60
+quote_stale_seconds_asia: 180
+quote_stale_seconds_offhours: 300
+weekend_close_utc: "Fri 21:00-Sun 22:00"
+daily_break_utc: "21:00-22:00"

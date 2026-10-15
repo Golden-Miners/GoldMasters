@@ -98,9 +98,11 @@ class QualityStatus(StrEnum):
     """The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.
 
     ``not_evaluated`` is the only value Phase 1 may emit and is never a healthy
-    value (D-20/D-22); thresholds and the computing code stay in Phase 2.
+    value (D-20/D-22); ``ok`` (added in Phase 2, minor bump per D-23) is the
+    single healthy value Phase 2 validation stamps on a fully passing bar.
     """
 
+    OK = "ok"
     STALE = "stale"
     DUPLICATE = "duplicate"
     GAP = "gap"

@@ -113,5 +113,6 @@ __all__ = [
 # The contract-layer version shared by every contract (Schema.md §1; D-02/D-23).
 # It is a ``major.minor`` string: a reader accepts any ``1.x`` and rejects an
 # unknown major, so a document written at ``1.0`` stays readable and replayable
-# by a later ``1.x`` build.
-CONTRACT_VERSION = "1.0"
+# by a later ``1.x`` build. Bumped to ``1.1`` for the Phase 2 ``QualityStatus.OK``
+# enum addition (vocabularies only grow — a minor bump per D-23).
+CONTRACT_VERSION = "1.1"

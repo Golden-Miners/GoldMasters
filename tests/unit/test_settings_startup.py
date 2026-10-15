@@ -18,6 +18,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     for key in [k for k in os.environ if k.startswith("GOLDMASTERS_")]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("GOLDMASTERS_DATABASE_URL", DB)
+    monkeypatch.setenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", "UTC")
 
 
 def test_missing_required_key_names_it(
@@ -65,7 +66,49 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "log_level",
         "config_version",
         "provider_api_key",
+        # Phase 2 D-59 market-data keys (02-01 tracer).
+        "provider_id",
+        "instrument_id",
+        "mt5_symbol",
+        "timeframe",
+        "mt5_server_timezone",
+        "mt5_probe_timeout_seconds",
+        "mt5_retry_attempts",
+        "mt5_retry_delay_ms",
+        "mt5_bars_count",
+        "bar_stale_closed_bars",
+        "bar_stale_grace_seconds",
+        "quote_stale_seconds_overlap",
+        "quote_stale_seconds_major",
+        "quote_stale_seconds_asia",
+        "quote_stale_seconds_offhours",
+        "weekend_close_utc",
+        "daily_break_utc",
     }
+
+
+def test_no_mt5_secret_key_declared(clean_env: pytest.FixtureRequest) -> None:
+    """D-47: the server timezone is the only GOLDMASTERS_MT5_* key, never secret."""
+    from goldmasters_api.settings import _is_secret_field
+
+    settings = Settings()  # type: ignore[call-arg]
+    mt5_keys = [n for n in Settings.model_fields if n.startswith("mt5_")]
+    assert mt5_keys, "expected MT5 settings keys to exist"
+    for name in mt5_keys:
+        assert not _is_secret_field(settings, name), f"secret MT5 key declared: {name}"
+    assert "mt5_server_timezone" in mt5_keys
+
+
+def test_server_timezone_required_names_key(
+    clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Fail-closed startup on a missing/invalid server timezone (D-36)."""
+    monkeypatch.delenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", raising=False)
+    with pytest.raises(ValidationError, match="mt5_server_timezone"):
+        Settings()  # type: ignore[call-arg]
+    monkeypatch.setenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", "Not/AZone")
+    with pytest.raises(ValidationError, match="mt5_server_timezone"):
+        Settings()  # type: ignore[call-arg]
 
 
 def test_secret_field_hidden(

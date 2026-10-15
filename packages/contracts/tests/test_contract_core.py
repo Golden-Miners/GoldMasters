@@ -163,7 +163,7 @@ C09_DOCUMENT: dict[str, object] = {
 
 #: Schema.md §3 with synthetic identifiers and no market data.
 ENVELOPE_DOCUMENT: dict[str, object] = {
-    "schema_version": "1.0",
+    "schema_version": CONTRACT_VERSION,
     "run_id": "run_01890000-0000-7000-8000-000000000001",
     "agent_name": "trend_agent",
     "agent_version": "1.0.0",

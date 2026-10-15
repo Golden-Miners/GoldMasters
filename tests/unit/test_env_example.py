@@ -43,6 +43,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "GOLDMASTERS_DATABASE_URL",
         "postgresql+psycopg://goldmasters:t@127.0.0.1:5432/goldmasters",
     )
+    monkeypatch.setenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", "UTC")
 
 
 def test_env_example_covers_every_key() -> None:

@@ -229,8 +229,9 @@
       "type": "string"
     },
     "QualityStatus": {
-      "description": "The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.\n\n``not_evaluated`` is the only value Phase 1 may emit and is never a healthy\nvalue (D-20/D-22); thresholds and the computing code stay in Phase 2.",
+      "description": "The D-20 quality vocabulary, shared by ``quality_status``/``quality_flags``.\n\n``not_evaluated`` is the only value Phase 1 may emit and is never a healthy\nvalue (D-20/D-22); ``ok`` (added in Phase 2, minor bump per D-23) is the\nsingle healthy value Phase 2 validation stamps on a fully passing bar.",
       "enum": [
+        "ok",
         "stale",
         "duplicate",
         "gap",

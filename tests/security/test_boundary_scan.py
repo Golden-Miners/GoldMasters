@@ -1,4 +1,10 @@
-"""Boundary scan: no forbidden calls/imports in the tree, deps on allowlist (01-02 Task 1)."""
+"""Boundary scan: no forbidden calls/imports in the tree, deps on allowlist (01-02 Task 1).
+
+Phase 2 rework: the MT5 package is allowlisted at exactly one path
+(``services/mt5_adapter/terminal.py``) and reported anywhere else, while
+``symbol_select``/``login`` are banned over the adapter tree. Order-capable
+names stay globally forbidden.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +26,10 @@ def _load_boundary() -> object:
     return module
 
 
+def _relative_posix(path: pathlib.Path) -> str:
+    return path.relative_to(REPO).as_posix()
+
+
 def test_no_forbidden_call_in_source_tree() -> None:
     boundary = _load_boundary()
     failures: dict[str, set[str]] = {}
@@ -36,9 +46,28 @@ def test_no_forbidden_call_in_source_tree() -> None:
                 boundary.scan_import_roots(tree)  # type: ignore[attr-defined]
                 & set(boundary.FORBIDDEN_IMPORT_ROOTS)  # type: ignore[attr-defined]
             )
+            rel = _relative_posix(path)
+            hits |= boundary.scan_adapter_imports(rel, tree)  # type: ignore[attr-defined]
+            if rel == boundary.ADAPTER_GATEWAY_PATH or rel.startswith(  # type: ignore[attr-defined]
+                boundary.ADAPTER_TREE_PREFIX  # type: ignore[attr-defined]
+            ):
+                hits |= boundary.scan_adapter_calls(tree)  # type: ignore[attr-defined]
             if hits:
-                failures[str(path.relative_to(REPO))] = hits
+                failures[rel] = hits
     assert not failures, f"forbidden broker/order capability: {failures}"
+
+
+def test_gateway_allowlist_permits_only_terminal() -> None:
+    """The allowlist names exactly the lazy gateway, nothing else."""
+    boundary = _load_boundary()
+    assert boundary.ADAPTER_GATEWAY_PATH == "services/mt5_adapter/terminal.py"  # type: ignore[attr-defined]
+    assert boundary.ADAPTER_TREE_PREFIX == "services/mt5_adapter/"  # type: ignore[attr-defined]
+    assert set(boundary.ADAPTER_SCOPED_IMPORT_ROOTS) == {"MetaTrader5", "mt5"}  # type: ignore[attr-defined]
+    assert set(boundary.FORBIDDEN_ADAPTER_CALLS) == {"symbol_select", "login"}  # type: ignore[attr-defined]
+    assert "MetaTrader5" not in set(boundary.FORBIDDEN_IMPORT_ROOTS)  # type: ignore[attr-defined]
+    assert "mt5" not in set(boundary.FORBIDDEN_IMPORT_ROOTS)  # type: ignore[attr-defined]
+    gateway = REPO / "services" / "mt5_adapter" / "terminal.py"
+    assert gateway.is_file(), "the allowlisted gateway module must exist"
 
 
 ALLOWED_DEPENDENCIES: frozenset[str] = frozenset(

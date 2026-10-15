@@ -21,6 +21,7 @@ import os
 import typing
 from typing import Any
 
+from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe
 from pydantic import SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
@@ -54,6 +55,31 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     config_version: str = "1.0"
     provider_api_key: SecretStr | None = None
+    # Phase 2 D-59 market-data keys (02-RESEARCH.md §5). All non-secret, so all
+    # join the hashed effective config automatically. No GOLDMASTERS_MT5_*
+    # secret field exists by design (D-47: bare attach, never credentials).
+    provider_id: ProviderId = "mt5"
+    instrument_id: str = "xauusd"
+    mt5_symbol: str = "XAUUSD"
+    timeframe: Timeframe = Timeframe.H1
+    # Required, no default: startup fails closed naming this key until the
+    # operator sets the broker server zone (02-RESEARCH.md §1).
+    mt5_server_timezone: IanaTimezone
+    mt5_probe_timeout_seconds: float = 2.0
+    mt5_retry_attempts: int = 1
+    mt5_retry_delay_ms: int = 500
+    mt5_bars_count: int = 10
+    bar_stale_closed_bars: int = 2
+    bar_stale_grace_seconds: int = 300
+    quote_stale_seconds_overlap: int = 30
+    quote_stale_seconds_major: int = 60
+    quote_stale_seconds_asia: int = 180
+    quote_stale_seconds_offhours: int = 300
+    # Tracer stubs: opaque UTC-window strings the full session/weekend table
+    # (plan 02-02) parses; the quote-session windows stay fixed in code until
+    # then (FLAGGED ASSUMPTION, 02-01 plan must-haves).
+    weekend_close_utc: str = "Fri 21:00-Sun 22:00"
+    daily_break_utc: str = "21:00-22:00"
 
     @model_validator(mode="before")
     @classmethod

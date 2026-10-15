@@ -16,9 +16,11 @@ from fastapi import FastAPI
 
 from goldmasters_api.health import router as health_router
 from goldmasters_api.logging import configure_logging
+from goldmasters_api.market import router as market_router
 from goldmasters_api.middleware import CorrelationIdMiddleware
 from goldmasters_api.settings import Settings, hash_effective_config
 from goldmasters_api.tracing import configure_tracing, shutdown_tracing
+from services.mt5_adapter.terminal import Mt5Gateway, TerminalGateway
 
 __all__ = ["app", "assert_loopback", "create_app"]
 
@@ -56,11 +58,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     shutdown_tracing()
 
 
-def create_app() -> FastAPI:
-    """Build the API application."""
+def create_app(gateway: TerminalGateway | None = None) -> FastAPI:
+    """Build the API application.
+
+    Args:
+        gateway: MT5 terminal gateway; defaults to the live gateway. Tests
+            inject a double — the seam that proves the slice without a terminal.
+    """
     application = FastAPI(title="GoldMasters Research API", lifespan=lifespan)
     application.add_middleware(CorrelationIdMiddleware)
+    application.state.mt5_gateway = gateway if gateway is not None else Mt5Gateway()
     application.include_router(health_router)
+    application.include_router(market_router)
     return application
 
 

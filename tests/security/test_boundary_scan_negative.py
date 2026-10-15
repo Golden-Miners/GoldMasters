@@ -1,4 +1,4 @@
-"""Negative meta-tests: the boundary scan has teeth (01-02 Task 2).
+"""Negative meta-tests: the boundary scan has teeth (01-02 Task 2, 02-01 rework).
 
 Names are drawn at runtime from the helper's own sets, so the mechanism is
 proven against every member and cannot rot when the sets grow. Fully
@@ -39,3 +39,39 @@ def test_scan_detects_forbidden_import() -> None:
     root = roots[0]
     tree = ast.parse(f"import {root}\n")
     assert root in boundary.scan_import_roots(tree)  # type: ignore[attr-defined]
+
+
+def test_gateway_import_allowed_only_at_gateway_path() -> None:
+    """A broker-package import passes at terminal.py and fails anywhere else."""
+    boundary = _load_boundary()
+    gateway = boundary.ADAPTER_GATEWAY_PATH  # type: ignore[attr-defined]
+    for root in sorted(boundary.ADAPTER_SCOPED_IMPORT_ROOTS):  # type: ignore[attr-defined]
+        tree = ast.parse(f"import {root}\n")
+        assert boundary.scan_adapter_imports(gateway, tree) == set()  # type: ignore[attr-defined]
+        assert boundary.scan_adapter_imports("apps/api/src/goldmasters_api/market.py", tree) == {  # type: ignore[attr-defined]
+            root
+        }
+        from_tree = ast.parse(f"from {root} import version\n")
+        assert boundary.scan_adapter_imports("services/mt5_adapter/adapter.py", from_tree) == {  # type: ignore[attr-defined]
+            root
+        }
+
+
+def test_scan_detects_forbidden_adapter_call() -> None:
+    """Every adapter-banned name is reported over the adapter tree."""
+    boundary = _load_boundary()
+    names = sorted(boundary.FORBIDDEN_ADAPTER_CALLS)  # type: ignore[attr-defined]
+    assert names, "adapter call set is empty — the scan guards nothing"
+    for name in names:
+        tree = ast.parse(f"def f(gateway):\n    gateway.{name}()\n")
+        assert boundary.scan_adapter_calls(tree) == {name}  # type: ignore[attr-defined]
+    clean = ast.parse("def f(gateway):\n    gateway.initialize()\n")
+    assert boundary.scan_adapter_calls(clean) == set()  # type: ignore[attr-defined]
+
+
+def test_global_scan_still_forbids_order_calls() -> None:
+    """The rework keeps every order-capable call globally forbidden."""
+    boundary = _load_boundary()
+    assert "order_send" in set(boundary.FORBIDDEN_CALL_NAMES)  # type: ignore[attr-defined]
+    tree = ast.parse("def f():\n    api.order_send(req)\n")
+    assert boundary.scan_forbidden(tree) == {"order_send"}  # type: ignore[attr-defined]

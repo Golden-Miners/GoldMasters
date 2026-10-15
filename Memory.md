@@ -81,3 +81,8 @@
 5. Resolve environment constraints and open decisions. Update this file with evidence.
 6. Implement one small task at a time; run its acceptance checks; update the task tracker only with actual results.
 7. No order execution in V1.
+
+## Phase 2 execution log (2026-10-15)
+
+- 02-01 tracer DONE: `services/mt5_adapter/` + bars/quote endpoints + provider health + reworked boundary scan. Evidence: full `uv run pytest` green (213), `ruff check/format` clean, `mypy --strict .` clean (57 files).
+- Next: 02-02 + 02-03 (Wave 2). `live_mt5` operator run still pending (no terminal here; field names + py3.14 wheel must-verify-first).
