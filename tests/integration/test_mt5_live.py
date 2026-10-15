@@ -40,6 +40,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from services.mt5_adapter.terminal import Mt5Gateway, TerminalGateway
+
 pytestmark = [
     pytest.mark.live_mt5,
     pytest.mark.skipif(
@@ -51,16 +53,14 @@ pytestmark = [
 REQUIRES_LIVE_GATE = "GOLDMASTERS_LIVE_MT5=1"
 
 
-def _gateway():  # type: ignore[no-untyped-def]
-    """Live gateway; import is lazy so collection never needs the package."""
-    from services.mt5_adapter.terminal import Mt5Gateway
-
+def _gateway() -> TerminalGateway:
+    """Live gateway (module import is safe: the package loads lazily)."""
     return Mt5Gateway()
 
 
 def test_live_bare_attach_is_read_only() -> None:
     """Bare initialize attaches; the session must be investor read-only."""
-    from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter
+    from services.mt5_adapter.adapter import Mt5Adapter
 
     gateway = _gateway()
     assert gateway.initialize() is True

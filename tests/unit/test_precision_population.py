@@ -67,9 +67,25 @@ class FIXTURE_Terminal:  # noqa: N801 — fixture prefix is the labelling conven
     def last_error(self) -> tuple[int, str]:
         return (0, "ok")
 
+    def copy_rates_from_pos(
+        self, symbol: str, timeframe: str, start_pos: int, count: int
+    ) -> list[dict[str, Any]] | None:
+        return None
+
+    def copy_rates_range(
+        self, symbol: str, timeframe: str, start: datetime, end: datetime
+    ) -> list[dict[str, Any]] | None:
+        return None
+
     def symbol_info(self, symbol: str) -> SimpleNamespace | None:
         assert symbol == "XAUUSD"
         return self._info
+
+    def symbol_info_tick(self, symbol: str) -> dict[str, Any] | None:
+        return None
+
+    def symbols_get(self) -> list[SimpleNamespace]:
+        return [SimpleNamespace(name="XAUUSD")]
 
     def terminal_info(self) -> SimpleNamespace:
         return SimpleNamespace(trade_allowed=False)
@@ -80,7 +96,9 @@ class FIXTURE_Terminal:  # noqa: N801 — fixture prefix is the labelling conven
 
 def _spec(info: SimpleNamespace | None, now: datetime) -> PrecisionRow | AdapterFailure:
     adapter = Mt5Adapter(
-        FIXTURE_Terminal(info), server_timezone="UTC", retry_delay_ms=1  # type: ignore[arg-type]
+        FIXTURE_Terminal(info),
+        server_timezone="UTC",
+        retry_delay_ms=1,
     )
     return adapter.get_instrument_spec("xauusd", now_utc=now)
 

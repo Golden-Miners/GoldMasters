@@ -9,7 +9,6 @@ still fails construction — the contract gate (D-04) holds over adapter data.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
@@ -51,7 +50,9 @@ def FIXTURE_closed_rows() -> list[dict[str, Any]]:  # noqa: N802
         FIXTURE_bar_row(datetime(2026, 1, 6, hour, tzinfo=UTC), o, h, lo, c)
         for hour, o, h, lo, c in chronological
     ]
-    forming = FIXTURE_bar_row(datetime(2026, 1, 6, 15, tzinfo=UTC), 2386.50, 2388.00, 2385.50, 2387.00)
+    forming = FIXTURE_bar_row(
+        datetime(2026, 1, 6, 15, tzinfo=UTC), 2386.50, 2388.00, 2385.50, 2387.00
+    )
     return [forming, *reversed(rows)]
 
 
@@ -127,7 +128,7 @@ class FIXTURE_Terminal:  # noqa: N801 — fixture prefix is the labelling conven
 
 def _adapter(now: datetime) -> Mt5Adapter:
     return Mt5Adapter(
-        FIXTURE_Terminal(now),  # type: ignore[arg-type]
+        FIXTURE_Terminal(now),
         server_timezone="UTC",
         retry_delay_ms=1,
     )
@@ -171,13 +172,13 @@ def test_spec_constructs_and_round_trips() -> None:
 def _valid_bar_dict() -> dict[str, Any]:
     result = _adapter(FIXTURE_NOW).get_bars("xauusd", "H1", now_utc=FIXTURE_NOW)
     assert not isinstance(result, AdapterFailure)
-    return json.loads(result[0].model_dump_json())
+    return result[0].model_dump(mode="json")
 
 
 def _valid_quote_dict() -> dict[str, Any]:
     result = _adapter(FIXTURE_NOW).get_latest_quote("xauusd", now_utc=FIXTURE_NOW)
     assert not isinstance(result, AdapterFailure)
-    return json.loads(result.model_dump_json())
+    return result.model_dump(mode="json")
 
 
 def _mutate(base: dict[str, Any], key: str, value: Any, *, drop: bool = False) -> dict[str, Any]:
@@ -244,7 +245,7 @@ def test_quote_mutations_fail(label: str, mutate: Any) -> None:
 def test_precision_row_mutations_fail() -> None:
     result = _adapter(FIXTURE_NOW).get_instrument_spec("xauusd", now_utc=FIXTURE_NOW)
     assert not isinstance(result, AdapterFailure)
-    base = json.loads(result.model_dump_json())
+    base = result.model_dump(mode="json")
     with pytest.raises(ValidationError):
         PrecisionRow.model_validate(_mutate(base, "decimals", -1))
     with pytest.raises(ValidationError):
