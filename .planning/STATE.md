@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 ## Current Position
 
 Phase: 3 — Deterministic Analysis, Strategy Rules and Risk Gates
-Plan: 03-01 complete (Wave 1 tracer: conventions, contract-size column, settings surface)
+Plan: 03-02 complete (Wave 2: structure.py, regime.py, strategies/base.py + 22 contract tests)
 Status: Phase 2 implementation complete pending operator live_mt5 run (BLOCKED) + verification
-Last activity: 2026-10-15 — 03-01 executed: ROUND_HALF_UP quantization, UTC adjacency + fold, MALFORMED order check, PrecisionRow.contract_size (1.2), Phase 3 GOLDMASTERS_ keys; 322 passed, 2 skipped
+Last activity: 2026-10-15 — 03-02 executed: strict-extreme swings, ordinal TrendRegime (UNKNOWN fail-closed), no-setup-on-fail interface; 344 passed, 2 skipped
 
 ## Performance Metrics
 
@@ -87,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-15T14:58:17Z
-Stopped at: Completed 03-01-PLAN.md (Phase 3 Wave 1 tracer)
+Last session: 2026-10-15T15:30:00Z
+Stopped at: Completed 03-02-PLAN.md (Phase 3 Wave 2 structure/regime/strategy-interface)
 Resume file: None
