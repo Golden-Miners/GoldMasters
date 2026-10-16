@@ -54,14 +54,14 @@
 - [x] T0401 Define typed graph state and run lifecycle. **Accept:** RunState + run_log (D-4.3 pinned) tested — 04-02-SUMMARY (2026-10-16), `pytest tests/unit/test_graph_state.py` 4 passed.
 - [x] T0402 Build graph skeleton and explicit conditional edges. **Accept:** ingest/select/evaluate/gate/barrier/finalize + 3 conditional routes — same evidence.
 - [x] T0403 Add bounded retry, timeout, cancellation and partial-failure handling. **Accept:** RetryPolicy transient-only + TimeoutPolicy from GOLDMASTERS_GRAPH_* settings, failure-injection suite — `test_graph_bounds.py` + `test_graph_failure_policy.py` green, full suite 625 passed.
-- [ ] T0404 Implement Market Analyst, Trend and Instrument agents.
-- [ ] T0405 Implement News and Sentiment adapters/agents with provenance.
-- [ ] T0406 Implement Research agent with citations and source restrictions.
+- [ ] T0404 Implement Market Analyst, Trend and Instrument agents. (Partial in 04-03: Market Analyst LLM prose role `AnalystNote` + prompt builder landed with schema-pinned parse — 04-03-SUMMARY (2026-10-16), `test_graph_nodes_roles.py` green; Trend/Instrument deterministic agents + graph wiring pending.)
+- [ ] T0405 Implement News and Sentiment adapters/agents with provenance. (Partial in 04-03: News/Sentiment LLM extraction role `SentimentExtraction` landed, inputs marked untrusted — same evidence; retrieval adapters with provenance pending.)
+- [ ] T0406 Implement Research agent with citations and source restrictions. (Partial in 04-03: Research LLM role `ResearchFindings` with sources list landed — same evidence; source-restriction adapters pending.)
 - [x] T0407 Implement Strategy Supervisor and individual strategy nodes. **Accept:** `matrix_from_settings` over all 10 rows + evaluate fan-out == eligible set — 04-02-SUMMARY (2026-10-16), bounds suite green.
 - [ ] T0408 Implement Signaling Agent using validated strategy outputs only.
 - [x] T0409 Implement deterministic risk/validation gate. **Accept:** gate node on Phase 3 `evaluate_gate` (sole TRADE path) + deterministic pre-CEO barrier — 04-02-SUMMARY (2026-10-16), barrier + failure-policy suites green.
-- [ ] T0410 Implement CEO decision contract and fail-closed rules. (Deterministic terminal mapper + stubbed synthesis slot landed in 04-02; model-assisted CEO stays open on T0004.)
-- [ ] T0411 Add schema/contract tests for every node and graph path. (Partial in 04-02: all 6 built nodes covered; role nodes T0404–T0410 pending.)
+- [ ] T0410 Implement CEO decision contract and fail-closed rules. (Deterministic terminal mapper + stubbed synthesis slot landed in 04-02; 04-03 added the CEO prose role `CeoProse` + `check_ceo_required` agreement gate — same evidence; model-assisted CEO stays open on T0004.)
+- [x] T0411 Add schema/contract tests for every node and graph path. **Accept:** all 6 deterministic nodes (04-02) + all 4 LLM role nodes (T0404–T0406, T0410 prose) covered — 04-03-SUMMARY (2026-10-16), `test_graph_nodes_roles.py` (11) + `test_ollama_discovery.py` (8) green, outage cannot produce TRADE.
 - Acceptance gate: all graph branches tested; no unvalidated LLM output reaches a decision.
 
 ## Phase 5 — Persistence, journal and monitoring

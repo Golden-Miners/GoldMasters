@@ -56,6 +56,19 @@
   per-idea risk; no graph change needed. T0004 (Ollama) still operator-open.
 - **Repo tooling note:** bare `uv sync` prunes workspace members from `.venv`;
   always use `uv sync --all-packages` in this repo.
+- **04-03 Wave 2 model runtime completed (2026-10-16):** `src/goldmasters/graph/runtime.py`
+  (Ollama `AsyncClient` binding on `GOLDMASTERS_OLLAMA_HOST`, run-start `list()`
+  discovery, reachable+expected-model health, measured run record) plus
+  `src/goldmasters/agents/` (prompts + `ContractModel` output schemas for analyst,
+  news/sentiment, research, CEO prose — evidence/reason strings only) and
+  `check_ceo_required` in barriers (failed required agent blocks prose, no model
+  call). `ollama==0.6.3` + `langgraph-checkpoint-sqlite==3.1.2` pinned in
+  `apps/api` (04-01 GO pins); `GOLDMASTERS_OLLAMA_HOST` loopback-allowlisted,
+  `OLLAMA_MODEL` unset by default. Evidence: full suite 643 passed / 3 skips
+  (2 pre-existing live-MT5 + 1 ollama-live, T0004 open), ruff + mypy strict
+  clean, boundary scan green; commits `41c9884`, `5227881`, `487f1c8`.
+  Deferred: `AsyncSqliteSaver` wiring (dep pinned, builder swap is a later plan),
+  role-node graph wiring, T0004 operator close-out.
 
 - Drafted the nine project Markdown files from the user-provided requirements and clarification answers.
 - No repository was inspected.
