@@ -64,9 +64,7 @@ def test_flat_bars_run_end_to_end_to_no_trade(
     apply_clean_env(monkeypatch)
     settings = make_settings(**AGENT_01_SCOPE, **AGENT_01_NUMERICS, **OPEN_RISK)
     graph = build_graph(settings)
-    closing = asyncio.run(
-        run_closing(graph, make_opening(settings, closes=FIXTURE_FLAT_CLOSES))
-    )
+    closing = asyncio.run(run_closing(graph, make_opening(settings, closes=FIXTURE_FLAT_CLOSES)))
 
     assert closing["fatal"] is None
     assert closing["barrier_passed"] is True

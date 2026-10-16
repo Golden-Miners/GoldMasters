@@ -71,9 +71,7 @@ def make_settings(**overrides: object) -> Settings:
     return Settings(**base)  # type: ignore[arg-type]
 
 
-def make_opening(
-    settings: Settings, *, closes: list[str] | None = None
-) -> RunState:
+def make_opening(settings: Settings, *, closes: list[str] | None = None) -> RunState:
     """Deterministic opening state: fresh run id, fixture bars, eligible ctx."""
     return initial_state(
         run_id=f"run_{uuid.uuid4()}",
@@ -83,6 +81,8 @@ def make_opening(
     )
 
 
-async def run_closing(graph: object, opening: RunState) -> RunState:
+async def run_closing(
+    graph: object, opening: RunState, *, max_concurrency: int | None = None
+) -> RunState:
     """Invoke one run and return the closing state (thread bound to run_id)."""
-    return await run_to_decision(graph, opening)  # type: ignore[arg-type]
+    return await run_to_decision(graph, opening, max_concurrency=max_concurrency)  # type: ignore[arg-type]

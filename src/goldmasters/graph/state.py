@@ -13,7 +13,7 @@ import hashlib
 import json
 import operator
 from datetime import UTC, datetime
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, Protocol, TypedDict
 
 from goldmasters_contracts import (
     AgentRunStatus,
@@ -23,11 +23,12 @@ from goldmasters_contracts import (
     MarketBar,
 )
 
-from src.goldmasters.strategies.base import MarketContext, StrategyEvaluation
 from src.goldmasters.risk.gate import GateVerdict
+from src.goldmasters.strategies.base import MarketContext, StrategyEvaluation
 
 __all__ = [
     "MINIMAL_LOG_KEYS",
+    "NodeFn",
     "RunState",
     "compute_input_ref",
     "run_log",
@@ -47,6 +48,12 @@ MINIMAL_LOG_KEYS = frozenset(
         "node_times",
     }
 )
+
+
+#: Node function shape: async, state in, partial state update out. A
+#: Protocol (not a Callable alias) so mypy matches langgraph's node overloads.
+class NodeFn(Protocol):
+    async def __call__(self, state: RunState) -> dict[str, Any]: ...
 
 
 class RunState(TypedDict):
