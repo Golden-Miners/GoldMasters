@@ -155,6 +155,8 @@ def _status_of(evaluation: StrategyEvaluation) -> AgentRunStatus:
 
     ``_blocked`` stamps the cause in single-element ``limitations``;
     ``NOT_APPLICABLE`` maps to the verbatim ``skipped`` member (closed enum).
+    Only ``SETUP_FOUND`` feeds the gate; every other outcome is recorded with
+    rule checks and never reaches it.
     """
     if evaluation.setup_found:
         return AgentRunStatus.OK
@@ -238,7 +240,10 @@ def make_select_node(settings: Settings) -> NodeFn:
                 else AgentRunStatus.SKIPPED.value
             )
         update = _stamp(state, edges.SELECT, AgentRunStatus.OK)
-        update["agent_statuses"] = statuses
+        update["agent_statuses"] = {
+            **statuses,
+            edges.SELECT: AgentRunStatus.OK.value,
+        }
         update["eligible"] = eligible_ids
         selected_at = utc_now_iso()
         times = dict(update["node_times"])
@@ -274,8 +279,16 @@ def make_evaluate_node(settings: Settings) -> NodeFn:
                     build_params(module_name, f"{index + 1:02d}", settings),
                 )
                 evaluations[sid] = evaluation
-                statuses[sid] = _status_of(evaluation).value
-                evidence[sid] = EvidenceStatus.VALID.value
+                status = _status_of(evaluation)
+                statuses[sid] = status.value
+                # A completed report is VALID evidence — except INSUFFICIENT_DATA:
+                # the agent could not evaluate, so its evidence is MISSING and
+                # the barrier fails the run closed (never NO_TRADE on partial
+                # evaluation). Crashes below record INVALID.
+                if status is AgentRunStatus.INSUFFICIENT_DATA:
+                    evidence[sid] = EvidenceStatus.MISSING.value
+                else:
+                    evidence[sid] = EvidenceStatus.VALID.value
                 if evaluation.setup_found:
                     conflicts.append(_describe_candidate(sid, evaluation))
             except Exception as exc:  # noqa: BLE001 — partial failure, recorded not raised
@@ -302,7 +315,10 @@ def make_evaluate_node(settings: Settings) -> NodeFn:
                     details=None,
                 ),
             }
-        update["agent_statuses"] = statuses
+        update["agent_statuses"] = {
+            **statuses,
+            edges.EVALUATE: AgentRunStatus.OK.value,
+        }
         update["evidence"] = evidence
         update["evaluations"] = evaluations
         if "errors" not in update:

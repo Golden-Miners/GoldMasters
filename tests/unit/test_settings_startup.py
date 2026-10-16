@@ -187,6 +187,9 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "strategy_agent_10_min_bars",
         "strategy_agent_10_max_data_age_hours",
         "strategy_agent_10_min_history_points",
+        "graph_node_timeout_seconds",
+        "graph_node_max_retries",
+        "graph_max_concurrency",
     }
 
 
@@ -481,11 +484,9 @@ def test_strategy_scaffold_fail_closed(
     with pytest.raises(PydanticValidationError, match="strategy_agent_01_min_bars"):
         Settings()  # type: ignore[call-arg]
     monkeypatch.delenv("GOLDMASTERS_STRATEGY_AGENT_01_MIN_BARS")
-    assert (
-        _settings(monkeypatch, strategy_agent_01_instruments="xauusd, eurusd")
-        .strategy_agent_01_instruments
-        == ["xauusd", "eurusd"]
-    )
+    assert _settings(
+        monkeypatch, strategy_agent_01_instruments="xauusd, eurusd"
+    ).strategy_agent_01_instruments == ["xauusd", "eurusd"]
 
 
 def test_strategy_numeric_params_fail_closed(
@@ -516,14 +517,11 @@ def test_strategy_numeric_params_fail_closed(
     assert settings.strategy_agent_09_expiry_bars is None
     assert settings.strategy_agent_10_max_data_age_hours is None
     assert settings.strategy_agent_10_min_history_points is None
+    assert _settings(
+        monkeypatch, strategy_agent_02_lookbacks="10, 20"
+    ).strategy_agent_02_lookbacks == [10, 20]
     assert (
-        _settings(monkeypatch, strategy_agent_02_lookbacks="10, 20").strategy_agent_02_lookbacks
-        == [10, 20]
-    )
-    assert (
-        _settings(
-            monkeypatch, strategy_agent_01_htf_timeframe="H4"
-        ).strategy_agent_01_htf_timeframe
+        _settings(monkeypatch, strategy_agent_01_htf_timeframe="H4").strategy_agent_01_htf_timeframe
         == "H4"
     )
     for key, bad in (

@@ -88,6 +88,8 @@ ALLOWED_DEPENDENCIES: frozenset[str] = frozenset(
         "psycopg-binary",
         "httpx",
         "goldmasters-contracts",
+        # Phase 4 D-4.4: orchestration runtime (04-01 GO probe on 3.14.7).
+        "langgraph",
         # Dev tools
         "pytest",
         "pytest-cov",
