@@ -25,6 +25,7 @@ __all__ = [
     "SplitEnforcement",
     "SplitName",
     "SplitWindows",
+    "bar_times",
     "build_manifest",
     "classify_bar",
     "enforce_splits",
@@ -114,9 +115,18 @@ def timeframe_step(timeframe: Timeframe) -> timedelta:
     raise ValueError(f"gap detection unsupported for timeframe {token!r}")
 
 
-def classify_bar(moment: datetime, windows: SplitWindows) -> SplitName | None:
+def bar_times(bar: MarketBar) -> tuple[datetime, datetime]:
+    """Fail-closed bar timestamps: a bar without both is refused, never guessed."""
+    opened = bar.bar_open_time
+    closed = bar.bar_close_time
+    if opened is None or closed is None:
+        raise ValueError("bar without open/close timestamps cannot enter a backtest")
+    return opened, closed
+
+
+def classify_bar(moment: datetime | None, windows: SplitWindows) -> SplitName | None:
     """Classify one UTC instant; ``None`` means out-of-window (rejected)."""
-    if moment.tzinfo is None:
+    if moment is None or moment.tzinfo is None:
         raise ValueError("classify_bar requires a timezone-aware instant")
     if windows.in_sample_start <= moment < windows.in_sample_end:
         return "in_sample"
@@ -139,14 +149,15 @@ def enforce_splits(
     unique: list[MarketBar] = []
     duplicates: list[MarketBar] = []
     for bar in ordered:
-        key = bar.bar_open_time.isoformat()
+        opened, _ = bar_times(bar)
+        key = opened.isoformat()
         if key in seen:
             duplicates.append(bar)
             continue
         seen.add(key)
         unique.append(bar)
     for first, second in zip(unique, unique[1:], strict=False):
-        if second.bar_open_time <= first.bar_open_time:
+        if bar_times(second)[0] <= bar_times(first)[0]:
             raise ValueError("bars must arrive in strictly increasing open-time order")
     in_window: list[MarketBar] = []
     out_of_window: list[MarketBar] = []
@@ -158,21 +169,24 @@ def enforce_splits(
     missing: list[dict[str, str]] = []
     excluded: list[dict[str, str]] = []
     for first, second in zip(unique, unique[1:], strict=False):
-        delta = second.bar_open_time - first.bar_open_time
+        first_opened, first_closed = bar_times(first)
+        second_opened, _ = bar_times(second)
+        delta = second_opened - first_opened
         if delta > step:
             skipped = max(round(delta / step) - 1, 1)
             missing.append(
                 {
-                    "gap_start": first.bar_close_time.isoformat(),
-                    "gap_end": second.bar_open_time.isoformat(),
+                    "gap_start": first_closed.isoformat(),
+                    "gap_end": second_opened.isoformat(),
                     "bars_skipped": str(skipped),
                 }
             )
             excluded.append(
                 {
-                    "start": first.bar_close_time.isoformat(),
-                    "end": second.bar_open_time.isoformat(),
-                    "reason": f"missing data: {skipped} {timeframe.value} bar(s) absent, never synthesised",
+                    "start": first_closed.isoformat(),
+                    "end": second_opened.isoformat(),
+                    "reason": f"missing data: {skipped} {timeframe.value} bar(s) "
+                    "absent, never synthesised",
                 }
             )
     flags: list[str] = []
@@ -193,13 +207,14 @@ def enforce_splits(
 
 
 def _canonical_bar(bar: MarketBar) -> str:
+    opened, closed = bar_times(bar)
     document = {
         "instrument_id": bar.instrument_id,
         "provider_id": str(bar.provider_id),
         "provider_symbol": bar.provider_symbol,
         "timeframe": str(bar.timeframe),
-        "bar_open_time": bar.bar_open_time.isoformat(),
-        "bar_close_time": bar.bar_close_time.isoformat(),
+        "bar_open_time": opened.isoformat(),
+        "bar_close_time": closed.isoformat(),
         "open": str(bar.open),
         "high": str(bar.high),
         "low": str(bar.low),
@@ -224,10 +239,12 @@ def build_manifest(
     digest = hashlib.sha256()
     for bar in ordered:
         digest.update(_canonical_bar(bar).encode("utf-8"))
+    range_start, _ = bar_times(ordered[0])
+    _, range_end = bar_times(ordered[-1])
     return DatasetManifest(
         dataset_ref=dataset_ref,
-        range_start=ordered[0].bar_open_time,
-        range_end=ordered[-1].bar_close_time,
+        range_start=range_start,
+        range_end=range_end,
         symbol_mapping=dict(symbol_mapping),
         quality_report={
             "bars_total": str(len(ordered)),

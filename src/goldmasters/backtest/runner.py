@@ -40,6 +40,7 @@ from src.goldmasters.backtest.fills import (
 from src.goldmasters.backtest.splits import (
     DatasetManifest,
     SplitWindows,
+    bar_times,
     build_manifest,
     enforce_splits,
 )
@@ -164,7 +165,7 @@ def _metric(name: str, definition: str, count: int) -> BacktestMetric:
     return BacktestMetric(
         name=name,
         definition=f"{definition}; costs placeholder per D-6.1, not authoritative",
-        value=str(count),
+        value=Decimal(count),
         sample_size=count,
     )
 
@@ -231,6 +232,7 @@ def _run_slot(
     for index, bar in enumerate(bars):
         bars_so_far = bars[: index + 1]
         ctx = make_ctx(index, bar)
+        _, bar_closed = bar_times(bar)
         evaluation = slot.evaluate(bars_so_far, ctx)
         if not evaluation.setup_found:
             continue
@@ -238,7 +240,7 @@ def _run_slot(
         direction = _direction_from_levels(evaluation)
         if direction is None:
             errors.append(
-                f"bar {bar.bar_close_time.isoformat()}: setup with "
+                f"bar {bar_closed.isoformat()}: setup with "
                 "indeterminate direction from levels, gate blocked"
             )
             continue
@@ -261,7 +263,7 @@ def _run_slot(
         raw_fill = fill_at_next_open(bars, index)
         if raw_fill is None:
             errors.append(
-                f"bar {bar.bar_close_time.isoformat()}: gate passed on the final "
+                f"bar {bar_closed.isoformat()}: gate passed on the final "
                 "bar, no next-bar open — fill skipped, never synthesised"
             )
             continue
@@ -285,6 +287,8 @@ def _run_slot(
             fills,
         ),
     )
+    range_start, _ = bar_times(bars[0])
+    _, range_end = bar_times(bars[-1])
     return BacktestRecord(
         backtest_run_id=f"{job.run_id}:{slot.strategy_id}",
         strategy_id=slot.strategy_id,
@@ -293,12 +297,10 @@ def _run_slot(
         dataset_hash=job.dataset_hash,
         instrument_id=job.instrument_id,
         timeframe=job.timeframe,
-        start=bars[0].bar_open_time,
-        end=bars[-1].bar_close_time,
-        timezone=job.display_timezone,  # type: ignore[arg-type]
-        data_quality=EvidenceStatus.MISSING
-        if missing_periods
-        else EvidenceStatus.VALID,
+        start=range_start,
+        end=range_end,
+        timezone=job.display_timezone,
+        data_quality=EvidenceStatus.MISSING if missing_periods else EvidenceStatus.VALID,
         parameter_hash=hash_params(slot.params),
         assumptions=to_assumptions(job.costs),
         in_sample_start=job.windows.in_sample_start,

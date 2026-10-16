@@ -9,9 +9,10 @@ fill model) is present on every runner-produced record.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import TypeVar
+from typing import Protocol
 
 import pytest
 from goldmasters_contracts import (
@@ -63,21 +64,32 @@ from src.goldmasters.strategies.agent_07 import Agent07Params
 from src.goldmasters.strategies.agent_08 import Agent08Params
 from src.goldmasters.strategies.agent_09 import Agent09Params
 from src.goldmasters.strategies.agent_10 import Agent10Params
-from src.goldmasters.strategies.base import MarketContext
+from src.goldmasters.strategies.base import MarketContext, StrategyEvaluation
 from tests.unit.agent_fixtures import bars_from_closes, make_ctx
 
 T0 = datetime(2026, 1, 6, 12, 0, tzinfo=UTC)
 FIXTURE_UP = ["100", "102", "104", "106", "108", "110", "112", "114"]
 
 
-def _slot(module: object, params: object) -> StrategySlot:
-    evaluate = getattr(module, "evaluate")
+class _Package(Protocol):
+    """Structural package surface: stamped identity only (evaluate binds per slot)."""
+
+    STRATEGY_ID: str
+    STRATEGY_VERSION: str
+    CODE_HASH: str
+
+
+def _slot(
+    package: _Package,
+    params: object,
+    evaluate: Callable[[Sequence[MarketBar], MarketContext], StrategyEvaluation],
+) -> StrategySlot:
     return StrategySlot(
-        strategy_id=str(getattr(module, "STRATEGY_ID")),
-        strategy_version=str(getattr(module, "STRATEGY_VERSION")),
-        code_hash=str(getattr(module, "CODE_HASH")),
+        strategy_id=package.STRATEGY_ID,
+        strategy_version=package.STRATEGY_VERSION,
+        code_hash=package.CODE_HASH,
         params=params,
-        evaluate=lambda bars, ctx: evaluate(bars, ctx, params),
+        evaluate=evaluate,
     )
 
 
@@ -90,52 +102,122 @@ def _scope(regimes: tuple[TrendRegime, ...]) -> dict[str, object]:
     }
 
 
-_P = TypeVar("_P")
-
-
-def _params(cls: type[_P], **fields: object) -> _P:
+def _params[P](cls: type[P], **fields: object) -> P:
     """One ignore for all FIXTURE builders (values copied from per-agent tests)."""
-    return cls(**fields)  # type: ignore[call-arg]
+    return cls(**fields)
 
 
 def _all_slots() -> list[StrategySlot]:
     up_down = (TrendRegime.UPTREND, TrendRegime.DOWNTREND)
     full = (TrendRegime.UPTREND, TrendRegime.DOWNTREND, TrendRegime.RANGE)
+    p01 = _params(
+        Agent01Params,
+        **_scope(up_down),
+        min_bars=6,
+        fast_period=3,
+        slow_period=5,
+        htf_timeframe="H4",
+        adx_min=Decimal("0.1"),
+        confirm_bars=2,
+    )
+    p02 = _params(
+        Agent02Params,
+        **_scope(up_down),
+        min_bars=6,
+        lookbacks=(2, 4),
+        entry_threshold=Decimal("0.005"),
+        vol_lookback=3,
+        max_hold_bars=8,
+        expiry_bars=3,
+    )
+    p03 = _params(
+        Agent03Params,
+        **_scope(up_down),
+        min_bars=7,
+        channel_bars=5,
+        buffer_ticks=2,
+        confirm_bars=2,
+        exit_bars=5,
+    )
+    p04 = _params(
+        Agent04Params,
+        **_scope(up_down),
+        min_bars=7,
+        vol_lookback=3,
+        compression_pctile=Decimal("0.5"),
+        confirm_bars=2,
+    )
+    p05 = _params(
+        Agent05Params,
+        **_scope(up_down),
+        min_bars=6,
+        trend_period=5,
+        pullback_ma=3,
+        confirm_bars=2,
+        expiry_bars=3,
+    )
+    p06 = _params(
+        Agent06Params,
+        **_scope(up_down),
+        min_bars=6,
+        session_name="london",
+        session_tz="UTC",
+        range_minutes=120,
+        buffer_ticks=2,
+        expiry_minutes=480,
+        max_spread_ticks=5,
+    )
+    p07 = _params(
+        Agent07Params,
+        **_scope(full),
+        min_bars=6,
+        basis_period=5,
+        band_width=Decimal("1.0"),
+        z_min=Decimal("1.0"),
+        rsi_period=5,
+        rsi_extreme=Decimal("30"),
+        confirm_bars=1,
+    )
+    p08 = _params(
+        Agent08Params,
+        **_scope(full),
+        min_bars=6,
+        session_name="london",
+        session_tz="UTC",
+        band_sigmas=Decimal("1.0"),
+        min_volume_bars=5,
+    )
+    p09 = _params(
+        Agent09Params,
+        **_scope(full),
+        min_bars=6,
+        swing_bars=1,
+        equal_tol_ticks=2,
+        sweep_tol_ticks=2,
+        disp_body_min_atr=Decimal("1.0"),
+        expiry_bars=5,
+    )
+    p10 = _params(
+        Agent10Params,
+        enabled=True,
+        instruments=("xauusd", "eurusd", "btcusd", "usoil"),
+        timeframes=(Timeframe.H1,),
+        regimes=full,
+        min_bars=6,
+        max_data_age_hours=Decimal("24"),
+        min_history_points=50,
+    )
     return [
-        _slot(pkg_01, _params(Agent01Params, **_scope(up_down), min_bars=6,
-                              fast_period=3, slow_period=5, htf_timeframe="H4",
-                              adx_min=Decimal("0.1"), confirm_bars=2)),
-        _slot(pkg_02, _params(Agent02Params, **_scope(up_down), min_bars=6,
-                              lookbacks=(2, 4), entry_threshold=Decimal("0.005"),
-                              vol_lookback=3, max_hold_bars=8, expiry_bars=3)),
-        _slot(pkg_03, _params(Agent03Params, **_scope(up_down), min_bars=7,
-                              channel_bars=5, buffer_ticks=2, confirm_bars=2,
-                              exit_bars=5)),
-        _slot(pkg_04, _params(Agent04Params, **_scope(up_down), min_bars=7,
-                              vol_lookback=3, compression_pctile=Decimal("0.5"),
-                              confirm_bars=2)),
-        _slot(pkg_05, _params(Agent05Params, **_scope(up_down), min_bars=6,
-                              trend_period=5, pullback_ma=3, confirm_bars=2,
-                              expiry_bars=3)),
-        _slot(pkg_06, _params(Agent06Params, **_scope(up_down), min_bars=6,
-                              session_name="london", session_tz="UTC",
-                              range_minutes=120, buffer_ticks=2,
-                              expiry_minutes=480, max_spread_ticks=5)),
-        _slot(pkg_07, _params(Agent07Params, **_scope(full), min_bars=6,
-                              basis_period=5, band_width=Decimal("1.0"),
-                              z_min=Decimal("1.0"), rsi_period=5,
-                              rsi_extreme=Decimal("30"), confirm_bars=1)),
-        _slot(pkg_08, _params(Agent08Params, **_scope(full), min_bars=6,
-                              session_name="london", session_tz="UTC",
-                              band_sigmas=Decimal("1.0"), min_volume_bars=5)),
-        _slot(pkg_09, _params(Agent09Params, **_scope(full), min_bars=6,
-                              swing_bars=1, equal_tol_ticks=2, sweep_tol_ticks=2,
-                              disp_body_min_atr=Decimal("1.0"), expiry_bars=5)),
-        _slot(pkg_10, _params(Agent10Params, enabled=True,
-                              instruments=("xauusd", "eurusd", "btcusd", "usoil"),
-                              timeframes=(Timeframe.H1,), regimes=full,
-                              min_bars=6, max_data_age_hours=Decimal("24"),
-                              min_history_points=50)),
+        _slot(pkg_01, p01, lambda bars, ctx: pkg_01.evaluate(bars, ctx, p01)),
+        _slot(pkg_02, p02, lambda bars, ctx: pkg_02.evaluate(bars, ctx, p02)),
+        _slot(pkg_03, p03, lambda bars, ctx: pkg_03.evaluate(bars, ctx, p03)),
+        _slot(pkg_04, p04, lambda bars, ctx: pkg_04.evaluate(bars, ctx, p04)),
+        _slot(pkg_05, p05, lambda bars, ctx: pkg_05.evaluate(bars, ctx, p05)),
+        _slot(pkg_06, p06, lambda bars, ctx: pkg_06.evaluate(bars, ctx, p06)),
+        _slot(pkg_07, p07, lambda bars, ctx: pkg_07.evaluate(bars, ctx, p07)),
+        _slot(pkg_08, p08, lambda bars, ctx: pkg_08.evaluate(bars, ctx, p08)),
+        _slot(pkg_09, p09, lambda bars, ctx: pkg_09.evaluate(bars, ctx, p09)),
+        _slot(pkg_10, p10, lambda bars, ctx: pkg_10.evaluate(bars, ctx, p10)),
     ]
 
 
@@ -161,8 +243,7 @@ def _job() -> BacktestJob:
             min_risk_reward_ratio=Decimal("1"),
             max_risk_percent_per_idea=Decimal("2"),
             risk_percent_for_idea=Decimal("1"),
-            evidence={"bars": EvidenceStatus.VALID,
-                      "precision": EvidenceStatus.VALID},
+            evidence={"bars": EvidenceStatus.VALID, "precision": EvidenceStatus.VALID},
         ),
         costs=placeholder_costs(),
     )
@@ -292,9 +373,7 @@ def test_fill_next_open_and_fail_closed_costs() -> None:
         fill_at_next_open(bars, len(bars))
     with pytest.raises(ValueError, match="placeholders"):
         require_confirmed(placeholder_costs())
-    net = apply_costs(
-        fill=Decimal("100"), direction=Direction.LONG, costs=placeholder_costs()
-    )
+    net = apply_costs(fill=Decimal("100"), direction=Direction.LONG, costs=placeholder_costs())
     assert net == Decimal("100")
 
 

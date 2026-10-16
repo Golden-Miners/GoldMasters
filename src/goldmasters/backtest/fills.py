@@ -37,10 +37,10 @@ FILL_MODEL = (
 class FillCosts:
     """Cost settings; ``confirmed`` flips only when the operator confirms values."""
 
-    spread: str = "0"
-    commission: str = "0"
-    slippage: str = "0"
-    swap: str = "0"
+    spread: Decimal = Decimal("0")
+    commission: Decimal = Decimal("0")
+    slippage: Decimal = Decimal("0")
+    swap: Decimal = Decimal("0")
     confirmed: bool = False
 
 
@@ -52,9 +52,7 @@ def placeholder_costs() -> FillCosts:
 def require_confirmed(costs: FillCosts) -> FillCosts:
     """Fail closed: authoritative use raises until the operator confirms values."""
     if not costs.confirmed:
-        raise ValueError(
-            "cost values are placeholders (D-6.1); operator confirmation required"
-        )
+        raise ValueError("cost values are placeholders (D-6.1); operator confirmation required")
     return costs
 
 
@@ -68,9 +66,7 @@ def to_assumptions(costs: FillCosts) -> BacktestAssumptions:
     )
 
 
-def fill_at_next_open(
-    bars: Sequence[MarketBar], signal_index: int
-) -> Decimal | None:
+def fill_at_next_open(bars: Sequence[MarketBar], signal_index: int) -> Decimal | None:
     """Next-bar open price, or ``None`` when the signal sits on the final bar."""
     ordered = list(bars)
     if signal_index < 0 or signal_index >= len(ordered):
@@ -88,7 +84,7 @@ def apply_costs(*, fill: Decimal, direction: Direction, costs: FillCosts) -> Dec
     With placeholder zeros this is the identity — the math stays so any
     operator-confirmed value flows through the same path.
     """
-    half_spread = Decimal(costs.spread) / 2 + Decimal(costs.slippage)
+    half_spread = costs.spread / 2 + costs.slippage
     if direction == Direction.LONG:
         return fill + half_spread
     if direction == Direction.SHORT:

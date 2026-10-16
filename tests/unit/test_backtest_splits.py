@@ -107,9 +107,7 @@ def test_dst_crossing_boundary_classifies_by_utc() -> None:
     )
     straddlers = _hourly(datetime(2026, 3, 29, 0, 0, tzinfo=UTC), 4)
     utc_labels = [classify_bar(bar.bar_close_time, windows_utc) for bar in straddlers]
-    berlin_labels = [
-        classify_bar(bar.bar_close_time, windows_berlin) for bar in straddlers
-    ]
+    berlin_labels = [classify_bar(bar.bar_close_time, windows_berlin) for bar in straddlers]
     assert utc_labels == berlin_labels
     assert utc_labels[0] == "in_sample"  # close 01:00Z < 01:30Z boundary
     assert utc_labels[1:] == ["validation"] * 3  # closes 02:00Z+ past the boundary

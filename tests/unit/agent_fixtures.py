@@ -72,7 +72,7 @@ def bars_from_closes(closes: list[str]) -> list[MarketBar]:
 def make_ctx(
     *,
     regime: TrendRegime = TrendRegime.UPTREND,
-    tick_size: str | None = "0.01",
+    tick_size: Decimal | None = Decimal("0.01"),
     instrument_id: str = "xauusd",
     timeframe: Timeframe = Timeframe.H1,
     bar_count: int = 12,
