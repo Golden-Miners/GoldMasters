@@ -117,7 +117,11 @@ def test_no_float_in_metrics_source() -> None:
         node
         for node in ast.walk(tree)
         if (isinstance(node, ast.Constant) and isinstance(node.value, float))
-        or (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "float")
+        or (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "float"
+        )
         or (isinstance(node, ast.Name) and node.id == "float")
     ]
     assert not found, "float in the metric path"
