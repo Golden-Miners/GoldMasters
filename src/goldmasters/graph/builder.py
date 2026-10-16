@@ -31,9 +31,15 @@ from src.goldmasters.graph.nodes import (
     make_select_node,
 )
 from src.goldmasters.graph.role_nodes import (
+    ANALYST_NODE,
+    CEO_NODE,
     NEWS_SENTIMENT_NODE,
-    CoverageFn,
+    RESEARCH_NODE,
+    RoleOptions,
+    make_analyst_node,
+    make_ceo_prose_node,
     make_news_sentiment_node,
+    make_research_node,
 )
 from src.goldmasters.graph.state import RunState, compute_input_ref
 from src.goldmasters.strategies.base import MarketContext
@@ -105,18 +111,13 @@ def _route_after_gate_through_roles(state: RunState) -> str:
     """
     routed = edges.route_after_gate(state)
     if routed == edges.BARRIER:
-        return NEWS_SENTIMENT_NODE
+        return ANALYST_NODE
     return routed
 
 
-def build_graph(
-    settings: Settings,
-    *,
-    news_coverage_fn: CoverageFn | None = None,
-    news_chat: Any | None = None,
-    news_model: str | None = None,
-) -> Any:
+def build_graph(settings: Settings, *, roles: RoleOptions | None = None) -> Any:
     """Assemble the bounded deterministic graph over validated node factories."""
+    options = roles if roles is not None else RoleOptions()
     retry = _retry_policy(settings)
     timeout = _timeout(settings)
     builder = StateGraph(RunState)
@@ -127,22 +128,57 @@ def build_graph(
     )
     builder.add_node(edges.GATE, make_gate_node(settings), retry_policy=retry, timeout=timeout)
     builder.add_node(
+        ANALYST_NODE,
+        make_analyst_node(settings, chat=options.analyst_chat, model=options.analyst_model),
+        retry_policy=retry,
+        timeout=timeout,
+    )
+    builder.add_node(
         NEWS_SENTIMENT_NODE,
         make_news_sentiment_node(
-            settings, chat=news_chat, model=news_model, coverage_fn=news_coverage_fn
+            settings,
+            chat=options.news_chat,
+            model=options.news_model,
+            coverage_fn=options.news_coverage_fn,
+        ),
+        retry_policy=retry,
+        timeout=timeout,
+    )
+    builder.add_node(
+        RESEARCH_NODE,
+        make_research_node(
+            settings,
+            question=options.research_question,
+            sources_fn=options.research_sources_fn,
+            chat=options.research_chat,
+            model=options.research_model,
         ),
         retry_policy=retry,
         timeout=timeout,
     )
     builder.add_node(edges.BARRIER, make_barrier_node(), retry_policy=retry, timeout=timeout)
+    builder.add_node(
+        CEO_NODE,
+        make_ceo_prose_node(
+            settings,
+            chat=options.ceo_chat,
+            model=options.ceo_model,
+            required=options.ceo_required,
+        ),
+        retry_policy=retry,
+        timeout=timeout,
+    )
     builder.add_node(edges.FINALIZE, make_finalize_node(), retry_policy=retry, timeout=timeout)
     builder.add_edge(START, edges.INGEST)
     builder.add_conditional_edges(edges.INGEST, edges.route_after_ingest)
     builder.add_edge(edges.SELECT, edges.EVALUATE)
     builder.add_conditional_edges(edges.EVALUATE, edges.route_after_evaluate)
     builder.add_conditional_edges(edges.GATE, _route_after_gate_through_roles)
-    builder.add_edge(NEWS_SENTIMENT_NODE, edges.BARRIER)
-    builder.add_edge(edges.BARRIER, edges.FINALIZE)
+    builder.add_edge(ANALYST_NODE, NEWS_SENTIMENT_NODE)
+    builder.add_edge(NEWS_SENTIMENT_NODE, RESEARCH_NODE)
+    builder.add_edge(RESEARCH_NODE, edges.BARRIER)
+    builder.add_edge(edges.BARRIER, CEO_NODE)
+    builder.add_edge(CEO_NODE, edges.FINALIZE)
     builder.add_edge(edges.FINALIZE, END)
     return builder.compile(checkpointer=InMemorySaver())
 
