@@ -10,8 +10,6 @@ a test pins that the forbidden names stay out.
 
 from __future__ import annotations
 
-from typing import TypeVar
-
 from goldmasters_contracts import ContractModel, ErrorCode, ErrorPayload
 from pydantic import Field
 
@@ -26,8 +24,6 @@ __all__ = [
     "parse_output",
     "role_output_model",
 ]
-
-T = TypeVar("T", bound=ContractModel)
 
 
 class AnalystNote(ContractModel):
@@ -75,7 +71,7 @@ def role_output_model(role: str) -> type[ContractModel]:
     return ROLE_OUTPUTS[role]
 
 
-def parse_output(
+def parse_output[T: ContractModel](
     model: type[T], content: str, *, run_id: str, node: str
 ) -> tuple[T | None, ErrorPayload | None]:
     """Validate raw model text; malformed output never reaches a decision."""

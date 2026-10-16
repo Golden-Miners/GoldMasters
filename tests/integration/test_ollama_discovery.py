@@ -10,21 +10,16 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 from goldmasters_contracts import ErrorCode
-from ollama import AsyncClient, ChatResponse, ListResponse
 from pydantic import ValidationError
 
-from src.goldmasters.graph import runtime
-from src.goldmasters.graph.runtime import (
-    check_health,
-    discover,
-    generate,
-    resolve_model,
-    run_model_record,
-)
 from tests.unit.graph_fixtures import apply_clean_env, make_settings
+
+if TYPE_CHECKING:
+    from ollama import ListResponse
 
 #: Loopback discard port: refused immediately, no blackhole wait.
 CLOSED_PORT_HOST = "http://127.0.0.1:9"
@@ -56,6 +51,8 @@ class _StubList:
 
 
 def _live_models() -> ListResponse:
+    from ollama import ListResponse
+
     return ListResponse(
         models=[
             ListResponse.Model(model="live-model", digest="sha256:live"),
@@ -66,6 +63,8 @@ def _live_models() -> ListResponse:
 
 async def _probe_reachable(host: str) -> bool:
     """Fast loopback probe: True only when a server answers list()."""
+    from ollama import AsyncClient
+
     try:
         await AsyncClient(host=host, timeout=2).list()
     except Exception:  # noqa: BLE001 — reachability probe, fail closed to skip
@@ -77,6 +76,9 @@ def test_discovery_live_or_skip(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """Tracer verify: discovery + health against a live server, skip without one."""
+    from src.goldmasters.graph import runtime
+    from src.goldmasters.graph.runtime import check_health, discover, run_model_record
+
     apply_clean_env(monkeypatch)
     settings = make_settings()
     if not asyncio.run(_probe_reachable(settings.ollama_host)):
@@ -101,6 +103,14 @@ def test_discovery_outage_fails_closed(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """Server unreachable: bounded retries, then sanitized error, never a model."""
+    from src.goldmasters.graph import runtime
+    from src.goldmasters.graph.runtime import (
+        check_health,
+        discover,
+        resolve_model,
+        run_model_record,
+    )
+
     apply_clean_env(monkeypatch)
     settings = make_settings(ollama_host=CLOSED_PORT_HOST, graph_node_max_retries=1)
     discovery = asyncio.run(
@@ -126,6 +136,8 @@ def test_generate_outage_returns_error_never_text(
 ) -> None:
     """Outage on the chat path: (None, ErrorPayload) — raw text never escapes."""
     from src.goldmasters.agents.parse import AnalystNote
+    from src.goldmasters.graph import runtime
+    from src.goldmasters.graph.runtime import generate
 
     apply_clean_env(monkeypatch)
     settings = make_settings(ollama_host=CLOSED_PORT_HOST, graph_node_max_retries=0)
@@ -148,6 +160,13 @@ def test_discovery_stub_lists_measured_inventory(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """Deterministic discovery: inventory is whatever the server reports."""
+    from src.goldmasters.graph.runtime import (
+        check_health,
+        discover,
+        resolve_model,
+        run_model_record,
+    )
+
     apply_clean_env(monkeypatch)
     settings = make_settings(ollama_model="live-model")
     discovery = asyncio.run(
@@ -177,6 +196,8 @@ def test_unset_model_never_matches(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """No model-name default: None expected never resolves, even when reachable."""
+    from src.goldmasters.graph.runtime import check_health, discover, resolve_model
+
     apply_clean_env(monkeypatch)
     settings = make_settings()
     assert settings.ollama_model is None
@@ -212,5 +233,7 @@ def test_public_host_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_chat_response_shape_assumed_by_generate() -> None:
     """Pin the transport contract the stub-based tests rely on."""
+    from ollama import ChatResponse
+
     response = ChatResponse(message={"role": "assistant", "content": "{}"})
     assert response.message.content == "{}"

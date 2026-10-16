@@ -12,10 +12,13 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import pytest
 from goldmasters_contracts import AgentRunStatus, ErrorCode, EvidenceStatus, NewsItem
-from ollama import ChatResponse
+
+if TYPE_CHECKING:
+    from ollama import ChatResponse
 
 from src.goldmasters.agents import parse
 from src.goldmasters.agents.parse import (
@@ -34,7 +37,6 @@ from src.goldmasters.agents.prompts import (
     research_messages,
 )
 from src.goldmasters.graph.barriers import check_ceo_required
-from src.goldmasters.graph.runtime import generate
 from tests.unit.agent_fixtures import bars_from_closes, make_ctx
 from tests.unit.graph_fixtures import apply_clean_env, make_settings
 
@@ -70,6 +72,8 @@ class _StubChat:
         self.calls: list[dict[str, object]] = []
 
     async def chat(self, **kwargs: object) -> ChatResponse:
+        from ollama import ChatResponse
+
         self.calls.append(kwargs)
         item = self._script[min(len(self.calls) - 1, len(self._script) - 1)]
         if isinstance(item, Exception):
@@ -149,6 +153,8 @@ def test_generate_pins_schema_and_temperature_zero(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """Every generation: format=schema, temperature 0, then model_validate_json."""
+    from src.goldmasters.graph.runtime import generate
+
     apply_clean_env(monkeypatch)
     settings = make_settings(graph_node_max_retries=0)
     chat = _StubChat(['{"evidence": "e", "reason": "r"}'])
@@ -175,6 +181,8 @@ def test_generate_retries_parse_failure_then_fails_closed(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """Parse failure: bounded retry, then CONTRACT_VALIDATION_FAILED — no guess."""
+    from src.goldmasters.graph.runtime import generate
+
     apply_clean_env(monkeypatch)
     settings = make_settings(graph_node_max_retries=1)
     chat = _StubChat(["garbage", "still garbage"])
@@ -235,6 +243,8 @@ def test_ceo_blocked_without_model_call(
     monkeypatch: pytest.MonkeyPatch, run_id: str
 ) -> None:
     """A failed required agent blocks CEO prose: no call, INSUFFICIENT_DATA path."""
+    from src.goldmasters.graph.runtime import generate
+
     apply_clean_env(monkeypatch)
     settings = make_settings(graph_node_max_retries=0)
     required = frozenset({"select", "evaluate", "gate"})

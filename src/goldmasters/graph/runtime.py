@@ -10,7 +10,7 @@ httpx timeout from settings is defense-in-depth under ``TimeoutPolicy``.
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, TypeVar
+from typing import Any
 
 import httpx
 from goldmasters_api.settings import Settings
@@ -36,15 +36,17 @@ __all__ = [
 #: Validation and policy outcomes never retry.
 TRANSIENT_ERRORS = (httpx.TimeoutException, httpx.ConnectError, ConnectionError)
 
-T = TypeVar("T", bound=ContractModel)
-
 
 @dataclasses.dataclass(frozen=True)
 class DiscoveredModel:
-    """One server-reported model: measured id plus digest, nothing inferred."""
+    """One server-reported model: measured id plus digest, nothing inferred.
 
-    model: str
-    digest: str
+    Fields stay ``None`` when the server leaves them blank — absence is
+    recorded, never filled in.
+    """
+
+    model: str | None
+    digest: str | None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -172,9 +174,13 @@ def run_model_record(
     Every value is observed (settings, ``list()`` output, health check) —
     availability is measured, never assumed.
     """
-    available = sorted(entry.model for entry in discovery.models)
+    available = sorted(entry.model for entry in discovery.models if entry.model is not None)
     digest = next(
-        (entry.digest for entry in discovery.models if entry.model == health.expected),
+        (
+            entry.digest
+            for entry in discovery.models
+            if entry.model is not None and entry.model == health.expected
+        ),
         None,
     )
     return {
@@ -188,7 +194,7 @@ def run_model_record(
     }
 
 
-async def generate(
+async def generate[T: ContractModel](
     settings: Settings,
     client: AsyncClient,
     *,
@@ -217,7 +223,9 @@ async def generate(
             )
             if not isinstance(response, ChatResponse):  # noqa: S101 — stream never asked
                 raise TypeError(f"unexpected chat response: {type(response).__name__}")
-            return response_model.model_validate_json(response.message.content), None
+            # A missing content block validates as empty: the schema rejects
+            # it below, so absence fails closed instead of raising here.
+            return response_model.model_validate_json(response.message.content or ""), None
         except TRANSIENT_ERRORS as exc:
             if tried >= attempts:
                 return None, _sanitized_error(

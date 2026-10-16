@@ -16,7 +16,7 @@ from goldmasters_contracts import AgentRunStatus, EvidenceStatus, QualityStatus
 from src.goldmasters.graph import edges
 from src.goldmasters.graph.state import NodeFn, RunState, utc_now_iso
 
-__all__ = ["check_barrier", "make_barrier_node"]
+__all__ = ["check_barrier", "check_ceo_required", "make_barrier_node"]
 
 
 def check_barrier(state: RunState) -> list[str]:
@@ -43,6 +43,24 @@ def check_barrier(state: RunState) -> list[str]:
             f"data quality not healthy: status={ctx.quality_status.value}, "
             f"flags={[flag.value for flag in ctx.quality_flags]}"
         )
+    return reasons
+
+
+def check_ceo_required(statuses: dict[str, str], required: frozenset[str]) -> list[str]:
+    """CEO agreement gate: every required node must report ``ok``.
+
+    The CEO must never infer that a failed agent agreed (Rules §3.4): any
+    required node missing from the full status map or reporting non-ok
+    blocks CEO prose with reasons, and the caller fails closed to
+    ``INSUFFICIENT_DATA`` without calling the model.
+    """
+    reasons: list[str] = []
+    for node in sorted(required):
+        status = statuses.get(node)
+        if status is None:
+            reasons.append(f"ceo blocked: required node {node} has no status")
+        elif status != AgentRunStatus.OK.value:
+            reasons.append(f"ceo blocked: required node {node} is {status}, not ok")
     return reasons
 
 

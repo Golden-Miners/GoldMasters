@@ -90,6 +90,9 @@ ALLOWED_DEPENDENCIES: frozenset[str] = frozenset(
         "goldmasters-contracts",
         # Phase 4 D-4.4: orchestration runtime (04-01 GO probe on 3.14.7).
         "langgraph",
+        # Phase 4 Wave 2 model runtime (04-03; 04-01 GO pins).
+        "ollama",
+        "langgraph-checkpoint-sqlite",
         # Dev tools
         "pytest",
         "pytest-cov",

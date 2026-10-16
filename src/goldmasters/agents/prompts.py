@@ -132,7 +132,9 @@ def ceo_messages(
     the CEO drafts words, never numbers. Callers must pass the full status
     map; a non-ok required node blocks the call (see ``check_ceo_required``).
     """
-    rendered_statuses = "\n".join(f"- {node}: {status}" for node, status in sorted(agent_statuses.items()))
+    rendered_statuses = "\n".join(
+        f"- {node}: {status}" for node, status in sorted(agent_statuses.items())
+    )
     rendered_conflicts = "\n".join(f"- {conflict}" for conflict in conflicts)
     return [
         {"role": "system", "content": _SYSTEM_JSON_ONLY},
