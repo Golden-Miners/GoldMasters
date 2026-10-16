@@ -30,6 +30,11 @@ from src.goldmasters.graph.nodes import (
     make_ingest_node,
     make_select_node,
 )
+from src.goldmasters.graph.role_nodes import (
+    NEWS_SENTIMENT_NODE,
+    CoverageFn,
+    make_news_sentiment_node,
+)
 from src.goldmasters.graph.state import RunState, compute_input_ref
 from src.goldmasters.strategies.base import MarketContext
 
@@ -90,7 +95,27 @@ def _timeout(settings: Settings) -> TimeoutPolicy:
     return TimeoutPolicy(run_timeout=settings.graph_node_timeout_seconds)
 
 
-def build_graph(settings: Settings) -> Any:
+def _route_after_gate_through_roles(state: RunState) -> str:
+    """Spine-preserving hop: barrier-bound flows pass the role nodes first.
+
+    Delegates to :func:`edges.route_after_gate` and only remaps its
+    ``BARRIER`` outcome through the role chain — fatal skips to ``FINALIZE``
+    unchanged, and unconfigured role nodes skip without touching evidence,
+    so the deterministic spine runs as before.
+    """
+    routed = edges.route_after_gate(state)
+    if routed == edges.BARRIER:
+        return NEWS_SENTIMENT_NODE
+    return routed
+
+
+def build_graph(
+    settings: Settings,
+    *,
+    news_coverage_fn: CoverageFn | None = None,
+    news_chat: Any | None = None,
+    news_model: str | None = None,
+) -> Any:
     """Assemble the bounded deterministic graph over validated node factories."""
     retry = _retry_policy(settings)
     timeout = _timeout(settings)
@@ -101,13 +126,22 @@ def build_graph(settings: Settings) -> Any:
         edges.EVALUATE, make_evaluate_node(settings), retry_policy=retry, timeout=timeout
     )
     builder.add_node(edges.GATE, make_gate_node(settings), retry_policy=retry, timeout=timeout)
+    builder.add_node(
+        NEWS_SENTIMENT_NODE,
+        make_news_sentiment_node(
+            settings, chat=news_chat, model=news_model, coverage_fn=news_coverage_fn
+        ),
+        retry_policy=retry,
+        timeout=timeout,
+    )
     builder.add_node(edges.BARRIER, make_barrier_node(), retry_policy=retry, timeout=timeout)
     builder.add_node(edges.FINALIZE, make_finalize_node(), retry_policy=retry, timeout=timeout)
     builder.add_edge(START, edges.INGEST)
     builder.add_conditional_edges(edges.INGEST, edges.route_after_ingest)
     builder.add_edge(edges.SELECT, edges.EVALUATE)
     builder.add_conditional_edges(edges.EVALUATE, edges.route_after_evaluate)
-    builder.add_conditional_edges(edges.GATE, edges.route_after_gate)
+    builder.add_conditional_edges(edges.GATE, _route_after_gate_through_roles)
+    builder.add_edge(NEWS_SENTIMENT_NODE, edges.BARRIER)
     builder.add_edge(edges.BARRIER, edges.FINALIZE)
     builder.add_edge(edges.FINALIZE, END)
     return builder.compile(checkpointer=InMemorySaver())
