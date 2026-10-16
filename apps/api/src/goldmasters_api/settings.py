@@ -21,6 +21,7 @@ import os
 import typing
 from decimal import Decimal
 from typing import Annotated, Any
+from urllib.parse import urlparse
 
 from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe, TrendRegime
 from pydantic import (
@@ -337,6 +338,13 @@ class Settings(BaseSettings):
     # construction). Positive when set.
     graph_max_concurrency: int | None = None
 
+    # Phase 4 Wave 2 model runtime (04-03 tracer). Host defaults to loopback;
+    # anything else fails startup (T-04-06 SSRF allowlist). No model-name
+    # default: None means no expected model and discovery fails the run
+    # closed — T0004 stays operator-open, never assumed in code.
+    ollama_host: str = "http://127.0.0.1:11434"
+    ollama_model: FailClosedText = None
+
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod
     def _window_specs_parse(cls, value: str) -> str:
@@ -438,6 +446,26 @@ class Settings(BaseSettings):
         """Fail closed on a non-positive concurrency cap (D-36)."""
         if value is not None and (isinstance(value, bool) or value < 1):
             raise ValueError("graph_max_concurrency must be a positive int when set")
+        return value
+
+    @field_validator("ollama_host", mode="before")
+    @classmethod
+    def _ollama_host_empty_means_default(cls, value: Any) -> Any:
+        """An empty template entry reads as the loopback default, never blank."""
+        if value == "":
+            return "http://127.0.0.1:11434"
+        return value
+
+    @field_validator("ollama_host", mode="after")
+    @classmethod
+    def _ollama_host_loopback_only(cls, value: str) -> str:
+        """Fail closed unless the endpoint is loopback (T-04-06, D-36)."""
+        if urlparse(value).scheme not in ("http", "https") or urlparse(value).hostname not in (
+            "127.0.0.1",
+            "::1",
+            "localhost",
+        ):
+            raise ValueError(f"ollama_host {value!r} is not a loopback endpoint")
         return value
 
     @model_validator(mode="before")

@@ -23,6 +23,8 @@ dependencies = [
     # Phase 4 D-4.4: orchestration runtime (04-01 GO probe on 3.14.7).
     # InMemorySaver ships inside this package; no checkpointer extra needed yet.
     "langgraph==1.2.15",
+    "ollama==0.6.3",
+    "langgraph-checkpoint-sqlite==3.1.2",
 ]
 
 [tool.uv.sources]
