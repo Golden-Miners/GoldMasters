@@ -42,6 +42,21 @@
 
 ## Work actually completed
 
+- **04-02 Wave 1 deterministic graph completed (2026-10-16):** `src/goldmasters/graph/`
+  (state/edges/nodes/barriers/builder) wires all 10 Phase 3 strategy packages through
+  `eligible_agents` → `evaluate` → `evaluate_gate` → pre-CEO barrier → `DecisionRecord`,
+  bounded by `GOLDMASTERS_GRAPH_*` settings (60s timeout, 2 transient-only retries).
+  `langgraph==1.2.15` pinned in `apps/api` (04-01 GO; PyPI legitimacy verified).
+  Evidence: full suite 625 passed / 2 pre-existing live-MT5 skips, ruff + mypy strict
+  clean, boundary scan green; commits `a01846d`, `234904b`, `0d713c3`; Task.md
+  T0401/T0402/T0403/T0407/T0409 checked with evidence.
+- **Wave-1 TRADE-unreachable finding (fail-closed, tested):** no code produces
+  `risk_percent_for_idea`, so the graph passes `None` and the gate blocks with
+  "idea risk unknown" → terminal NO_TRADE. Unlocks when a later phase computes
+  per-idea risk; no graph change needed. T0004 (Ollama) still operator-open.
+- **Repo tooling note:** bare `uv sync` prunes workspace members from `.venv`;
+  always use `uv sync --all-packages` in this repo.
+
 - Drafted the nine project Markdown files from the user-provided requirements and clarification answers.
 - No repository was inspected.
 - No source code was created or modified.
