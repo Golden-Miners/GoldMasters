@@ -5,16 +5,16 @@ milestone_name: Research Signal Team
 current_phase: 2
 current_phase_name: Market Data and Provider Selection
 status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-10-15T05:57:10.254Z"
+stopped_at: Completed 06-journal-persistence-backtesting-02-PLAN.md
+last_updated: "2026-10-16T13:11:22.267Z"
 last_activity: 2026-10-15
 last_activity_desc: Phase 1 complete, transitioned to Phase 2
-state_head: e66409c5d3d9f864eb5a74790270bcd0dfc677db
+state_head: 3c7ec640c64d3fd605cc90821d37b27cf280953b
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 27
+  completed_plans: 26
 ---
 
 # Project State
@@ -52,6 +52,11 @@ Last activity: 2026-10-15 — 03-03 executed: code-computed levels (R:R recomput
 - Trend: —
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 06-journal-persistence-backtesting P02 | ~1 h across resumed session | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -66,6 +71,9 @@ Proposed (Architecture.md §2, reconcile before pinning; DR-09…DR-15): FastAPI
 No ADRs and no ADR-locked decisions exist — every decision record is DOC-sourced and ranks below Schema.md (SPEC, canonical for names and JSON shapes) and Prd.md (PRD).
 
 Phase 1 locked (implemented, not just decided): decimal-as-string wire form; closed provider-sourced Timeframe; `manual_review_required=true` with null-unless-validated levels; append-only precision table shipping empty; fail-closed version/prefix rules; loopback-only binds; secret-by-type hash exclusion; JSONB + promoted columns persistence shape.
+- [Phase 06-journal-persistence-backtesting]: Manifest joins records by dataset_ref (0003 has no run_id column); backtest_run_id is the per-strategy {run_id}:{strategy_id} key
+- [Phase 06-journal-persistence-backtesting]: Gate direction inferred from validated levels; equal levels block as indeterminate
+- [Phase 06-journal-persistence-backtesting]: FillCosts carry Decimal zeros as declared placeholders; require_confirmed fails closed until operator confirms values
 
 ### Pending Todos
 
@@ -87,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-15T16:00:00Z
-Stopped at: Completed 03-03-PLAN.md (Phase 3 Wave 3 levels/risk-gate/role-matrix)
+Last session: 2026-10-16T13:11:21.468Z
+Stopped at: Completed 06-journal-persistence-backtesting-02-PLAN.md
 Resume file: None

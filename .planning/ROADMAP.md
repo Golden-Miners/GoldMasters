@@ -131,7 +131,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Every decision record validates against the CEO contract with `manual_review_required = true`, and a TRADE appears only when required evidence is present, current, schema-valid, strategy-qualified and risk-validated, with entry/stop/targets/risk_reward null otherwise.
   5. Decision traceability is instrumented — the percentage of decisions with complete evidence references and configuration/version metadata is measured and displayed before any target is set.
 
-**Plans**: TBD
+**Plans:** 3 plans (Wave 1: 05-01 adapter tracer; Wave 2: 05-02 sentiment, 05-03 role nodes)
+- [ ] 05-01-PLAN.md — News adapter interface + unavailable path (D-5.1, criteria 1-2)
+- [ ] 05-02-PLAN.md — Scoreless sentiment evidence assembler (D-5.2, criterion 3)
+- [ ] 05-03-PLAN.md — Role graph nodes + TRADE conjunction + traceability (D-5.3, criteria 4-5, closes Phase 4 O-1)
 
 ### Phase 6: Journal, Persistence and Backtesting
 
@@ -146,6 +149,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Leakage, timestamp alignment, transaction-cost application and split enforcement are covered by tests that fail when an assumption is violated.
 
 **Plans**: TBD
+- [x] 06-01-PLAN.md
+- [x] 06-02-PLAN.md
+- [ ] 06-03-PLAN.md
 
 ### Phase 7: Research Console UI and Reports
 
@@ -188,7 +194,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Deterministic Analysis, Strategy Rules and Risk Gates | 0/0 | Not started | - |
 | 4. LangGraph Orchestration and Local Model Runtime | 0/0 | Not started | - |
 | 5. News, Sentiment and CEO Decision Contract | 0/0 | Not started | - |
-| 6. Journal, Persistence and Backtesting | 0/0 | Not started | - |
+| 6. Journal, Persistence and Backtesting | 2/3 | In Progress | - |
 | 7. Research Console UI and Reports | 0/0 | Not started | - |
 | 8. Hardening, Data-Integrity Verification and Release Gate | 0/0 | Not started | - |
 
