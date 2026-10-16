@@ -325,6 +325,18 @@ class Settings(BaseSettings):
     strategy_agent_10_max_data_age_hours: FailClosedDecimal = None
     strategy_agent_10_min_history_points: FailClosedCount = None
 
+    # Phase 4 D-4.2 graph bounds (04-CONTEXT.md). The locked values are the
+    # defaults; the operator may override them explicitly, and an invalid
+    # value fails startup (D-36). All non-secret, so hash-covered
+    # automatically. Graph code reads these through the Settings object —
+    # no threshold literal lives in graph code.
+    graph_node_timeout_seconds: float = 60.0
+    graph_node_max_retries: int = 2
+    # Optional tighter cap on concurrent node execution; unset means no
+    # explicit cap (fan-out is still capped at the eligible set by
+    # construction). Positive when set.
+    graph_max_concurrency: int | None = None
+
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod
     def _window_specs_parse(cls, value: str) -> str:
@@ -376,6 +388,56 @@ class Settings(BaseSettings):
 
         if value is not None and (not math.isfinite(value) or value <= 0):
             raise ValueError("risk placeholder must be finite and positive when set")
+        return value
+
+    @field_validator("graph_node_timeout_seconds", mode="before")
+    @classmethod
+    def _graph_timeout_empty_means_default(cls, value: Any) -> Any:
+        """An empty template entry reads as the locked D-4.2 default, never zero."""
+        if value == "":
+            return 60.0
+        return value
+
+    @field_validator("graph_node_timeout_seconds", mode="after")
+    @classmethod
+    def _graph_timeout_positive(cls, value: float) -> float:
+        """Fail closed on a non-positive node timeout (D-4.2, D-36)."""
+        import math
+
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError("graph_node_timeout_seconds must be finite and positive")
+        return value
+
+    @field_validator("graph_node_max_retries", mode="before")
+    @classmethod
+    def _graph_retries_empty_means_default(cls, value: Any) -> Any:
+        """An empty template entry reads as the locked D-4.2 default."""
+        if value == "":
+            return 2
+        return value
+
+    @field_validator("graph_node_max_retries", mode="after")
+    @classmethod
+    def _graph_retries_non_negative(cls, value: int) -> int:
+        """Fail closed on a negative retry count (D-4.2, D-36)."""
+        if isinstance(value, bool) or value < 0:
+            raise ValueError("graph_node_max_retries must be a non-negative int")
+        return value
+
+    @field_validator("graph_max_concurrency", mode="before")
+    @classmethod
+    def _graph_concurrency_empty_means_unset(cls, value: Any) -> Any:
+        """An empty template entry reads as unset, never as zero (D-36)."""
+        if value == "":
+            return None
+        return value
+
+    @field_validator("graph_max_concurrency", mode="after")
+    @classmethod
+    def _graph_concurrency_positive_or_unset(cls, value: int | None) -> int | None:
+        """Fail closed on a non-positive concurrency cap (D-36)."""
+        if value is not None and (isinstance(value, bool) or value < 1):
+            raise ValueError("graph_max_concurrency must be a positive int when set")
         return value
 
     @model_validator(mode="before")

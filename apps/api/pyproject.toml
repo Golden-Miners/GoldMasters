@@ -20,6 +20,9 @@ dependencies = [
     "alembic==1.20.0",
     "psycopg[binary]==3.3.6",
     "httpx==0.28.1",
+    # Phase 4 D-4.4: orchestration runtime (04-01 GO probe on 3.14.7).
+    # InMemorySaver ships inside this package; no checkpointer extra needed yet.
+    "langgraph==1.2.15",
 ]
 
 [tool.uv.sources]
