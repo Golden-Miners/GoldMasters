@@ -38,6 +38,7 @@ from src.goldmasters.graph.role_nodes import (
     RESEARCH_NODE,
     RoleOptions,
 )
+from src.goldmasters.graph.traceability import log_traceability, report_for_state
 from src.goldmasters.risk.gate import trade_eligible_levels
 from tests.unit.graph_fixtures import (
     AGENT_01_NUMERICS,
@@ -263,3 +264,46 @@ def test_conjunction_invalid_record_rejected(monkeypatch: pytest.MonkeyPatch) ->
         DecisionRecord.model_validate(
             {**payload, "decision": Decision.TRADE, "decision_id": f"dec_{uuid.uuid4().hex}"}
         )
+
+
+def test_traceability_percent_counts_only_complete_refs(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Criterion 5: measured from refs plus config/version metadata, no target."""
+    settings = _open(monkeypatch)
+    closing = asyncio.run(run_closing(build_graph(settings), make_opening(settings)))
+    assert closing["decision"] is not None
+    decision = closing["decision"]
+    assert decision.evidence_refs  # the wired run stamps refs from state evidence
+
+    envelopes = {ref: object() for ref in decision.evidence_refs}
+    report = report_for_state([decision], envelopes, closing)
+    assert (report.total, report.complete, report.percent) == (1, 1, 100.0)
+    assert report.incomplete_ids == ()
+    assert report.agent_versions == {
+        "market_analyst": "0.1.0",
+        "news_sentiment": "0.1.0",
+        "research": "0.1.0",
+        "ceo": "0.1.0",
+    }
+
+    ghost = decision.model_copy(
+        update={
+            "decision_id": f"dec_{uuid.uuid4().hex}",
+            "evidence_refs": [*decision.evidence_refs, "ghost-envelope"],
+        }
+    )
+    mixed = report_for_state([decision, ghost], envelopes, closing)
+    assert (mixed.total, mixed.complete, mixed.percent) == (2, 1, 50.0)
+    assert mixed.incomplete_ids == (ghost.decision_id,)
+
+    line = log_traceability(mixed)
+    assert "1/2 complete (50.0%)" in line
+    assert ghost.decision_id in line
+    with caplog.at_level("INFO", logger="src.goldmasters.graph.traceability"):
+        assert log_traceability(mixed) == line
+    assert line in caplog.text  # operator-visible via the log, no target set
+
+    # Missing run metadata also counts as incomplete, refs resolving or not.
+    unmeta = report_for_state([decision], envelopes, {**closing, "config_hash": ""})  # type: ignore[typeddict-item]
+    assert (unmeta.total, unmeta.complete, unmeta.percent) == (1, 0, 0.0)
