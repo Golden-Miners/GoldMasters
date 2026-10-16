@@ -38,9 +38,7 @@ def upgrade() -> None:
         sa.Column("supersedes", sa.Text, nullable=True),
         sa.Column("reason", sa.Text, nullable=False, server_default=""),
     )
-    op.create_index(
-        "ix_outcome_observation_decision_id", "outcome_observation", ["decision_id"]
-    )
+    op.create_index("ix_outcome_observation_decision_id", "outcome_observation", ["decision_id"])
 
 
 def downgrade() -> None:
