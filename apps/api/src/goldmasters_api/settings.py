@@ -1,17 +1,4 @@
-"""Typed settings resolved once at startup (D-15/D-27/D-36).
-
-Every key the skeleton and its later phases use is declared explicitly; an
-unknown ``GOLDMASTERS_``-prefixed variable is rejected (``extra="forbid"``),
-and a missing or invalid key stops startup naming the key. Secrets arrive
-only through ``GOLDMASTERS_``-prefixed variables and are typed ``SecretStr``.
-
-The versioned ``config/goldmasters.yaml`` document is wired as the
-lowest-priority source (after init, environment, ``.env`` and secrets), so an
-operator override always wins. :func:`hash_effective_config` covers the
-non-secret fields only — derived from field *types*, so a new secret field is
-excluded automatically — and carries :data:`HASH_ALGORITHM_VERSION` so a
-future canonicalisation change is detectable.
-"""
+"""Typed settings resolved once at startup (D-15/D-27/D-36)."""
 
 from __future__ import annotations
 
@@ -42,19 +29,10 @@ from pydantic_settings import (
 
 __all__ = ["HASH_ALGORITHM_VERSION", "Settings", "hash_effective_config"]
 
-#: Version of the hash canonicalisation. Bumping this changes every digest by
-#: construction, so a canonicalisation change is detectable, never silent.
 HASH_ALGORITHM_VERSION = "1"
 
 
 def _split_strategy_list(value: Any) -> Any:
-    """Comma-separated env text reads as a list; empty/unset reads as none.
-
-    Lists arrive via ``GOLDMASTERS_STRATEGY_AGENT_<NN>_*`` variables, where a
-    bare ``.env`` template carries the empty string. An empty list means
-    none (never "all" by default) so the eligibility matrix stays
-    fail-closed. Non-string sequences pass through for item validation.
-    """
     if value is None:
         return []
     if isinstance(value, str):
@@ -62,33 +40,23 @@ def _split_strategy_list(value: Any) -> Any:
     return value
 
 
-#: Comma-separated instrument ids; empty means none.
-#: ``NoDecode`` keeps the raw env text for the comma split (pydantic-settings
-#: would otherwise demand JSON for a complex field).
 CsvInstruments = Annotated[list[str], NoDecode, BeforeValidator(_split_strategy_list)]
-
-#: Comma-separated canonical timeframes; unknown members fail startup.
 CsvTimeframes = Annotated[list[Timeframe], NoDecode, BeforeValidator(_split_strategy_list)]
-
-#: Comma-separated regime labels; unknown members fail startup.
 CsvRegimes = Annotated[list[TrendRegime], NoDecode, BeforeValidator(_split_strategy_list)]
 
 
 def _empty_min_bars_means_unset(value: Any) -> Any:
-    """An empty template entry reads as unset, never as zero (D-3.1)."""
     if value == "":
         return None
     return value
 
 
 def _min_bars_positive_or_unset(value: int | None) -> int | None:
-    """Fail closed on a non-positive minimum bar count (D-3.1, D-36)."""
     if value is not None and (isinstance(value, bool) or value < 1):
         raise ValueError("strategy min_bars must be a positive int when set")
     return value
 
 
-#: Minimum-bar placeholder: None blocks, never defaults (D-3.1).
 FailClosedMinBars = Annotated[
     int | None,
     BeforeValidator(_empty_min_bars_means_unset),
@@ -97,13 +65,11 @@ FailClosedMinBars = Annotated[
 
 
 def _count_positive_or_unset(value: int | None) -> int | None:
-    """Fail closed on a non-positive rule count (D-3.1, D-36)."""
     if value is not None and (isinstance(value, bool) or value < 1):
         raise ValueError("strategy rule count must be a positive int when set")
     return value
 
 
-#: Rule-window placeholder (periods, spans, horizons): None blocks, never defaults.
 FailClosedCount = Annotated[
     int | None,
     BeforeValidator(_empty_min_bars_means_unset),
@@ -112,20 +78,17 @@ FailClosedCount = Annotated[
 
 
 def _decimal_positive_or_unset(value: Decimal | None) -> Decimal | None:
-    """Fail closed on a non-positive rule threshold (D-3.1, D-36)."""
     if value is not None and value <= 0:
         raise ValueError("strategy rule threshold must be positive when set")
     return value
 
 
-#: Rule-threshold placeholder (multiples, fractions, return cutoffs): None blocks.
 FailClosedDecimal = Annotated[
     Decimal | None,
     BeforeValidator(_empty_min_bars_means_unset),
     AfterValidator(_decimal_positive_or_unset),
 ]
 
-#: Rule-label placeholder (e.g. higher timeframe): empty reads as unset, never a default.
 FailClosedText = Annotated[
     str | None,
     BeforeValidator(_empty_min_bars_means_unset),
@@ -133,12 +96,6 @@ FailClosedText = Annotated[
 
 
 def _split_positive_int_list(value: Any) -> Any:
-    """Comma-separated env text reads as positive ints; empty/unset reads as none.
-
-    An empty lookback list means none (never a default window) so the owning
-    agent fails closed. Non-positive or non-integer members fail startup
-    naming the field.
-    """
     if value is None:
         return []
     if isinstance(value, str):
@@ -155,8 +112,6 @@ def _split_positive_int_list(value: Any) -> Any:
     return value
 
 
-#: Comma-separated positive-int windows (e.g. momentum lookbacks); empty means none.
-#: ``NoDecode`` keeps the raw env text for the comma split, mirroring CsvInstruments.
 CsvPositiveInts = Annotated[list[int], NoDecode, BeforeValidator(_split_positive_int_list)]
 
 
@@ -178,15 +133,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     config_version: str = "1.0"
     provider_api_key: SecretStr | None = None
-    # Phase 2 D-59 market-data keys (02-RESEARCH.md §5). All non-secret, so all
-    # join the hashed effective config automatically. No GOLDMASTERS_MT5_*
-    # secret field exists by design (D-47: bare attach, never credentials).
     provider_id: ProviderId = "mt5"
     instrument_id: str = "xauusd"
     mt5_symbol: str = "XAUUSD"
     timeframe: Timeframe = Timeframe.H1
-    # Required, no default: startup fails closed naming this key until the
-    # operator sets the broker server zone (02-RESEARCH.md §1).
     mt5_server_timezone: IanaTimezone
     mt5_probe_timeout_seconds: float = 2.0
     mt5_retry_attempts: int = 1
@@ -198,35 +148,21 @@ class Settings(BaseSettings):
     quote_stale_seconds_major: int = 60
     quote_stale_seconds_asia: int = 180
     quote_stale_seconds_offhours: int = 300
-    # Session windows (UTC, standard-time basis; DST ±1h is operator-confirmed
-    # against the broker per D-57 — retune here, never in code). Off-hours is
-    # whatever remains; the weekend window short-circuits thresholds entirely.
     session_overlap_utc: str = "13:00-16:30"
     session_major_utc: str = "08:00-13:00,16:30-21:00"
     session_asia_utc: str = "00:00-08:00"
     weekend_close_utc: str = "Fri 21:00-Sun 22:00"
     daily_break_utc: str = "21:00-22:00"
 
-    # Phase 3 D-3.1/D-3.2 policy keys. The rounding mode is an operator
-    # acknowledgement of the locked ROUND_HALF_UP (anything else fails
-    # closed); the risk placeholders stay None until a strategy set is
-    # approved — no threshold literal lives in code.
     tick_rounding_mode: str = "ROUND_HALF_UP"
     max_risk_percent_per_idea: float | None = None
     min_risk_reward_ratio: float | None = None
 
-    # Phase 3.1 strategy-agent scaffold (03.1-RESEARCH.md locked shape). One
-    # five-field row per agent (ENABLED flag, instrument list, timeframe
-    # list, regime list, min_bars); every row is fail-closed until the
-    # operator sets it — disabled, empty (none, never all), None (blocks).
-    # Numeric rule params stay per-agent-phase (operator spec), never here.
     strategy_agent_01_enabled: bool = False
     strategy_agent_01_instruments: CsvInstruments = Field(default_factory=list)
     strategy_agent_01_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_01_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_01_min_bars: FailClosedMinBars = None
-    # Phase 3.2 Agent 1 trend-following numerics (operator spec §Agent 1).
-    # Placeholders until the operator confirms values; None blocks, never defaults.
     strategy_agent_01_fast_period: FailClosedCount = None
     strategy_agent_01_slow_period: FailClosedCount = None
     strategy_agent_01_htf_timeframe: FailClosedText = None
@@ -237,7 +173,6 @@ class Settings(BaseSettings):
     strategy_agent_02_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_02_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_02_min_bars: FailClosedMinBars = None
-    # Phase 3.2 Agent 2 time-series-momentum numerics (operator spec §Agent 2).
     strategy_agent_02_lookbacks: CsvPositiveInts = Field(default_factory=list)
     strategy_agent_02_entry_threshold: FailClosedDecimal = None
     strategy_agent_02_vol_lookback: FailClosedCount = None
@@ -248,7 +183,6 @@ class Settings(BaseSettings):
     strategy_agent_03_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_03_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_03_min_bars: FailClosedMinBars = None
-    # Phase 3.2 Agent 3 donchian-breakout numerics (operator spec §Agent 3).
     strategy_agent_03_channel_bars: FailClosedCount = None
     strategy_agent_03_buffer_ticks: FailClosedCount = None
     strategy_agent_03_confirm_bars: FailClosedCount = None
@@ -258,7 +192,6 @@ class Settings(BaseSettings):
     strategy_agent_04_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_04_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_04_min_bars: FailClosedMinBars = None
-    # Phase 3.2 Agent 4 vol-expansion-breakout numerics (operator spec §Agent 4).
     strategy_agent_04_vol_lookback: FailClosedCount = None
     strategy_agent_04_compression_pctile: FailClosedDecimal = None
     strategy_agent_04_confirm_bars: FailClosedCount = None
@@ -267,7 +200,6 @@ class Settings(BaseSettings):
     strategy_agent_05_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_05_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_05_min_bars: FailClosedMinBars = None
-    # Phase 3.2 Agent 5 trend-pullback-continuation numerics (operator spec §Agent 5).
     strategy_agent_05_trend_period: FailClosedCount = None
     strategy_agent_05_pullback_ma: FailClosedCount = None
     strategy_agent_05_confirm_bars: FailClosedCount = None
@@ -277,7 +209,6 @@ class Settings(BaseSettings):
     strategy_agent_06_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_06_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_06_min_bars: FailClosedMinBars = None
-    # Phase 3.3 Agent 6 session-opening-range numerics (operator spec §Agent 6).
     strategy_agent_06_session_name: FailClosedText = None
     strategy_agent_06_session_tz: FailClosedText = None
     strategy_agent_06_range_minutes: FailClosedCount = None
@@ -289,7 +220,6 @@ class Settings(BaseSettings):
     strategy_agent_07_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_07_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_07_min_bars: FailClosedMinBars = None
-    # Phase 3.3 Agent 7 mean-reversion numerics (operator spec §Agent 7).
     strategy_agent_07_basis_period: FailClosedCount = None
     strategy_agent_07_band_width: FailClosedDecimal = None
     strategy_agent_07_z_min: FailClosedDecimal = None
@@ -301,7 +231,6 @@ class Settings(BaseSettings):
     strategy_agent_08_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_08_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_08_min_bars: FailClosedMinBars = None
-    # Phase 3.3 Agent 8 vwap-reversion numerics (operator spec §Agent 8).
     strategy_agent_08_session_name: FailClosedText = None
     strategy_agent_08_session_tz: FailClosedText = None
     strategy_agent_08_band_sigmas: FailClosedDecimal = None
@@ -311,7 +240,6 @@ class Settings(BaseSettings):
     strategy_agent_09_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_09_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_09_min_bars: FailClosedMinBars = None
-    # Phase 3.4 Agent 9 smc-ict-liquidity-sweep numerics (operator spec §Agent 9).
     strategy_agent_09_swing_bars: FailClosedCount = None
     strategy_agent_09_equal_tol_ticks: FailClosedCount = None
     strategy_agent_09_sweep_tol_ticks: FailClosedCount = None
@@ -322,33 +250,19 @@ class Settings(BaseSettings):
     strategy_agent_10_timeframes: CsvTimeframes = Field(default_factory=list)
     strategy_agent_10_regimes: CsvRegimes = Field(default_factory=list)
     strategy_agent_10_min_bars: FailClosedMinBars = None
-    # Phase 3.5 Agent 10 carry-term-structure numerics (operator spec §Agent 10).
     strategy_agent_10_max_data_age_hours: FailClosedDecimal = None
     strategy_agent_10_min_history_points: FailClosedCount = None
 
-    # Phase 4 D-4.2 graph bounds (04-CONTEXT.md). The locked values are the
-    # defaults; the operator may override them explicitly, and an invalid
-    # value fails startup (D-36). All non-secret, so hash-covered
-    # automatically. Graph code reads these through the Settings object —
-    # no threshold literal lives in graph code.
     graph_node_timeout_seconds: float = 60.0
     graph_node_max_retries: int = 2
-    # Optional tighter cap on concurrent node execution; unset means no
-    # explicit cap (fan-out is still capped at the eligible set by
-    # construction). Positive when set.
     graph_max_concurrency: int | None = None
 
-    # Phase 4 Wave 2 model runtime (04-03 tracer). Host defaults to loopback;
-    # anything else fails startup (T-04-06 SSRF allowlist). No model-name
-    # default: None means no expected model and discovery fails the run
-    # closed — T0004 stays operator-open, never assumed in code.
     ollama_host: str = "http://127.0.0.1:11434"
     ollama_model: FailClosedText = None
 
     @field_validator("session_overlap_utc", "session_major_utc", "session_asia_utc", mode="after")
     @classmethod
     def _window_specs_parse(cls, value: str) -> str:
-        """Fail closed on a malformed session window (D-36, D-59)."""
         from services.mt5_adapter.validation import parse_session_windows
 
         parse_session_windows(value)
@@ -357,7 +271,6 @@ class Settings(BaseSettings):
     @field_validator("weekend_close_utc", mode="after")
     @classmethod
     def _weekend_spec_parses(cls, value: str) -> str:
-        """Fail closed on a malformed weekend window (D-36, D-58)."""
         from services.mt5_adapter.validation import parse_weekend_window
 
         parse_weekend_window(value)
@@ -366,7 +279,6 @@ class Settings(BaseSettings):
     @field_validator("daily_break_utc", mode="after")
     @classmethod
     def _break_spec_parses(cls, value: str) -> str:
-        """Fail closed on a malformed daily-break window (D-36, D-58)."""
         from services.mt5_adapter.validation import parse_daily_window
 
         parse_daily_window(value)
@@ -375,7 +287,6 @@ class Settings(BaseSettings):
     @field_validator("tick_rounding_mode", mode="after")
     @classmethod
     def _rounding_mode_acknowledged(cls, value: str) -> str:
-        """Fail closed unless the operator acknowledges the locked mode (D-3.2)."""
         if value != "ROUND_HALF_UP":
             raise ValueError(f"tick_rounding_mode {value!r} is not the locked D-3.2 mode")
         return value
@@ -383,7 +294,6 @@ class Settings(BaseSettings):
     @field_validator("max_risk_percent_per_idea", "min_risk_reward_ratio", mode="before")
     @classmethod
     def _empty_placeholder_means_unset(cls, value: Any) -> Any:
-        """An empty template entry reads as unset, never as zero (D-3.1)."""
         if value == "":
             return None
         return value
@@ -391,7 +301,6 @@ class Settings(BaseSettings):
     @field_validator("max_risk_percent_per_idea", "min_risk_reward_ratio", mode="after")
     @classmethod
     def _risk_placeholders_positive(cls, value: float | None) -> float | None:
-        """Fail closed on a non-positive risk placeholder (D-3.1, D-36)."""
         import math
 
         if value is not None and (not math.isfinite(value) or value <= 0):
@@ -401,7 +310,6 @@ class Settings(BaseSettings):
     @field_validator("graph_node_timeout_seconds", mode="before")
     @classmethod
     def _graph_timeout_empty_means_default(cls, value: Any) -> Any:
-        """An empty template entry reads as the locked D-4.2 default, never zero."""
         if value == "":
             return 60.0
         return value
@@ -409,7 +317,6 @@ class Settings(BaseSettings):
     @field_validator("graph_node_timeout_seconds", mode="after")
     @classmethod
     def _graph_timeout_positive(cls, value: float) -> float:
-        """Fail closed on a non-positive node timeout (D-4.2, D-36)."""
         import math
 
         if not math.isfinite(value) or value <= 0:
@@ -419,7 +326,6 @@ class Settings(BaseSettings):
     @field_validator("graph_node_max_retries", mode="before")
     @classmethod
     def _graph_retries_empty_means_default(cls, value: Any) -> Any:
-        """An empty template entry reads as the locked D-4.2 default."""
         if value == "":
             return 2
         return value
@@ -427,7 +333,6 @@ class Settings(BaseSettings):
     @field_validator("graph_node_max_retries", mode="after")
     @classmethod
     def _graph_retries_non_negative(cls, value: int) -> int:
-        """Fail closed on a negative retry count (D-4.2, D-36)."""
         if isinstance(value, bool) or value < 0:
             raise ValueError("graph_node_max_retries must be a non-negative int")
         return value
@@ -435,7 +340,6 @@ class Settings(BaseSettings):
     @field_validator("graph_max_concurrency", mode="before")
     @classmethod
     def _graph_concurrency_empty_means_unset(cls, value: Any) -> Any:
-        """An empty template entry reads as unset, never as zero (D-36)."""
         if value == "":
             return None
         return value
@@ -443,7 +347,6 @@ class Settings(BaseSettings):
     @field_validator("graph_max_concurrency", mode="after")
     @classmethod
     def _graph_concurrency_positive_or_unset(cls, value: int | None) -> int | None:
-        """Fail closed on a non-positive concurrency cap (D-36)."""
         if value is not None and (isinstance(value, bool) or value < 1):
             raise ValueError("graph_max_concurrency must be a positive int when set")
         return value
@@ -451,7 +354,6 @@ class Settings(BaseSettings):
     @field_validator("ollama_host", mode="before")
     @classmethod
     def _ollama_host_empty_means_default(cls, value: Any) -> Any:
-        """An empty template entry reads as the loopback default, never blank."""
         if value == "":
             return "http://127.0.0.1:11434"
         return value
@@ -459,7 +361,6 @@ class Settings(BaseSettings):
     @field_validator("ollama_host", mode="after")
     @classmethod
     def _ollama_host_loopback_only(cls, value: str) -> str:
-        """Fail closed unless the endpoint is loopback (T-04-06, D-36)."""
         if urlparse(value).scheme not in ("http", "https") or urlparse(value).hostname not in (
             "127.0.0.1",
             "::1",
@@ -471,12 +372,6 @@ class Settings(BaseSettings):
     @model_validator(mode="before")
     @classmethod
     def _reject_undeclared_prefixed_variables(cls, data: Any) -> Any:
-        """Reject a `GOLDMASTERS_`-prefixed variable no field declares (D-36).
-
-        pydantic-settings ignores environment names with no matching field,
-        so a typo would silently default; this guard names the offender
-        instead. Runs on every construction path, including startup.
-        """
         declared = {f"GOLDMASTERS_{name.upper()}" for name in cls.model_fields}
         unknown = sorted(
             key for key in os.environ if key.startswith("GOLDMASTERS_") and key not in declared
@@ -494,7 +389,6 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Default sources plus the versioned YAML document, last (D-15)."""
         return (
             init_settings,
             env_settings,
@@ -511,11 +405,7 @@ def _is_secret_field(settings: Settings, name: str) -> bool:
 
 
 def hash_effective_config(settings: Settings) -> str:
-    """Hash the canonical JSON of the non-secret settings (sha256 hex).
-
-    Sorted keys make the digest order-invariant; the embedded algorithm
-    version makes a canonicalisation change detectable.
-    """
+    """Hash the canonical JSON of the non-secret settings (sha256 hex)."""
     payload = {
         key: value
         for key, value in settings.model_dump().items()
