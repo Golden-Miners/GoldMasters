@@ -185,10 +185,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. The release suite runs with exact commands and recorded output, unresolved items are listed instead of hidden, and no claim of "zero hallucinations", "perfect analysis" or "zero errors" appears anywhere in the project.
 
 **Plans**: 4 plans (Wave 0: 08-01 audit scans; Wave 1: 08-02 failure-injection; Wave 2: 08-03 rollback + backup/restore; Wave 3: 08-04 release-suite run)
-- [ ] 08-01-PLAN.md — Audit scans: security boundary AST scan, dependency/secret scan, fixture scan, read scripts/gate (REQ-no-trade-execution, REQ-no-fabricated-data)
-- [ ] 08-02-PLAN.md — Failure-injection: provider/model/DB/outage/timeout/malformed → NO_TRADE or INSUFFICIENT_DATA; prove no unqualified TRADE (REQ-no-trade-execution, REQ-local-model-support)
-- [ ] 08-03-PLAN.md — Migration rollback + backup/restore test: alembic upgrade head → downgrade base, verify empty schema; backup/restore (REQ-journal-and-backtesting)
-- [ ] 08-04-PLAN.md — Release-suite run: exact command output recorded; unresolved items listed; no forbidden claims (REQ-no-fabricated-data, REQ-no-trade-execution)
+- [x] 08-01-PLAN.md — Audit scans: security boundary AST scan, dependency/secret scan, fixture scan, read scripts/gate (REQ-no-trade-execution, REQ-no-fabricated-data)
+- [x] 08-02-PLAN.md — Failure-injection: provider/model/DB/outage/timeout/malformed → NO_TRADE or INSUFFICIENT_DATA; prove no unqualified TRADE (REQ-no-trade-execution, REQ-local-model-support)
+- [x] 08-03-PLAN.md — Migration rollback + backup/restore test: alembic upgrade head → downgrade base, verify empty schema; backup/restore (REQ-journal-and-backtesting)
+- [x] 08-04-PLAN.md — Release-suite run: exact command output recorded; unresolved items listed; no forbidden claims (REQ-no-fabricated-data, REQ-no-trade-execution)
 
 ## Progress
 
@@ -203,8 +203,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 4. LangGraph Orchestration and Local Model Runtime | 0/0 | Not started | - |
 | 5. News, Sentiment and CEO Decision Contract | 0/0 | Not started | - |
 | 6. Journal, Persistence and Backtesting | 3/3 | Complete | 2026-10-16 |
-| 7. Research Console UI and Reports | 0/0 | Not started | - |
-| 8. Hardening, Data-Integrity Verification and Release Gate | 0/0 | Not started | - |
+| 7. Research Console UI and Reports | 4/4 | Complete | 2026-10-17 |
+| 8. Hardening, Data-Integrity Verification and Release Gate | 4/4 | Complete | 2026-10-17 |
 
 ---
 *Roadmap created: 2026-10-13 from `.planning/intel/` synthesis (12 requirements, 23 constraints, 15 decision records)*
