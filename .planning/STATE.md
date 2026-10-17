@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v1.0
 milestone_name: Research Signal Team
-current_phase: 2
-current_phase_name: Market Data and Provider Selection
-status: planning
-stopped_at: Completed 06-journal-persistence-backtesting-02-PLAN.md
-last_updated: "2026-10-16T13:11:22.267Z"
-last_activity: 2026-10-15
-last_activity_desc: Phase 1 complete, transitioned to Phase 2
-state_head: 3c7ec640c64d3fd605cc90821d37b27cf280953b
+current_phase: 8
+current_phase_name: Hardening and Release Gate
+status: in-progress
+stopped_at: Completed 08-hardening-release-gate-01-PLAN.md
+last_updated: "2026-10-17T00:00:00Z"
+last_activity: 2026-10-17
+last_activity_desc: 08-01 audit scans executed — boundary scan, dependency/secret scan, fixture scan, gate read
+state_head: ed64d6d0e92e2cb94b1829f82f165fafee14f705
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 
 ## Current Position
 
-Phase: 3 — Deterministic Analysis, Strategy Rules and Risk Gates
-Plan: 03-03 complete (Wave 3: risk/levels.py, risk/gate.py, docs/roles.md + 21 tests)
-Status: Phase 2 implementation complete pending operator live_mt5 run (BLOCKED) + verification
-Last activity: 2026-10-15 — 03-03 executed: code-computed levels (R:R recomputed, null-when-unknown), fail-closed gate sole path to TRADE, 14-role matrix; 365 passed, 2 skipped
+Phase: 8 — Hardening and Release Gate
+Plan: 08-01 complete (Wave 0: audit scans)
+Status: 08-01 complete — security boundary AST scan (zero forbidden call names), dependency/secret scan (no real secrets), fixture scan (no mock data in production), scripts/gate documented
+Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_example tests passed, audit evidence recorded at .planning/phases/08-hardening-release-gate/08-01-audit-evidence.md; commit aa71688
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Last activity: 2026-10-15 — 03-03 executed: code-computed levels (R:R recomput
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 06-journal-persistence-backtesting P02 | ~1 h across resumed session | 3 tasks | 9 files |
+| Phase 08-hardening-release-gate 01 | ~25 min | 2 tasks | 1 file created |
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ Proposed (Architecture.md §2, reconcile before pinning; DR-09…DR-15): FastAPI
 No ADRs and no ADR-locked decisions exist — every decision record is DOC-sourced and ranks below Schema.md (SPEC, canonical for names and JSON shapes) and Prd.md (PRD).
 
 Phase 1 locked (implemented, not just decided): decimal-as-string wire form; closed provider-sourced Timeframe; `manual_review_required=true` with null-unless-validated levels; append-only precision table shipping empty; fail-closed version/prefix rules; loopback-only binds; secret-by-type hash exclusion; JSONB + promoted columns persistence shape.
+
+Phase 8-01 locked (audit scans complete): AST boundary scan enforces REQ-no-trade-execution — zero order-execution call names across packages/apps/src/services; `trade_allowed` read-only assertion at services/mt5_adapter/adapter.py:215 (plan cited terminal.py:215 — citation deviation); loopback bind at app.py:39-56; Ollama loopback validator at settings.py:363-370; .env.example verified no real secrets; fixture scan confirms no mock/sample data in production paths; scripts/gate command list documented.
 - [Phase 06-journal-persistence-backtesting]: Manifest joins records by dataset_ref (0003 has no run_id column); backtest_run_id is the per-strategy {run_id}:{strategy_id} key
 - [Phase 06-journal-persistence-backtesting]: Gate direction inferred from validated levels; equal levels block as indeterminate
 - [Phase 06-journal-persistence-backtesting]: FillCosts carry Decimal zeros as declared placeholders; require_confirmed fails closed until operator confirms values
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-16T13:11:21.468Z
-Stopped at: Completed 06-journal-persistence-backtesting-02-PLAN.md
+Last session: 2026-10-17
+Stopped at: Completed 08-hardening-release-gate-01-PLAN.md
 Resume file: None

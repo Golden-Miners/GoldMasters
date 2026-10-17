@@ -40,10 +40,10 @@ Requirements for the initial release. Each maps to exactly one roadmap phase (se
 - [ ] **REQ-local-model-support** — Local, discovered model runtime with health status and no assumed capability.
   - **Acceptance:** Ollama endpoint and model are configurable with runtime discovery (no assumed model name, hardware or context window), health check and provider/model status recorded (`ModelConfig`); all model output is untrusted until schema-validated and checked against evidence references; deterministic code owns prices, indicator values, risk/reward arithmetic, validation and gates; show `unavailable`/degraded states honestly; never send sensitive data to unapproved endpoints. **Source:** Prd.md §6.9; Architecture.md §2 Local model; Rules.md R-03, R-08.
 
-- [ ] **REQ-no-trade-execution** — The V1 boundary is structural: no order capability exists anywhere in the codebase.
+- [x] **REQ-no-trade-execution** — The V1 boundary is structural: no order capability exists anywhere in the codebase.
   - **Acceptance:** No order-placement/modification/closure code, endpoint, tool or broker-trading credentials exist; a `TRADE` result is a qualified research candidate requiring manual review — not an order; any future execution capability requires an explicit user decision that supersedes DR-04/R-02. **Source:** Prd.md §3; Rules.md R-02; Task.md T0804.
 
-- [ ] **REQ-no-fabricated-data** — No synthetic market, news, sentiment, backtest or signal data in production paths.
+- [x] **REQ-no-fabricated-data** — No synthetic market, news, sentiment, backtest or signal data in production paths.
   - **Acceptance:** Missing or unavailable data is labelled as such — never synthesized; test fixtures are labelled and confined to tests; no claim of "perfect analysis", "zero errors" or "zero hallucinations"; errors and failures are measured and reported honestly. **Source:** Prd.md §1, §3; Rules.md R-01, R-09.
 
 - [ ] **REQ-evidence-and-provenance** — Explainability is the product, not an add-on.
@@ -77,7 +77,7 @@ Which phase covers which requirement (assigned during roadmap creation; one phas
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REQ-no-trade-execution | Phase 1 | Pending |
+| REQ-no-trade-execution | Phase 1 | Complete |
 | REQ-instrument-provider-selection | Phase 2 | Pending |
 | REQ-market-data-ingestion-validation | Phase 2 | Pending |
 | REQ-specialist-agent-responsibilities | Phase 3 | Pending |
@@ -88,7 +88,7 @@ Which phase covers which requirement (assigned during roadmap creation; one phas
 | REQ-evidence-and-provenance | Phase 5 | Pending |
 | REQ-journal-and-backtesting | Phase 6 | Pending |
 | REQ-ui-and-reports | Phase 7 | Pending |
-| REQ-no-fabricated-data | Phase 8 | Pending |
+| REQ-no-fabricated-data | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 12 total
