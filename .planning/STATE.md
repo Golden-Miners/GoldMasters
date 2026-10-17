@@ -5,11 +5,11 @@ milestone_name: Research Signal Team
 current_phase: 8
 current_phase_name: Hardening and Release Gate
 status: in-progress
-stopped_at: Completed 08-hardening-release-gate-01-PLAN.md
-last_updated: "2026-10-17T00:00:00Z"
+stopped_at: Completed 08-hardening-release-gate-02-PLAN.md
+last_updated: "2026-10-17T13:22:00Z"
 last_activity: 2026-10-17
-last_activity_desc: 08-01 audit scans executed — boundary scan, dependency/secret scan, fixture scan, gate read
-state_head: ed64d6d0e92e2cb94b1829f82f165fafee14f705
+last_activity_desc: 08-02 failure-injection executed — provider/model/DB/timeout/malformed injection prove no unqualified TRADE; 16 graph-failure-policy tests green
+state_head: db1ab88d8335b6fb37e130430b755fc3b6988dee
 progress:
   total_phases: 8
   completed_phases: 1
@@ -58,6 +58,7 @@ Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_exa
 |------|----------|-------|-------|
 | Phase 06-journal-persistence-backtesting P02 | ~1 h across resumed session | 3 tasks | 9 files |
 | Phase 08-hardening-release-gate 01 | ~25 min | 2 tasks | 1 file created |
+| Phase 08-hardening-release-gate 02 | ~36 min | 1 task | 1 file created, 1 test file modified |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ No ADRs and no ADR-locked decisions exist — every decision record is DOC-sourc
 Phase 1 locked (implemented, not just decided): decimal-as-string wire form; closed provider-sourced Timeframe; `manual_review_required=true` with null-unless-validated levels; append-only precision table shipping empty; fail-closed version/prefix rules; loopback-only binds; secret-by-type hash exclusion; JSONB + promoted columns persistence shape.
 
 Phase 8-01 locked (audit scans complete): AST boundary scan enforces REQ-no-trade-execution — zero order-execution call names across packages/apps/src/services; `trade_allowed` read-only assertion at services/mt5_adapter/adapter.py:215 (plan cited terminal.py:215 — citation deviation); loopback bind at app.py:39-56; Ollama loopback validator at settings.py:363-370; .env.example verified no real secrets; fixture scan confirms no mock/sample data in production paths; scripts/gate command list documented.
+Phase 8-02 locked (failure-injection complete): provider outage, Ollama model outage, DB outage, timeout, and malformed output each proven via doubles to yield NO_TRADE or INSUFFICIENT_DATA — never TRADE; `evaluate_gate` (gate.py:86-135) is the sole TRADE gate (passed=False, levels=None on any unset/invalid input); `assemble_decision` (nodes.py:421-443) emits TRADE only when barrier_passed and verdict.passed; no production code changes; no invented thresholds.
 - [Phase 06-journal-persistence-backtesting]: Manifest joins records by dataset_ref (0003 has no run_id column); backtest_run_id is the per-strategy {run_id}:{strategy_id} key
 - [Phase 06-journal-persistence-backtesting]: Gate direction inferred from validated levels; equal levels block as indeterminate
 - [Phase 06-journal-persistence-backtesting]: FillCosts carry Decimal zeros as declared placeholders; require_confirmed fails closed until operator confirms values
