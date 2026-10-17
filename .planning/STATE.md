@@ -101,5 +101,12 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-10-17
-Stopped at: Completed 08-hardening-release-gate-01-PLAN.md
+Stopped at: Completed 08-hardening-release-gate-04-PLAN.md (release suite + forbidden-claims grep)
 Resume file: None
+
+## Phase 8 Completion
+
+- 08-01 audit scans: complete (committed)
+- 08-02 failure-injection: complete (committed)
+- 08-03 migration rollback + backup/restore: complete (committed)
+- 08-04 release suite + forbidden-claims grep: complete (release-output.md recorded verbatim; SUMMARY.md written)
