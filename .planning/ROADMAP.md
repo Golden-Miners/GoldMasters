@@ -184,7 +184,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Backup/restore and migration rollback are tested, dependencies and secrets are scanned, and local services bind to loopback only.
   5. The release suite runs with exact commands and recorded output, unresolved items are listed instead of hidden, and no claim of "zero hallucinations", "perfect analysis" or "zero errors" appears anywhere in the project.
 
-**Plans**: TBD
+**Plans**: 4 plans (Wave 0: 08-01 audit scans; Wave 1: 08-02 failure-injection; Wave 2: 08-03 rollback + backup/restore; Wave 3: 08-04 release-suite run)
+- [ ] 08-01-PLAN.md — Audit scans: security boundary AST scan, dependency/secret scan, fixture scan, read scripts/gate (REQ-no-trade-execution, REQ-no-fabricated-data)
+- [ ] 08-02-PLAN.md — Failure-injection: provider/model/DB/outage/timeout/malformed → NO_TRADE or INSUFFICIENT_DATA; prove no unqualified TRADE (REQ-no-trade-execution, REQ-local-model-support)
+- [ ] 08-03-PLAN.md — Migration rollback + backup/restore test: alembic upgrade head → downgrade base, verify empty schema; backup/restore (REQ-journal-and-backtesting)
+- [ ] 08-04-PLAN.md — Release-suite run: exact command output recorded; unresolved items listed; no forbidden claims (REQ-no-fabricated-data, REQ-no-trade-execution)
 
 ## Progress
 
