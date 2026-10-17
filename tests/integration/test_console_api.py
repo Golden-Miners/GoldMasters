@@ -10,10 +10,10 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from goldmasters_api.app import create_app
 from goldmasters_contracts import (
     BacktestAssumptions,
     BacktestMetric,
@@ -25,7 +25,6 @@ from goldmasters_contracts import (
 )
 from sqlalchemy import create_engine
 
-from goldmasters_api.app import create_app
 from src.goldmasters.backtest.persistence import write_backtest_record
 from src.goldmasters.journal.store import write_snapshot
 
@@ -88,7 +87,14 @@ def _backtest_record(run_id: str, dataset_ref: str) -> BacktestRecord:
             slippage="0",
             spread="0",
         ),
-        metrics=[BacktestMetric(name="net_return", definition="net return", sample_size=10, value="0.05")],
+        metrics=[
+            BacktestMetric(
+                name="net_return",
+                definition="net return",
+                sample_size=10,
+                value="0.05",
+            ),
+        ],
         generated_at=datetime(2026, 1, 1, 1, 0, tzinfo=UTC),
         code_version="1.0.0",
         status=EvidenceStatus.VALID,
