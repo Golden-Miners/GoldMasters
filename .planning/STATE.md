@@ -5,10 +5,10 @@ milestone_name: Research Signal Team
 current_phase: 8
 current_phase_name: Hardening and Release Gate
 status: in-progress
-stopped_at: Completed 08-hardening-release-gate-02-PLAN.md
-last_updated: "2026-10-17T13:22:00Z"
+stopped_at: Completed 08-hardening-release-gate-03-PLAN.md
+last_updated: "2026-10-17T14:00:00Z"
 last_activity: 2026-10-17
-last_activity_desc: 08-02 failure-injection executed — provider/model/DB/timeout/malformed injection prove no unqualified TRADE; 16 graph-failure-policy tests green
+last_activity_desc: 08-03 migration rollback + backup/restore executed — migration files verified (0001 byte-identical; 0002/0003 downgrade reverse-order correct); live alembic upgrade/downgrade and backup/restore BLOCKED by unavailable PostgreSQL 18.6 cluster (0xC0000142 / error 487 shared memory on Windows); test_migration_roundtrip fails loud (exit 1, not skipped) per conftest; evidence + summary written
 state_head: db1ab88d8335b6fb37e130430b755fc3b6988dee
 progress:
   total_phases: 8
@@ -29,8 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 ## Current Position
 
 Phase: 8 — Hardening and Release Gate
-Plan: 08-01 complete (Wave 0: audit scans)
-Status: 08-01 complete — security boundary AST scan (zero forbidden call names), dependency/secret scan (no real secrets), fixture scan (no mock data in production), scripts/gate documented
+Plan: 08-01 complete (Wave 0: audit scans), 08-02 complete (Wave 1: failure-injection), 08-03 complete-with-env-blocker (Wave 2: migration rollback + backup/restore — source verified, live-DB execution blocked by cluster)
 Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_example tests passed, audit evidence recorded at .planning/phases/08-hardening-release-gate/08-01-audit-evidence.md; commit aa71688
 
 ## Performance Metrics
@@ -59,6 +58,7 @@ Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_exa
 | Phase 06-journal-persistence-backtesting P02 | ~1 h across resumed session | 3 tasks | 9 files |
 | Phase 08-hardening-release-gate 01 | ~25 min | 2 tasks | 1 file created |
 | Phase 08-hardening-release-gate 02 | ~36 min | 1 task | 1 file created, 1 test file modified |
+| Phase 08-hardening-release-gate 03 | ~60 min | 2 tasks | 2 files created (evidence, summary); live-DB blocked by cluster |
 
 ## Accumulated Context
 
@@ -90,6 +90,7 @@ None yet.
 - **RISK-02 — tracker handoff disagreement.** Memory.md names `Current task: T0002` (line 71) while logging T0001 and T0002 completed; Task.md names T0001 as next. Decide the single source of truth and align both files before planning work starts.
 - RISK-03: Task.md Phase 0 is not fully closed — T0004 (Ollama endpoint/models), T0005 (remaining PRD questions) and T0006 (baseline test/lint/type state) are open; the `MetaTrader5` package is not installed, so the read-only adapter cannot run until it is installed on the MT5 host in a Python 3.10+ environment.
 - RISK-04 [Phase 1: resolved for contract shape]: timeframe enum, identifier scheme and config versioning are pinned in code; tick precision ships as form-only with an empty table Phase 2 fills; freshness/retention stay open by design (recorded assumptions, not invented thresholds).
+- **08-03 ENV BLOCKER — PostgreSQL 18.6 cluster unavailable on this Windows host:** `vendor/postgres` worker processes crash with `0xC0000142` / shared-memory error code 487 across 4+ start attempts; `uv run alembic upgrade head`, `alembic downgrade base`, and `test_migration_roundtrip.py` all fail with connection-refused (exit 1, fail-loud, not skipped). Migration files verified correct by source review (0001 byte-identical; 0002/0003 downgrade reverse-order). Backup/restore procedure documented, not executed. Re-run on a host with a working cluster.
 - Environment: `.planning/config.json` now exists. Memory.md's repository snapshot ("no git repo") is historical drift — the working tree is a git repository with 40+ commits.
 
 ## Deferred Items
