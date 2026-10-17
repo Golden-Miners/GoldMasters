@@ -23,15 +23,15 @@ decisions:
 metrics:
   duration: ~30 min
   completed: 2026-10-17
-  commits: 0
-  tests: full pytest suite passes except 3 pre-existing test_mt5_health_api.py failures (no live MT5 terminal) and 1 pre-existing test_console_api.py failure (UUID format in test fixture)
-plan_head_before: (working tree)
-plan_head_after: (working tree)
+  commits: 2
+  tests: full pytest suite passes except 3 pre-existing test_mt5_health_api.py failures (no live MT5 terminal) and 1 pre-existing test_console_api.py failure (UUID format in test fixture); 18 errors from PostgreSQL cluster unavailable on Windows host
+plan_head_before: b610dcb13c6fc92da6119f4db4c3676ca35a2397
+plan_head_after: 24d778b68e15124ce214806aac816b3318daa543
 status: complete
 actuals:
   tokens: ~30000
   tasks: 2
-  commits: 0
+  commits: 2
 ---
 
 # Phase 08 Plan 04: Release Suite (Wave 3) Summary
