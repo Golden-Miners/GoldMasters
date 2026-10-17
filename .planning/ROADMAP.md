@@ -166,10 +166,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Keyboard navigation, visible focus, non-colour-only status, tabular chart alternatives and WCAG 2.2 AA contrast targets are verified, with Playwright coverage of the core journeys and their error states.
 
 **Plans:** 4 plans (Wave 1: 07-01 deps+API routers+primitives; Wave 2: 07-02 core surfaces, 07-03 data surfaces; Wave 3: 07-04 status surfaces + E2E + a11y)
-- [ ] 07-01-PLAN.md — Deps + 11 read-only API routers + shared UI primitives (D-7.1…D-7.3, all surfaces)
-- [ ] 07-02-PLAN.md — Overview + Instrument Workbench + Decision Detail (criteria 1-2, 4; T0701-T0703)
-- [ ] 07-03-PLAN.md — News & Sentiment + Strategy Lab + Backtest Results + Journal + Agent Runs (criteria 1-2; T0704-T0706)
-- [ ] 07-04-PLAN.md — Data Providers + Settings/Model Health + System Health + Playwright E2E + a11y (criteria 3, 5; T0707-T0710)
+- [x] 07-01-PLAN.md — Deps + 11 read-only API routers + shared UI primitives (D-7.1…D-7.3, all surfaces)
+- [x] 07-02-PLAN.md — Overview + Instrument Workbench + Decision Detail (criteria 1-2, 4; T0701-T0703)
+- [x] 07-03-PLAN.md — News & Sentiment + Strategy Lab + Backtest Results + Journal + Agent Runs (criteria 1-2; T0704-T0706)
+- [x] 07-04-PLAN.md — Data Providers + Settings/Model Health + System Health + Playwright E2E + a11y (criteria 3, 5; T0707-T0710)
 **UI hint**: yes
 
 ### Phase 8: Hardening, Data-Integrity Verification and Release Gate
