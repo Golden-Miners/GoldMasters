@@ -204,7 +204,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 5. News, Sentiment and CEO Decision Contract | 0/0 | Not started | - |
 | 6. Journal, Persistence and Backtesting | 3/3 | Complete | 2026-10-16 |
 | 7. Research Console UI and Reports | 4/4 | Complete | 2026-10-17 |
-| 8. Hardening, Data-Integrity Verification and Release Gate | 4/4 | Complete | 2026-10-17 |
+| 8. Hardening, Data-Integrity Verification and Release Gate | 2/4 | In Progress | - |
 
 ---
 *Roadmap created: 2026-10-13 from `.planning/intel/` synthesis (12 requirements, 23 constraints, 15 decision records)*

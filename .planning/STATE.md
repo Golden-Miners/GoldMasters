@@ -12,8 +12,8 @@ last_activity_desc: 08-03 migration rollback + backup/restore executed — migra
 state_head: db1ab88d8335b6fb37e130430b755fc3b6988dee
 progress:
   total_phases: 8
-  completed_phases: 1
-  total_plans: 27
+  completed_phases: 7
+  total_plans: 40
   completed_plans: 27
 ---
 
