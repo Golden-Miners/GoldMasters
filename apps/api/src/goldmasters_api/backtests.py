@@ -52,21 +52,33 @@ def list_backtests(request: Request) -> list[BacktestRecord] | JSONResponse:
 
     records: list[BacktestRecord] = []
     for row in rows:
-        document: dict[str, Any] = dict(row)
-        document["assumptions"] = _json(document["assumptions"])
-        document["metrics"] = _json(document["metrics"])
-        document["errors"] = _json(document["errors"])
-        document["start"] = _iso(document["start_at"])
-        document["end"] = _iso(document["end_at"])
-        document["in_sample_start"] = _iso_or_none(document["in_sample_start"])
-        document["in_sample_end"] = _iso_or_none(document["in_sample_end"])
-        document["validation_start"] = _iso_or_none(document["validation_start"])
-        document["validation_end"] = _iso_or_none(document["validation_end"])
-        document["out_of_sample_start"] = _iso_or_none(document["out_of_sample_start"])
-        document["out_of_sample_end"] = _iso_or_none(document["out_of_sample_end"])
-        document["generated_at"] = _iso(document["generated_at"])
-        document["instrument_id"] = document.pop("instrument")
-        records.append(BacktestRecord.model_validate(document))
+        document: dict[str, Any] = {
+            "backtest_run_id": row["backtest_run_id"],
+            "strategy_id": row["strategy_id"],
+            "strategy_version": row["strategy_version"],
+            "dataset_ref": row["dataset_ref"],
+            "dataset_hash": row["dataset_hash"],
+            "instrument_id": row["instrument"],
+            "timeframe": row["timeframe"],
+            "start": _iso(row["start_at"]),
+            "end": _iso(row["end_at"]),
+            "timezone": row["timezone"],
+            "data_quality": row["data_quality"],
+            "parameter_hash": row["parameter_hash"],
+            "assumptions": _json(row["assumptions"]),
+            "in_sample_start": _iso_or_none(row["in_sample_start"]),
+            "in_sample_end": _iso_or_none(row["in_sample_end"]),
+            "validation_start": _iso_or_none(row["validation_start"]),
+            "validation_end": _iso_or_none(row["validation_end"]),
+            "out_of_sample_start": _iso_or_none(row["out_of_sample_start"]),
+            "out_of_sample_end": _iso_or_none(row["out_of_sample_end"]),
+            "metrics": _json(row["metrics"]),
+            "generated_at": _iso(row["generated_at"]),
+            "code_version": row["code_version"],
+            "status": row["status"],
+            "errors": _json(row["errors"]),
+        }
+        records.append(BacktestRecord.model_validate_json(json.dumps(document)))
     return records
 
 

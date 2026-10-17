@@ -1,66 +1,87 @@
-import type { ReactNode } from "react";
+"use client";
 
-type Tone = "valid" | "warning" | "blocked" | "neutral";
+import type { FC } from "react";
 
-interface BadgeEntry {
-  label: string;
-  tone: Tone;
-  icon: string;
+type StatusTone = "valid" | "warning" | "blocked" | "neutral";
+
+interface StatusBadgeProps {
+  status: string;
 }
 
-const ENUM_MAP: Record<string, BadgeEntry> = {
-  // Decision
-  TRADE: { label: "Trade", tone: "valid", icon: "▲" },
-  NO_TRADE: { label: "No trade", tone: "neutral", icon: "○" },
-  INSUFFICIENT_DATA: { label: "Insufficient data", tone: "warning", icon: "⚠" },
-  // AgentRunStatus
-  queued: { label: "Queued", tone: "neutral", icon: "⏳" },
-  running: { label: "Running", tone: "neutral", icon: "▶" },
-  ok: { label: "OK", tone: "valid", icon: "✓" },
-  no_setup: { label: "No setup", tone: "warning", icon: "⚠" },
-  insufficient_data: { label: "Insufficient data", tone: "warning", icon: "⚠" },
-  skipped: { label: "Skipped", tone: "neutral", icon: "⊘" },
-  error: { label: "Error", tone: "blocked", icon: "✕" },
-  timed_out: { label: "Timed out", tone: "blocked", icon: "⏱" },
-  cancelled: { label: "Cancelled", tone: "neutral", icon: "⊘" },
-  // EvidenceStatus
-  valid: { label: "Valid", tone: "valid", icon: "✓" },
-  stale: { label: "Stale", tone: "warning", icon: "⚠" },
-  missing: { label: "Missing", tone: "blocked", icon: "✕" },
-  conflicted: { label: "Conflicted", tone: "blocked", icon: "⚠" },
-  invalid: { label: "Invalid", tone: "blocked", icon: "✕" },
-  unavailable: { label: "Unavailable", tone: "blocked", icon: "⊘" },
-  // QualityStatus
-  duplicate: { label: "Duplicate", tone: "warning", icon: "⚠" },
-  gap: { label: "Gap", tone: "warning", icon: "⚠" },
-  malformed: { label: "Malformed", tone: "blocked", icon: "✕" },
-  disconnected: { label: "Disconnected", tone: "blocked", icon: "⊘" },
-  "missing-history": { label: "Missing history", tone: "blocked", icon: "⚠" },
-  unsupported: { label: "Unsupported", tone: "blocked", icon: "⊘" },
-  not_evaluated: { label: "Not evaluated", tone: "neutral", icon: "○" },
-  // Direction
-  long: { label: "Long", tone: "valid", icon: "▲" },
-  short: { label: "Short", tone: "warning", icon: "▼" },
-  neutral: { label: "Neutral", tone: "neutral", icon: "○" },
-  unknown: { label: "Unknown", tone: "neutral", icon: "?" },
-};
+/**
+ * StatusBadge maps every closed enum value verbatim to a labelled badge.
+ * Colour is supplementary only — never the sole carrier of meaning (WCAG 1.4.1).
+ * Unknown / not_evaluated render neutral, never healthy.
+ */
+export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
+  const map: Record<string, { label: string; tone: StatusTone }> = {
+    // Decision enum
+    TRADE: { label: "TRADE", tone: "valid" },
+    NO_TRADE: { label: "NO TRADE", tone: "blocked" },
+    INSUFFICIENT_DATA: { label: "INSUFFICIENT DATA", tone: "warning" },
 
-const TONE_CLASS: Record<Tone, string> = {
-  valid: "badge-valid",
-  warning: "badge-warning",
-  blocked: "badge-blocked",
-  neutral: "badge-neutral",
-};
+    // AgentRunStatus enum
+    queued: { label: "Queued", tone: "neutral" },
+    running: { label: "Running", tone: "neutral" },
+    ok: { label: "OK", tone: "valid" },
+    no_setup: { label: "No Setup", tone: "neutral" },
+    insufficient_data: { label: "Insufficient Data", tone: "warning" },
+    skipped: { label: "Skipped", tone: "neutral" },
+    error: { label: "Error", tone: "blocked" },
+    timed_out: { label: "Timed Out", tone: "blocked" },
+    cancelled: { label: "Cancelled", tone: "neutral" },
 
-export function StatusBadge({ status }: { status: string }) {
-  const entry = ENUM_MAP[status] ?? { label: status, tone: "neutral" as Tone, icon: "?" };
+    // EvidenceStatus enum
+    valid: { label: "Valid", tone: "valid" },
+    stale: { label: "Stale", tone: "warning" },
+    missing: { label: "Missing", tone: "blocked" },
+    conflicted: { label: "Conflicted", tone: "warning" },
+    invalid: { label: "Invalid", tone: "blocked" },
+    unavailable: { label: "Unavailable", tone: "blocked" },
+
+    // QualityStatus enum (ok already exists from AgentRunStatus - same label/tone)
+    duplicate: { label: "Duplicate", tone: "warning" },
+    gap: { label: "Gap", tone: "warning" },
+    malformed: { label: "Malformed", tone: "blocked" },
+    disconnected: { label: "Disconnected", tone: "blocked" },
+    "missing-history": { label: "Missing History", tone: "blocked" },
+    unsupported: { label: "Unsupported", tone: "blocked" },
+    not_evaluated: { label: "Not Evaluated", tone: "neutral" },
+
+    // Direction enum
+    long: { label: "Long", tone: "valid" },
+    short: { label: "Short", tone: "valid" },
+    neutral: { label: "Neutral", tone: "neutral" },
+    unknown: { label: "Unknown", tone: "neutral" },
+  };
+
+  const entry = map[status] ?? { label: status, tone: "neutral" };
+
+  const toneStyles: Record<StatusTone, React.CSSProperties> = {
+    valid: { backgroundColor: "#E8F5E9", color: "#1B5E20", borderColor: "#81C784" },
+    warning: { backgroundColor: "#FFF3E0", color: "#E65100", borderColor: "#FFB74D" },
+    blocked: { backgroundColor: "#FBE9E7", color: "#B71C1C", borderColor: "#EF9A9A" },
+    neutral: { backgroundColor: "#ECEFF1", color: "#37474F", borderColor: "#B0BEC5" },
+  };
+
+  const style = toneStyles[entry.tone];
+
   return (
     <span
-      className={`badge ${TONE_CLASS[entry.tone]}`}
       data-testid={`badge-${status}`}
       aria-label={`${entry.label} (${status})`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "0.75rem",
+        fontWeight: 500,
+        border: "1px solid",
+        ...style,
+      }}
     >
-      <span aria-hidden="true">{entry.icon}</span> {entry.label}
+      {entry.label}
     </span>
   );
-}
+};

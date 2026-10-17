@@ -151,7 +151,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 - [x] 06-01-PLAN.md
 - [x] 06-02-PLAN.md
-- [ ] 06-03-PLAN.md
+- [x] 06-03-PLAN.md
 
 ### Phase 7: Research Console UI and Reports
 
@@ -165,7 +165,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The Decision Detail primary action is "Open evidence" or "Add review note" — no execute-trade control, prompt, credential or privileged agent tool is reachable from the client.
   5. Keyboard navigation, visible focus, non-colour-only status, tabular chart alternatives and WCAG 2.2 AA contrast targets are verified, with Playwright coverage of the core journeys and their error states.
 
-**Plans**: TBD
+**Plans:** 4 plans (Wave 1: 07-01 deps+API routers+primitives; Wave 2: 07-02 core surfaces, 07-03 data surfaces; Wave 3: 07-04 status surfaces + E2E + a11y)
+- [ ] 07-01-PLAN.md — Deps + 11 read-only API routers + shared UI primitives (D-7.1…D-7.3, all surfaces)
+- [ ] 07-02-PLAN.md — Overview + Instrument Workbench + Decision Detail (criteria 1-2, 4; T0701-T0703)
+- [ ] 07-03-PLAN.md — News & Sentiment + Strategy Lab + Backtest Results + Journal + Agent Runs (criteria 1-2; T0704-T0706)
+- [ ] 07-04-PLAN.md — Data Providers + Settings/Model Health + System Health + Playwright E2E + a11y (criteria 3, 5; T0707-T0710)
 **UI hint**: yes
 
 ### Phase 8: Hardening, Data-Integrity Verification and Release Gate
@@ -194,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Deterministic Analysis, Strategy Rules and Risk Gates | 0/0 | Not started | - |
 | 4. LangGraph Orchestration and Local Model Runtime | 0/0 | Not started | - |
 | 5. News, Sentiment and CEO Decision Contract | 0/0 | Not started | - |
-| 6. Journal, Persistence and Backtesting | 2/3 | In Progress | - |
+| 6. Journal, Persistence and Backtesting | 3/3 | Complete | 2026-10-16 |
 | 7. Research Console UI and Reports | 0/0 | Not started | - |
 | 8. Hardening, Data-Integrity Verification and Release Gate | 0/0 | Not started | - |
 
