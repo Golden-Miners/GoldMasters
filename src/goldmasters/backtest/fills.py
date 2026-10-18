@@ -6,6 +6,11 @@ fail-closed settings: they ship as declared placeholders and stay
 placeholders until the operator confirms values. **No metric derived through
 this module is authoritative before that confirmation** — the fill-model
 string on every record and every metric definition says so.
+
+Costs are per-instrument: each instrument may have its own spread/commission/
+slippage/swap profile. Unconfigured costs (``None``) fail closed: they never
+silently become zero-cost backtests. Only an explicitly configured zero cost
+(``Decimal("0")``) means free trading.
 """
 
 from __future__ import annotations
@@ -35,13 +40,24 @@ FILL_MODEL = (
 
 @dataclass(frozen=True)
 class FillCosts:
-    """Cost settings; ``confirmed`` flips only when the operator confirms values."""
+    """Cost settings; ``confirmed`` flips only when the operator confirms values.
 
-    spread: Decimal = Decimal("0")
-    commission: Decimal = Decimal("0")
-    slippage: Decimal = Decimal("0")
-    swap: Decimal = Decimal("0")
+    All cost fields are ``None`` (unconfigured) by default. An explicitly
+    configured zero cost (``Decimal("0")``) means free trading; ``None`` means
+    the cost has not been set and fail-closed logic must block any use.
+    """
+
+    spread: Decimal | None = None
+    commission: Decimal | None = None
+    slippage: Decimal | None = None
+    swap: Decimal | None = None
     confirmed: bool = False
+
+    def is_configured(self) -> bool:
+        """Return True only when all cost fields are set and confirmed."""
+        return self.confirmed and all(
+            v is not None for v in (self.spread, self.commission, self.slippage, self.swap)
+        )
 
 
 def placeholder_costs() -> FillCosts:
@@ -62,6 +78,7 @@ def to_assumptions(costs: FillCosts) -> BacktestAssumptions:
         spread=costs.spread,
         commission=costs.commission,
         slippage=costs.slippage,
+        swap=costs.swap,
         fill_model=FILL_MODEL,
     )
 
@@ -81,9 +98,14 @@ def apply_costs(*, fill: Decimal, direction: Direction, costs: FillCosts) -> Dec
 
     Long pays up (half-spread plus slippage); short mirrors. Commission and
     swap are per-trade terms carried on the assumptions, not the price.
-    With placeholder zeros this is the identity — the math stays so any
-    operator-confirmed value flows through the same path.
+    Costs must be configured and confirmed (fail-closed); unconfigured costs
+    raise ``ValueError``.
     """
+    if not costs.is_configured():
+        raise ValueError(
+            "cost values are not configured: set GOLDMASTERS_STRATEGY_* cost settings "
+            "and confirm them before computing levels"
+        )
     half_spread = costs.spread / 2 + costs.slippage
     if direction == Direction.LONG:
         return fill + half_spread

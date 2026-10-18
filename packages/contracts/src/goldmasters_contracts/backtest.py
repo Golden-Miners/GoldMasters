@@ -18,15 +18,26 @@ from goldmasters_contracts._base import (
 )
 from goldmasters_contracts.enums import EvidenceStatus, Timeframe
 
-__all__ = ["BacktestAssumptions", "BacktestMetric", "BacktestRecord"]
+__all__ = [
+    "BacktestAssumptions",
+    "BacktestMetric",
+    "BacktestRecord",
+    "CostProfile",
+]
 
 
 class BacktestAssumptions(ContractModel):
-    """Spread/commission/slippage/fill assumptions a report must show."""
+    """Spread/commission/slippage/swap assumptions a report must show.
 
-    spread: PriceStr
-    commission: PriceStr
-    slippage: PriceStr
+    All price fields use decimal-string wire form (PriceStr). ``None`` means
+    the cost is unconfigured (fail-closed), distinct from an explicitly
+    configured zero cost.
+    """
+
+    spread: PriceStr | None = None
+    commission: PriceStr | None = None
+    slippage: PriceStr | None = None
+    swap: PriceStr | None = None
     fill_model: str
 
 
@@ -66,3 +77,19 @@ class BacktestRecord(ContractModel):
     code_version: str
     status: EvidenceStatus
     errors: list[str] = Field(default_factory=list)
+
+
+class CostProfile(ContractModel):
+    """Cost profile for one instrument: all per-trade costs in decimal-string
+    wire form (PriceStr).
+
+    ``None`` means unconfigured (fail-closed), distinct from an explicitly
+    configured zero cost. ``confirmed`` must be True before the profile is
+    used authoritatively — unset costs never silently become zero-cost.
+    """
+
+    spread: PriceStr | None = None
+    commission: PriceStr | None = None
+    slippage: PriceStr | None = None
+    swap: PriceStr | None = None
+    confirmed: bool = False

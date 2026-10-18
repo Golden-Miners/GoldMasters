@@ -10,7 +10,8 @@ from decimal import Decimal
 from typing import Annotated, Any
 from urllib.parse import urlparse
 
-from goldmasters_contracts import IanaTimezone, ProviderId, Timeframe, TrendRegime
+from goldmasters_contracts import IanaTimezone, PriceStr, ProviderId, Timeframe, TrendRegime
+from goldmasters_contracts.backtest import CostProfile
 from pydantic import (
     AfterValidator,
     BeforeValidator,
@@ -113,6 +114,23 @@ def _split_positive_int_list(value: Any) -> Any:
 
 
 CsvPositiveInts = Annotated[list[int], NoDecode, BeforeValidator(_split_positive_int_list)]
+
+
+def _parse_cost_profiles(value: Any) -> dict[str, CostProfile]:
+    """Parse a JSON object of instrument_id -> cost profile mapping."""
+    if value is None or value == "":
+        return {}
+    if isinstance(value, str):
+        import json
+
+        raw = json.loads(value)
+        return {k: CostProfile(**v) for k, v in raw.items()}
+    return value
+
+
+CostProfiles = Annotated[
+    dict[str, CostProfile], NoDecode, BeforeValidator(_parse_cost_profiles)
+]
 
 
 class Settings(BaseSettings):
@@ -257,6 +275,16 @@ class Settings(BaseSettings):
     graph_node_max_retries: int = 2
     graph_max_concurrency: int | None = None
 
+    # --- Cost configuration (Phase 6). All fields are optional and fail-closed:
+    # None means unconfigured; an explicitly configured zero cost is Decimal("0").
+    cost_spread: PriceStr | None = None
+    cost_commission: PriceStr | None = None
+    cost_slippage: PriceStr | None = None
+    cost_swap: PriceStr | None = None
+    # Instrument-specific cost profiles, keyed by instrument_id. JSON-encoded
+    # mapping of instrument_id -> {spread, commission, slippage, swap, confirmed}.
+    cost_profiles: CostProfiles = Field(default_factory=dict)
+
     ollama_host: str = "http://127.0.0.1:11434"
     ollama_model: FailClosedText = None
 
@@ -349,6 +377,28 @@ class Settings(BaseSettings):
     def _graph_concurrency_positive_or_unset(cls, value: int | None) -> int | None:
         if value is not None and (isinstance(value, bool) or value < 1):
             raise ValueError("graph_max_concurrency must be a positive int when set")
+        return value
+
+    @field_validator(
+        "cost_spread",
+        "cost_commission",
+        "cost_slippage",
+        "cost_swap",
+        mode="before",
+    )
+    @classmethod
+    def _cost_empty_means_unset(cls, value: Any) -> Any:
+        if value == "":
+            return None
+        return value
+
+    @field_validator("cost_spread", "cost_commission", "cost_slippage", "cost_swap")
+    @classmethod
+    def _cost_positive_or_unset(cls, value: Decimal | None) -> Decimal | None:
+        import math
+
+        if value is not None and (not math.isfinite(value) or value <= 0):
+            raise ValueError("cost value must be finite and positive when set")
         return value
 
     @field_validator("ollama_host", mode="before")
