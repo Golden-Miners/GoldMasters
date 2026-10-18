@@ -1,5 +1,6 @@
 """News retrieval-adapter layer (locked D-5.1)."""
 
+from src.goldmasters.data.news.adapters import register_source as _register_source  # noqa: F401
 from src.goldmasters.data.news.base import (
     SOURCE_REGISTRY,
     NewsCoverage,
