@@ -190,6 +190,12 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         "graph_node_timeout_seconds",
         "graph_node_max_retries",
         "graph_max_concurrency",
+        # Phase 6 cost model (D-6.1).
+        "cost_spread",
+        "cost_commission",
+        "cost_slippage",
+        "cost_swap",
+        "cost_profiles",
         # Phase 4 Wave 2 model runtime (04-03 tracer).
         "ollama_host",
         "ollama_model",

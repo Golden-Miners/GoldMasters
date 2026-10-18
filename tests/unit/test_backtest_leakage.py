@@ -16,7 +16,12 @@ from decimal import Decimal
 
 from goldmasters_contracts import Direction, EvidenceStatus, MarketBar, Timeframe
 
-from src.goldmasters.backtest.fills import apply_costs, fill_at_next_open, placeholder_costs
+from src.goldmasters.backtest.fills import (
+    FillCosts,
+    apply_costs,
+    fill_at_next_open,
+    placeholder_costs,
+)
 from src.goldmasters.backtest.metrics import summarize_trades
 from src.goldmasters.backtest.splits import SplitWindows, enforce_splits
 from src.goldmasters.risk.gate import evaluate_gate, trade_eligible_levels
@@ -128,7 +133,13 @@ def _run_slice(bars: list[MarketBar]) -> dict[str, object]:
         fill = fill_at_next_open(bars, index)
         break
     assert signal_index is not None and fill is not None
-    costs = placeholder_costs()
+    costs = FillCosts(
+        spread=Decimal("0.5"),
+        commission=Decimal("3.5"),
+        slippage=Decimal("1.0"),
+        swap=Decimal("2.5"),
+        confirmed=True,
+    )
     net_fill = apply_costs(fill=fill, direction=Direction.LONG, costs=costs)
     exit_open = Decimal(str(bars[-1].open))  # FIXTURE exit rule: last bar open
     pnl = exit_open - net_fill
@@ -149,8 +160,10 @@ def test_slice_signals_then_fills_next_bar_in_decimal() -> None:
     # Next-bar open, never the signal bar open: 104 vs 102.
     assert result["fill"] == Decimal(str(bars[SIGNAL_INDEX + 1].open)) == Decimal("104")
     assert result["fill"] != Decimal(str(bars[SIGNAL_INDEX].open))
-    # FIXTURE exit at last-bar open 106: hand PnL 106 - 104 = 2.
-    assert result["pnl"] == Decimal("2")
+    # FIXTURE exit at last-bar open 106: hand PnL = 106 - entry
+    # entry = 104 + spread/2 + slippage = 104 + 0.25 + 1.0 = 105.25
+    # pnl = 106 - 105.25 = 0.75
+    assert result["pnl"] == Decimal("0.75")
     assert isinstance(result["pnl"], Decimal)
     assert result["win_rate"] == Decimal(1)
     assert result["bars_seen"] == [1, 2, 3]

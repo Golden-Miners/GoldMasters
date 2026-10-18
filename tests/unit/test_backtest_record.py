@@ -29,6 +29,7 @@ from pydantic import ValidationError
 
 from src.goldmasters.backtest.fills import (
     FILL_MODEL,
+    FillCosts,
     apply_costs,
     fill_at_next_open,
     placeholder_costs,
@@ -245,7 +246,13 @@ def _job() -> BacktestJob:
             risk_percent_for_idea=Decimal("1"),
             evidence={"bars": EvidenceStatus.VALID, "precision": EvidenceStatus.VALID},
         ),
-        costs=placeholder_costs(),
+        costs=FillCosts(
+            spread=Decimal("0.5"),
+            commission=Decimal("3.5"),
+            slippage=Decimal("1.0"),
+            swap=Decimal("2.5"),
+            confirmed=True,
+        ),
     )
 
 
@@ -271,7 +278,7 @@ def test_record_without_run_and_dataset_ref_unrepresentable() -> None:
 def test_runner_record_carries_every_assumption_field() -> None:
     record = _single_record()
     assumptions = record.assumptions.model_dump(mode="json")
-    assert set(assumptions) == {"spread", "commission", "slippage", "fill_model"}
+    assert set(assumptions) == {"spread", "commission", "slippage", "swap", "fill_model"}
     assert "PLACEHOLDER" in assumptions["fill_model"]
     assert assumptions["fill_model"] == FILL_MODEL
     assert record.backtest_run_id == "run_fixture:trend-following"
@@ -373,8 +380,16 @@ def test_fill_next_open_and_fail_closed_costs() -> None:
         fill_at_next_open(bars, len(bars))
     with pytest.raises(ValueError, match="placeholders"):
         require_confirmed(placeholder_costs())
-    net = apply_costs(fill=Decimal("100"), direction=Direction.LONG, costs=placeholder_costs())
-    assert net == Decimal("100")
+    costs = FillCosts(
+        spread=Decimal("0.5"),
+        commission=Decimal("3.5"),
+        slippage=Decimal("1.0"),
+        swap=Decimal("2.5"),
+        confirmed=True,
+    )
+    net = apply_costs(fill=Decimal("100"), direction=Direction.LONG, costs=costs)
+    # Long pays half-spread + slippage: entry = 100 + 0.25 + 1.0 = 101.25
+    assert net == Decimal("101.25")
 
 
 def test_parameter_hash_stable_and_sensitive() -> None:

@@ -147,9 +147,14 @@ REGISTERED_SOURCES: list[tuple[str, str, list[str]]] = [
 ]
 
 
-def _build_adapter(
+def build_adapter(
     source_id: str, feed_url: str, instrument_ids: Sequence[str]
 ) -> NewsSourceAdapter:
+    """Build a GenericRSSFeedAdapter for a given source configuration.
+
+    Returns an unregistered adapter; the operator must explicitly register it
+    via ``register_source`` after approving the source's access method + terms.
+    """
     return GenericRSSFeedAdapter(
         source_id=source_id,
         feed_url=feed_url,
@@ -157,9 +162,5 @@ def _build_adapter(
     )
 
 
-# Register each approved source.
-for _source_id, _feed_url, _instrument_ids in REGISTERED_SOURCES:
-    register_source(
-        _source_id,
-        _build_adapter(_source_id, _feed_url, _instrument_ids),
-    )
+# Registry starts empty: no sources are active until the operator approves
+# each one by calling register_source() with an approved adapter.
