@@ -1,3 +1,5 @@
+"use client";
+
 import { fetchStrategies } from "../../lib/api";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ExplicitState } from "../../components/ExplicitState";
@@ -13,9 +15,11 @@ export default async function StrategyLabPage() {
 
   return (
     <section aria-labelledby="strategy-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="strategy-heading">Strategy Lab</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
+      <header className="page-header">
+        <h1 id="strategy-heading" className="page-title">
+          Strategy Lab
+        </h1>
+        <p className="page-subtitle">
           Registered strategy agents with eligibility configuration. Rule-by-rule evidence per agent.
         </p>
       </header>
@@ -23,45 +27,37 @@ export default async function StrategyLabPage() {
       {result.agents.length === 0 ? (
         <ExplicitState state="empty" />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div className="strategy-list">
           {result.agents.map((agent: { agent_id: string; enabled: boolean; instruments: string[]; timeframes: string[]; regimes: string[]; min_bars: number }) => (
-            <details
-              key={agent.agent_id}
-              style={{
-                padding: "1rem",
-                background: "#FAFAFA",
-                border: "1px solid #E0E0E0",
-                borderRadius: "8px",
-              }}
-            >
-              <summary style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "1rem" }}>
-                <StatusBadge status={agent.enabled ? "ok" : "no_setup"} />
-                <code style={{ fontSize: "0.875rem" }}>{agent.agent_id}</code>
-                <span style={{ fontSize: "0.875rem", color: "#616161" }}>
-                  min_bars: {agent.min_bars}
-                </span>
-              </summary>
-              <div style={{ marginTop: "0.75rem", paddingLeft: "2rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <div>
-                  <strong>Instruments:</strong>{" "}
-                  <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {agent.instruments.join(", ")}
-                  </span>
+            <div className="strategy-card" key={agent.agent_id}>
+              <details className="strategy-card-detail">
+                <summary className="strategy-summary">
+                  <StatusBadge status={agent.enabled ? "ok" : "no_setup"} />
+                  <code className="strategy-id">{agent.agent_id}</code>
+                  <span className="strategy-meta-text">min_bars: {agent.min_bars}</span>
+                </summary>
+                <div className="strategy-details">
+                  <div className="strategy-row">
+                    <span className="strategy-label">Instruments:</span>
+                    <span className="strategy-value">{agent.instruments.join(", ")}</span>
+                  </div>
+                  <div className="strategy-row">
+                    <span className="strategy-label">Timeframes:</span>
+                    <span className="strategy-value">{agent.timeframes.join(", ")}</span>
+                  </div>
+                  <div className="strategy-row">
+                    <span className="strategy-label">Regimes:</span>
+                    <span className="strategy-value">{agent.regimes.join(", ")}</span>
+                  </div>
+                  <div className="strategy-actions">
+                    <button className={`btn-toggle ${agent.enabled ? "enabled" : ""}`}>
+                      {agent.enabled ? "Enabled" : "Disabled"}
+                    </button>
+                    <button className="btn-ghost">View Rules</button>
+                  </div>
                 </div>
-                <div>
-                  <strong>Timeframes:</strong>{" "}
-                  <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {agent.timeframes.join(", ")}
-                  </span>
-                </div>
-                <div>
-                  <strong>Regimes:</strong>{" "}
-                  <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {agent.regimes.join(", ")}
-                  </span>
-                </div>
-              </div>
-            </details>
+              </details>
+            </div>
           ))}
         </div>
       )}

@@ -9,6 +9,7 @@ description = "GoldMasters local research API skeleton (loopback-only, signals-o
 requires-python = "==3.14.7"
 dependencies = [
     "goldmasters-contracts",
+    "MetaTrader5==5.0.6231",
     "fastapi==0.143.0",
     "uvicorn==0.54.0",
     "pydantic-settings==2.15.0",

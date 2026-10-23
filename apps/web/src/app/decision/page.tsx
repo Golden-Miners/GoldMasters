@@ -10,61 +10,70 @@ export default async function DecisionPage() {
   const decisionsResult = await fetchDecisions();
 
   if (!decisionsResult.available) {
-    return <ExplicitState state="offline" />;
+    return (
+      <section className="panel" aria-labelledby="decision-heading">
+        <header className="page-header">
+          <h1 id="decision-heading" className="page-title">
+            Decision Detail
+          </h1>
+          <p className="page-subtitle">
+            Evidence-ledger view of a qualified research candidate. No trade execution.
+          </p>
+        </header>
+        <ExplicitState state="offline" />
+      </section>
+    );
   }
 
   const decisions = decisionsResult.decisions;
 
   if (decisions.length === 0) {
-    return <ExplicitState state="empty" />;
+    return (
+      <section className="panel" aria-labelledby="decision-heading">
+        <header className="page-header">
+          <h1 id="decision-heading" className="page-title">
+            Decision Detail
+          </h1>
+          <p className="page-subtitle">
+            Evidence-ledger view of a qualified research candidate. No trade execution.
+          </p>
+        </header>
+        <ExplicitState state="empty" />
+      </section>
+    );
   }
 
   return (
     <section aria-labelledby="decision-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="decision-heading">Decision Detail</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
+      <header className="page-header">
+        <h1 id="decision-heading" className="page-title">
+          Decision Detail
+        </h1>
+        <p className="page-subtitle">
           Evidence-ledger view of a qualified research candidate. No trade execution.
         </p>
       </header>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="decision-list">
         {decisions.map((decision: DecisionRecord) => (
           <Link
             key={decision.decision_id}
             href={`/decision?id=${decision.decision_id}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "1rem 1.25rem",
-              background: "#FAFAFA",
-              border: "1px solid #E0E0E0",
-              borderRadius: "8px",
-              textDecoration: "none",
-              color: "inherit",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
+            className="decision-item"
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div className="decision-left">
               <StatusBadge status={decision.decision} />
-              <span style={{ fontFamily: "monospace", fontSize: "0.875rem", fontWeight: 500 }}>
-                {decision.instrument_id}
-              </span>
-              <span style={{ fontSize: "0.875rem", color: "#616161" }}>
-                {decision.timeframe}
-              </span>
-              <span style={{ fontSize: "0.75rem", color: "#757575" }}>
+              <span className="decision-id">{decision.instrument_id}</span>
+              <span className="strategy-meta-text">{decision.timeframe}</span>
+              <span className="strategy-meta-text">
                 {decision.strategy_id}@{decision.strategy_version}
               </span>
               {decision.direction && <StatusBadge status={decision.direction} />}
-              <time dateTime={decision.created_at} style={{ fontSize: "0.75rem", color: "#757575", fontFamily: "monospace" }}>
+              <time dateTime={decision.created_at} className="recent-time">
                 {new Date(decision.created_at).toLocaleString()}
               </time>
             </div>
-            <span style={{ fontSize: "0.875rem", color: "#1976D2", fontWeight: 500 }}>
-              Open Evidence →
-            </span>
+            <span className="decision-right">Open Evidence →</span>
           </Link>
         ))}
       </div>

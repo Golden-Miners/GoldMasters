@@ -9,10 +9,12 @@ export default async function SystemHealthPage() {
 
   if (!result.available) {
     return (
-      <section aria-labelledby="system-health-heading">
-        <header style={{ marginBottom: "1.5rem" }}>
-          <h1 id="system-health-heading">System Health</h1>
-          <p style={{ color: "#616161", marginTop: "0.25rem" }}>
+      <section className="panel" aria-labelledby="system-health-heading">
+        <header className="page-header">
+          <h1 id="system-health-heading" className="page-title">
+            System Health
+          </h1>
+          <p className="page-subtitle">
             Five-field health surface plus bounded provider probe.
           </p>
         </header>
@@ -24,92 +26,70 @@ export default async function SystemHealthPage() {
   const { health } = result;
 
   return (
-    <section aria-labelledby="system-health-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="system-health-heading">System Health</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
-          Five-field health surface plus bounded provider probe. Database reachable, provider status, correlation-id presence.
+    <section className="panel" aria-labelledby="system-health-heading">
+      <header className="page-header">
+        <h1 id="system-health-heading" className="page-title">System Health</h1>
+        <p className="page-subtitle">
+          Five-field health surface plus bounded provider probe. Database reachable,
+          provider status, correlation-ID presence.
         </p>
       </header>
 
-      <section aria-labelledby="core-health" style={{ marginBottom: "2rem" }}>
-        <h2 id="core-health" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          Core Health
-        </h2>
-        <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Status</dt>
-            <dd style={{ fontWeight: 500 }}>
-              <StatusBadge status={health.status} />
-            </dd>
+      <section aria-labelledby="core-health" style={{ marginBottom: "var(--gm-space-8)" }}>
+        <h2 id="core-health" className="section-heading">Core Health</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "var(--gm-space-3)" }}>
+          <div className="health-card">
+            <span className="health-dt">Status</span>
+            <span className="health-dd"><StatusBadge status={health.status} /></span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Version</dt>
-            <dd style={{ fontWeight: 500, fontFamily: "monospace", fontSize: "0.875rem" }}>{health.version}</dd>
+          <div className="health-card">
+            <span className="health-dt">Version</span>
+            <span className="health-dd num">{health.version}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Contract Schema</dt>
-            <dd style={{ fontWeight: 500 }}>{health.contract_schema_version}</dd>
+          <div className="health-card">
+            <span className="health-dt">Contract Schema</span>
+            <span className="health-dd">{health.contract_schema_version}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Config Hash</dt>
-            <dd style={{ fontWeight: 500, fontFamily: "monospace", fontSize: "0.75rem" }}>{health.config_hash}</dd>
+          <div className="health-card">
+            <span className="health-dt">Config Hash</span>
+            <span className="health-dd num">{health.config_hash}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Database</dt>
-            <dd style={{ fontWeight: 500 }}>
-              <StatusBadge status={health.database.reachable ? "ok" : "unavailable"} />
-            </dd>
+          <div className="health-card">
+            <span className="health-dt">Database</span>
+            <span className="health-dd"><StatusBadge status={health.database.reachable ? "ok" : "unavailable"} /></span>
           </div>
-        </dl>
-      </section>
-
-      <section aria-labelledby="provider-probe">
-        <h2 id="provider-probe" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          Provider Probe
-        </h2>
-        {health.provider && typeof health.provider === "object" ? (
-          <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Provider ID</dt>
-              <dd style={{ fontWeight: 500, fontFamily: "monospace" }}>{(health.provider as any).provider_id ?? "unknown"}</dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Status</dt>
-              <dd style={{ fontWeight: 500 }}>
+          <div className="health-card">
+            <span className="health-dt">Provider</span>
+            <span className="health-dd">
+              {health.provider && typeof health.provider === "object" ? (
                 <StatusBadge status={(health.provider as any).status ?? "unavailable"} />
-              </dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Market Open</dt>
-              <dd style={{ fontWeight: 500 }}>{(health.provider as any).market_open === true ? "yes" : "no"}</dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Terminal Build</dt>
-              <dd style={{ fontWeight: 500, fontFamily: "monospace" }}>{(health.provider as any).terminal_build ?? "unknown"}</dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Last Bar Close</dt>
-              <dd style={{ fontFamily: "monospace" }}>
-                {(health.provider as any).last_bar_close_time ? new Date((health.provider as any).last_bar_close_time).toLocaleString() : "—"}
-              </dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Last Quote</dt>
-              <dd style={{ fontFamily: "monospace" }}>
-                {(health.provider as any).last_quote_time ? new Date((health.provider as any).last_quote_time).toLocaleString() : "—"}
-              </dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Checked At</dt>
-              <dd style={{ fontFamily: "monospace" }}>
-                {(health.provider as any).checked_at ? new Date((health.provider as any).checked_at).toLocaleString() : "—"}
-              </dd>
-            </div>
-          </dl>
-        ) : (
-          <p style={{ color: "#757575" }}>No provider data available.</p>
-        )}
+              ) : (
+                <span className="gm-badge gm-badge-blocked">unavailable</span>
+              )}
+            </span>
+          </div>
+          <div className="health-card">
+            <span className="health-dt">Market Data</span>
+            <span className="status-dd">
+              {health.provider && typeof health.provider === "object" ? (
+                <span className="gm-badge gm-badge-valid">receiving</span>
+              ) : (
+                <span className="gm-badge gm-badge-blocked">not connected</span>
+              )}
+            </span>
+          </div>
+        </div>
+        <div style={{ marginTop: "var(--gm-space-3)" }}>
+          {health.provider && typeof health.provider === "object" ? (
+            <span className="text-muted">
+              Provider: {(health.provider as any).provider_id} · Server Timezone:{" "}
+              {(health.provider as any).mt5_server_timezone ?? "not set"} · Last Checked:{" "}
+              {new Date((health.provider as any).checked_at).toLocaleString()}
+            </span>
+          ) : (
+            <span className="text-muted">Provider: not connected</span>
+          )}
+        </div>
       </section>
     </section>
   );

@@ -1,0 +1,93 @@
+/* ============================================================================
+   GoldMasters — Design System Tokens
+   Quant Terminal: cyan/teal on graphite, restrained and research-oriented
+   ============================================================================ */
+
+:root {
+  /* Canvas / background */
+  --gm-canvas: #0B1220;
+
+  /* Surfaces */
+  --gm-surface-1: #111B2E;   /* main panels */
+  --gm-surface-2: #18253A;   /* nested panels, hover surfaces */
+
+  /* Borders */
+  --gm-border: #2A3A52;          /* separators, input borders */
+  --gm-border-focus: #42D9C5;    /* focus ring border */
+
+  /* Text */
+  --gm-text-primary: #F3F6FC;    /* primary text */
+  --gm-text-secondary: #B5C2D6;  /* secondary / metadata text */
+  --gm-text-muted: #5B6B78;      /* tertiary / placeholder text */
+
+  /* Accent */
+  --gm-accent: #42D9C5;          /* primary cyan/teal accent */
+  --gm-accent-hover: #38C0AE;    /* accent on hover */
+  --gm-focus: #A7D7FF;           /* visible keyboard focus ring */
+
+  /* Status semantics */
+  --gm-positive: #3BC98A;        /* valid / ok */
+  --gm-negative: #FF6B78;        /* blocked / error */
+  --gm-warning: #F4C15D;         /* caution / stale */
+  --gm-neutral: #9AAAC0;         /* unknown / inactive */
+
+  /* Status surface tones (background + border + text pairs) */
+  --gm-tone-valid-bg: #0B2A1F;
+  --gm-tone-valid-border: #3BC98A;
+  --gm-tone-valid-text: #E8F5E9;
+  --gm-tone-warning-bg: #2D240B;
+  --gm-tone-warning-border: #F4C15D;
+  --gm-tone-warning-text: #FFF3E0;
+  --gm-tone-blocked-bg: #2A0B0B;
+  --gm-tone-blocked-border: #FF6B78;
+  --gm-tone-blocked-text: #FBE9E7;
+  --gm-tone-neutral-bg: #1F2630;
+  --gm-tone-neutral-border: #9EA0B4;
+  --gm-tone-neutral-text: #ECEFF1;
+
+  /* Spacing scale (px → rem, 1rem = 16px) */
+  --gm-space-1: 0.25rem;   /* 4px */
+  --gm-space-2: 0.5rem;    /* 8px */
+  --gm-space-3: 0.75rem;   /* 12px */
+  --gm-space-4: 1rem;      /* 16px */
+  --gm-space-5: 1.25rem;   /* 20px */
+  --gm-space-6: 1.5rem;    /* 24px */
+  --gm-space-8: 2rem;      /* 32px */
+  --gm-space-10: 2.5rem;   /* 40px */
+  --gm-space-12: 3rem;     /* 48px */
+
+  /* Border radius */
+  --gm-radius-sm: 4px;   /* inputs, badges */
+  --gm-radius-md: 8px;   /* panels */
+  --gm-radius-lg: 12px;  /* major page containers */
+
+  /* Typography scale */
+  --gm-text-xs: 0.75rem;     /* 12px metadata */
+  --gm-text-sm: 0.8125rem;   /* 13px dense table */
+  --gm-text-base: 0.875rem;  /* 14px body */
+  --gm-text-lg: 1rem;        /* 16px emphasized body */
+  --gm-text-xl: 1.25rem;     /* 20px section heading */
+  --gm-text-2xl: 1.5rem;     /* 24px page heading */
+  --gm-text-3xl: 1.875rem;   /* 30px major decision */
+
+  /* Line heights */
+  --gm-leading-tight: 1.25;  /* headings */
+  --gm-leading-normal: 1.45; /* body */
+  --gm-leading-dense: 1.35;  /* dense tables */
+
+  /* Motion */
+  --gm-duration-fast: 120ms;
+  --gm-duration-normal: 180ms;
+  --gm-ease: ease-out;
+}
+
+/* Dark mode is the default; light theme can be added later if implementation
+   cost permits. Charts and tables remain readable in both themes. */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gm-duration-fast: 0ms;
+    --gm-duration-normal: 0ms;
+    --gm-ease: none;
+  }
+}

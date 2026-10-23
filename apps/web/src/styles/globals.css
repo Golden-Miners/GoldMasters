@@ -1,0 +1,1263 @@
+/* ============================================================================
+   GoldMasters — Global Styles
+   Imports design tokens and provides base resets + utility classes.
+   ============================================================================ */
+
+@import "./design-tokens.css";
+
+/* Base resets */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--gm-canvas);
+  color: var(--gm-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--gm-text-base);
+  line-height: var(--gm-leading-normal);
+}
+
+a {
+  color: var(--gm-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Utility: visually hidden (for screen reader only text) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Utility: focus-visible ring */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--gm-focus);
+}
+
+/* Utility: section container */
+.section {
+  padding: var(--gm-space-6);
+}
+
+/* Utility: section heading */
+.section-heading {
+  font-size: var(--gm-text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--gm-space-4) 0;
+  color: var(--gm-text-primary);
+}
+
+/* Utility: muted text */
+.text-muted {
+  color: var(--gm-text-muted);
+}
+
+/* Utility: panel surface */
+.panel {
+  background-color: var(--gm-surface-1);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+}
+
+/* Utility: table base */
+.table-base {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gm-text-sm);
+}
+
+.table-base th,
+.table-base td {
+  padding: var(--gm-space-2) var(--gm-space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--gm-border);
+}
+
+.table-base th {
+  font-weight: 600;
+  color: var(--gm-text-secondary);
+  background-color: var(--gm-surface-2);
+}
+
+/* Utility: monospace numeric */
+.num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   StatusBadge — quant terminal dark theme
+   ============================================================================ */
+.gm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--gm-radius-sm);
+  font-size: var(--gm-text-xs);
+  font-weight: 500;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.gm-badge-valid {
+  background-color: var(--gm-tone-valid-bg);
+  color: var(--gm-tone-valid-text);
+  border-color: var(--gm-tone-valid-border);
+}
+
+.gm-badge-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+
+.gm-badge-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+
+.gm-badge-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+
+/* ============================================================================
+   ExplicitState — quant terminal dark theme
+   ============================================================================ */
+.gm-explicit-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--gm-space-5);
+  border-radius: var(--gm-radius-md);
+  border: 1px solid;
+  gap: var(--gm-space-3);
+  text-align: center;
+}
+
+.gm-explicit-state-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+
+.gm-explicit-state-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+
+.gm-explicit-state-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+
+.gm-explicit-state__label {
+  margin: 0;
+  font-weight: 500;
+  font-size: var(--gm-text-base);
+}
+
+.gm-explicit-state__description {
+  margin: 0;
+  font-size: var(--gm-text-sm);
+  opacity: 0.9;
+}
+
+.gm-explicit-state__action {
+  margin-top: var(--gm-space-3);
+  padding: var(--gm-space-2) var(--gm-space-4);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gm-explicit-state__action:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================================================
+   Application Shell — quant terminal dark theme
+   ============================================================================ */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  border-bottom: 1px solid var(--gm-border);
+  padding: var(--gm-space-2) var(--gm-space-6);
+  background-color: var(--gm-surface-1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-2);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: var(--gm-space-1);
+}
+
+.app-brand {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--gm-text-primary);
+  font-size: var(--gm-text-lg);
+}
+
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm);
+  text-decoration: none;
+  color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-dropdown-trigger:hover {
+  background-color: var(--gm-surface-2);
+  border-color: var(--gm-border);
+}
+
+.nav-dropdown-trigger.open {
+  background-color: var(--gm-surface-2);
+  border-color: var(--gm-border);
+}
+
+.nav-dropdown-arrow {
+  font-size: 0.625rem;
+  font-weight: 400;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  margin-top: var(--gm-space-1);
+  padding: var(--gm-space-1);
+  background-color: var(--gm-surface-1);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  display: block;
+}
+
+.nav-dropdown-link {
+  display: block;
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm);
+  text-decoration: none;
+  color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-dropdown-link:hover {
+  background-color: var(--gm-surface-2);
+  color: var(--gm-text-primary);
+}
+
+.nav-dropdown-link.active {
+  color: var(--gm-accent);
+}
+
+/* Mobile navigation */
+.nav-mobile-toggle {
+  display: none;
+  padding: var(--gm-space-1);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+  background: transparent;
+  cursor: cursor;
+  cursor: pointer;
+}
+
+.nav-hamburger-line {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background-color: var(--gm-text-primary);
+  margin: 3px 0;
+}
+
+.nav-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--gm-surface-1);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  margin-top: var(--gm-space-1);
+  padding: var(--gm-space-2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+}
+
+.nav-mobile-group {
+  border-bottom: 1px solid var(--gm-border);
+}
+
+.nav-mobile-group:last-child {
+  border-bottom: none;
+}
+
+.nav-mobile-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--gm-space-2) var(--gm-space-3);
+  border: none;
+  background: transparent;
+  color: var(--gm-text-primary);
+  font-size: var(--gm-text-base);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-mobile-group-toggle.open .nav-group-arrow {
+  transform: rotate(180deg);
+}
+
+.nav-mobile-group-links {
+  display: none;
+  padding: var(--gm-space-1) 0;
+}
+
+.nav-mobile-group-links.open {
+  display: block;
+}
+
+.nav-mobile-link {
+  display: block;
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm);
+  text-decoration: none;
+  color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-mobile-link:hover {
+  background-color: var(--gm-surface-2);
+  color: var(--gm-text-primary);
+}
+
+.nav-mobile-link.active {
+  color: var(--gm-accent);
+}
+
+@media (max-width: 768px) {
+  .nav-dropdown {
+    display: none;
+  }
+  .nav-mobile-toggle {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .nav-mobile-toggle,
+  .nav-mobile-menu,
+  .nav-mobile-group {
+    display: none !important;
+  }
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--gm-space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-footer {
+  border-top: 1px solid var(--gm-border);
+  padding: var(--gm-space-3) var(--gm-space-6);
+  background-color: var(--gm-surface-1);
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-align: center;
+}
+
+/* ============================================================================
+   Page shell utilities
+   ============================================================================ */
+.page-header {
+  margin-bottom: var(--gm-space-6);
+}
+
+.page-title {
+  font-size: var(--gm-text-2xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--gm-space-1) 0;
+  color: var(--gm-text-primary);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm);
+}
+
+/* ============================================================================
+   Status card (used on Overview / System Health)
+   ============================================================================ */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gm-space-3);
+}
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-3);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+}
+
+.status-dt {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.status-dd {
+  font-weight: 500;
+  font-size: var(--gm-text-base);
+  color: var(--gm-text-primary);
+}
+
+/* ============================================================================
+   Recent decisions list
+   ============================================================================ */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gm-space-3) var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--gm-duration-fast) var(--gm-ease),
+    background-color var(--gm-duration-fast) var(--gm-ease);
+}
+
+.recent-item:hover {
+  border-color: var(--gm-accent);
+  background-color: var(--gm-surface-1);
+}
+
+.recent-left {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-3);
+  flex-wrap: wrap;
+}
+
+.recent-time {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/* ============================================================================
+   Controls bar (used on Workbench)
+   ============================================================================ */
+.controls-bar {
+  display: flex;
+  gap: var(--gm-space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--gm-space-4);
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-1);
+}
+
+.control-label {
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  color: var(--gm-text-secondary);
+}
+
+.control-select,
+.control-input {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-sm);
+  background-color: var(--gm-surface-1);
+  color: var(--gm-text-primary);
+  font-size: var(--gm-text-sm);
+}
+
+.control-select:focus,
+.control-input:focus {
+  outline: none;
+  border-color: var(--gm-accent);
+  box-shadow: 0 0 0 2px var(--gm-focus);
+}
+
+/* ============================================================================
+   Chart container + accessible table alternative
+   ============================================================================ */
+.chart-wrap {
+  height: 340px;
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gm-text-muted);
+  font-size: var(--gm-text-sm);
+}
+
+.chart-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gm-text-sm);
+  margin-top: var(--gm-space-3);
+}
+
+.chart-table caption {
+  caption-side: top;
+  text-align: left;
+  margin-bottom: var(--gm-space-1);
+  font-weight: 600;
+  color: var(--gm-text-secondary);
+}
+
+.chart-table th,
+.chart-table td {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-bottom: 1px solid var(--gm-border);
+  text-align: left;
+}
+
+.chart-table th {
+  font-weight: 600;
+  color: var(--gm-text-secondary);
+  background-color: var(--gm-surface-2);
+}
+
+.chart-table td.num-col {
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+}
+
+.chart-table tr:hover {
+  background-color: rgba(66, 217, 197, 0.05);
+}
+
+/* ============================================================================
+   Strategy card (used on Strategy Lab)
+   ============================================================================ */
+.strategy-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-md);
+  border: 1px solid var(--gm-border);
+}
+
+.strategy-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-3);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.strategy-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  color: var(--gm-text-primary);
+}
+
+.strategy-meta-text {
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+.strategy-details {
+  margin-top: var(--gm-space-3);
+  padding-left: var(--gm-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.strategy-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-2);
+}
+
+.strategy-label {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+}
+
+.strategy-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+/* ============================================================================
+   Strategy version (used on Workbench)
+   ============================================================================ */
+.strategy-version {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+/* ============================================================================
+   Rule checks (used on Workbench)
+   ============================================================================ */
+.rule-checks {
+  margin-top: var(--gm-space-2);
+}
+
+.rule-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+}
+
+.rule-verdict {
+  font-size: var(--gm-text-xs);
+  font-weight: 500;
+}
+
+.rule-evidence {
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+/* ============================================================================
+   Empty state (used on Workbench)
+   ============================================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-6);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  text-align: center;
+}
+
+/* ============================================================================
+   Empty state inline (used on Workbench)
+   ============================================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-6);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  text-align: center;
+}
+
+/* ============================================================================
+   Decision list item (used on Decision Detail)
+   ============================================================================ */
+.decision-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.decision-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gm-space-4) var(--gm-space-5);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--gm-duration-fast) var(--gm-ease),
+    background-color var(--gm-duration-fast) var(--gm-ease);
+}
+
+.decision-item:hover {
+  border-color: var(--gm-accent);
+  background-color: var(--gm-surface-1);
+}
+
+.decision-left {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-3);
+  flex-wrap: wrap;
+}
+
+.decision-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  color: var(--gm-text-primary);
+}
+
+.decision-right {
+  font-size: var(--gm-text-sm);
+  font-weight: 500;
+  color: var(--gm-accent);
+  white-space: nowrap;
+}
+
+.decision-time {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/* ============================================================================
+   Toggle / ghost buttons (used on Strategy Lab, Decision Detail)
+   ============================================================================ */
+.btn-toggle {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+  background-color: transparent;
+  color: var(--gm-text-primary);
+  font: inherit;
+  font-size: var(--gm-text-xs);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-toggle:hover {
+  background-color: var(--gm-surface-1);
+}
+
+.btn-toggle.enabled {
+  border-color: var(--gm-accent);
+  color: var(--gm-accent);
+}
+
+.btn-toggle.enabled:hover {
+  background-color: var(--gm-accent);
+  color: var(--gm-canvas);
+}
+
+.btn-ghost {
+  padding: var(--gm-space-2) var(--gm-space-4);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+  background-color: transparent;
+  color: var(--gm-text-primary);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background-color: var(--gm-surface-2);
+}
+
+.btn-primary {
+  padding: var(--gm-space-2) var(--gm-space-4);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-accent);
+  background-color: transparent;
+  color: var(--gm-accent);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--gm-accent);
+  color: var(--gm-canvas);
+}
+
+/* ============================================================================
+   News item (used on News & Sentiment)
+   ============================================================================ */
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.news-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+}
+
+.news-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gm-space-2);
+  flex-wrap: wrap;
+}
+
+.news-source {
+  font-weight: 600;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-primary);
+}
+
+.news-time {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+}
+
+.news-title {
+  margin: 0;
+  font-size: var(--gm-text-base);
+  font-weight: 500;
+  color: var(--gm-text-primary);
+}
+
+.news-body {
+  margin: 0;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+  line-height: var(--gm-leading-normal);
+}
+
+.news-meta {
+  margin-top: var(--gm-space-2);
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  display: flex;
+  gap: var(--gm-space-3);
+  flex-wrap: wrap;
+}
+
+/* ============================================================================
+   Agent run item (used on Agent Runs)
+   ============================================================================ */
+.run-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.run-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+}
+
+.run-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gm-space-2);
+}
+
+.run-id {
+  font-weight: 500;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-primary);
+}
+
+.run-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gm-space-2);
+}
+
+.run-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-1);
+}
+
+.run-label {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+}
+
+.run-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+/* ============================================================================
+   Provider card (used on Data Providers)
+   ============================================================================ */
+.provider-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-md);
+  border: 1px solid var(--gm-border);
+}
+
+.provider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-1);
+}
+
+.provider-label {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.provider-value {
+  font-weight: 500;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-primary);
+}
+
+/* ============================================================================
+   Live quote grid (used on Data Providers)
+   ============================================================================ */
+.quote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--gm-space-3);
+}
+
+.quote-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  text-align: center;
+}
+
+.quote-label {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.quote-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-lg);
+  font-weight: 600;
+  color: var(--gm-text-primary);
+}
+
+.quote-value.accent {
+  color: var(--gm-accent);
+}
+
+/* ============================================================================
+   Config item (used on Settings)
+   ============================================================================ */
+.config-item {
+  padding: var(--gm-space-3);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+}
+
+.config-key {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: var(--gm-space-1);
+}
+
+.config-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+  word-break: break-all;
+}
+
+/* ============================================================================
+   Model health card (used on Settings)
+   ============================================================================ */
+.model-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-md);
+  border: 1px solid var(--gm-border);
+}
+
+.model-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-1);
+}
+
+.model-label {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.model-value {
+  font-weight: 500;
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-primary);
+}
+
+.model-limitation {
+  padding: var(--gm-space-3);
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border: 1px solid var(--gm-tone-warning-border);
+  border-radius: var(--gm-radius-sm);
+  font-size: var(--gm-text-sm);
+}
+
+/* ============================================================================
+   Health card (used on System Health)
+   ============================================================================ */
+.health-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-3);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+}
+
+.health-dt {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.health-dd {
+  font-weight: 500;
+  font-size: var(--gm-text-base);
+  color: var(--gm-text-primary);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* ============================================================================
+   Backtest metric card (used on Backtest Results)
+   ============================================================================ */
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-1);
+  padding: var(--gm-space-3);
+  background-color: var(--gm-surface-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+}
+
+.metric-name {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  font-size: var(--gm-text-lg);
+  font-weight: 600;
+  color: var(--gm-text-primary);
+}
+
+.metric-sample {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+}
+
+.metric-definition {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  font-style: italic;
+}
+
+/* ============================================================================
+   Metric grid (used on Backtest Results)
+   ============================================================================ */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--gm-space-3);
+  margin-bottom: var(--gm-space-4);
+}
+
+/* ============================================================================
+   Empty state inline (used on Overview)
+   ============================================================================ */
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-2);
+  padding: var(--gm-space-2) var(--gm-space-3);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-sm);
+  font-size: var(--gm-text-sm);
+  color: var(--gm-text-secondary);
+}
+
+.empty-state .gm-badge {
+  flex-shrink: 0;
+}
+
+.mr-2 {
+  margin-right: var(--gm-space-2);
+}
+
+/* ============================================================================
+   Journal list item (used on Journal)
+   ============================================================================ */
+.journal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-2);
+}
+
+.journal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gm-space-3) var(--gm-space-4);
+  background-color: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--gm-duration-fast) var(--gm-ease),
+    background-color var(--gm-duration-fast) var(--gm-ease);
+}
+
+.journal-item:hover {
+  border-color: var(--gm-accent);
+  background-color: var(--gm-surface-1);
+}
+
+.journal-left {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-3);
+  flex-wrap: wrap;
+}
+
+.journal-right {
+  font-size: var(--gm-text-xs);
+  color: var(--gm-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  white-space: nowrap;
+}

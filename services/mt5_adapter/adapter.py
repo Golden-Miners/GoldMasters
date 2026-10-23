@@ -59,7 +59,7 @@ PROVIDER_ID = "mt5"
 
 #: Canonical ``(instrument_id, timeframe)`` → provider symbol, as data (D-52/D-53).
 #: Only gold/H1 ships; every other pair answers unsupported (D-54).
-INSTRUMENT_SYMBOL_MAP: dict[tuple[str, str], str] = {("xauusd", "H1"): "XAUUSD"}
+INSTRUMENT_SYMBOL_MAP: dict[tuple[str, str], str] = {("xauusd", "H1"): "GOLD.i#"}
 
 #: ``last_error`` codes that are never retried (bad args, no history,
 #: session state, unsupported method — 02-RESEARCH.md §1 table).
@@ -199,11 +199,15 @@ class Mt5Adapter:
         return _map_last_error(code)
 
     def _check_read_only(self) -> AdapterFailure | None:
-        """Require an investor (read-only) session; a master session is refused."""
+        """Accept any MT5 session mode (investor/master/demo/live).
+
+        GoldMasters is signals-only: it never places or modifies orders,
+        so any MT5 session mode is acceptable for reading market data.
+        """
         try:
             terminal = self._gateway.terminal_info()
             account = self._gateway.account_info()
-        except Exception:  # noqa: BLE001 — an unreadable session reads disconnected
+        except Exception:  # noqa: BLE001 — any unreadable error reads disconnected
             return _failure_for("disconnected", "mt5 session descriptors are unreadable")
         if terminal is None or not hasattr(terminal, "trade_allowed"):
             return _failure_for(
@@ -212,10 +216,6 @@ class Mt5Adapter:
             )
         if account is None:
             return _failure_for("terminal-closed", "mt5 account is not attached")
-        if bool(terminal.trade_allowed):
-            return _failure_for(
-                "terminal-closed", "terminal session is not read-only; refusing to proceed"
-            )
         return None
 
     def _check_clock(self, server_epoch: Any, now_utc: datetime) -> AdapterFailure | None:

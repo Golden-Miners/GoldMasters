@@ -1,148 +1,244 @@
-import { fetchHealth, fetchDecisions, fetchProviders } from "../../lib/api";
+import {
+  fetchHealth,
+  fetchDecisions,
+  fetchProviders,
+  fetchMarketBars,
+} from "../../lib/api";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ExplicitState } from "../../components/ExplicitState";
 import Link from "next/link";
 import type { DecisionRecord } from "../../generated/decision";
+import type { MarketBar } from "../../generated/market";
 
 export const dynamic = "force-dynamic";
 
+interface ProviderData {
+  provider_id: string;
+  status: string;
+  market_open: boolean;
+  terminal_build: string;
+  last_bar_close_time: string | null;
+  last_quote_time: string | null;
+  checked_at: string;
+  mt5_server_timezone: string;
+}
+
 export default async function OverviewPage() {
-  const [healthResult, decisionsResult, providersResult] = await Promise.all([
-    fetchHealth(),
-    fetchDecisions(),
-    fetchProviders(),
-  ]);
+  const [healthResult, decisionsResult, providersResult, marketResult] =
+    await Promise.all([
+      fetchHealth(),
+      fetchDecisions(),
+      fetchProviders(),
+      fetchMarketBars(),
+    ]);
 
   if (!healthResult.available) {
     return (
-      <ExplicitState state="offline">
-        <p>Backend unreachable: {healthResult.reason}</p>
-      </ExplicitState>
+      <section className="panel" aria-labelledby="overview-heading">
+        <header className="page-header">
+          <h1 id="overview-heading" className="page-title">
+            Overview
+          </h1>
+          <p className="page-subtitle">
+            Market snapshot · data freshness · research setups · system quality
+          </p>
+        </header>
+        <ExplicitState state="offline" />
+      </section>
     );
   }
 
   const { health } = healthResult;
   const decisions = decisionsResult.available ? decisionsResult.decisions : [];
-  const providersData = providersResult.available ? providersResult.data : null;
-
+  const providersData =
+    providersResult.available ? (providersResult.data as ProviderData) : null;
+  const bars = marketResult.available ? marketResult.bars : [];
   const recentDecisions = decisions.slice(0, 5);
 
   return (
     <section aria-labelledby="overview-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="overview-heading">Overview</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
-          System status, provider health, and recent decisions at a glance.
+      <header className="page-header">
+        <h1 id="overview-heading" className="page-title">Overview</h1>
+        <p className="page-subtitle">
+          Market snapshot · data freshness · research setups · system quality
         </p>
       </header>
 
-      <section aria-labelledby="system-status-heading" style={{ marginBottom: "1.5rem" }}>
-        <h2 id="system-status-heading" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          System Status
+      <section className="panel" aria-labelledby="market-data-heading">
+        <h2 id="market-data-heading" className="section-heading">
+          Market Data
         </h2>
-        <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Backend Status</dt>
-            <dd style={{ fontWeight: 500 }}>{health.status}</dd>
+        <div className="controls-bar">
+          <div className="control-group">
+            <label className="control-label">Instrument</label>
+            <span className="num">{bars[0]?.instrument_id ?? "—"}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Backend Version</dt>
-            <dd style={{ fontWeight: 500 }}>{health.version}</dd>
+          <div className="control-group">
+            <label className="control-label">Timeframe</label>
+            <span className="num">{bars[0]?.timeframe ?? "—"}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Contract Schema</dt>
-            <dd style={{ fontWeight: 500 }}>{health.contract_schema_version}</dd>
+          <div className="control-group">
+            <label className="control-label">Provider</label>
+            <span className="num">{bars[0]?.provider_id ?? "—"}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Config Hash</dt>
-            <dd style={{ fontWeight: 500, fontFamily: "monospace", fontSize: "0.875rem" }}>{health.config_hash.slice(0, 12)}…</dd>
+          <div className="control-group">
+            <label className="control-label">Bars</label>
+            <span className="num">{bars.length}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0" }}>
-            <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Database</dt>
-            <dd style={{ fontWeight: 500 }}>
-              <StatusBadge status={health.database.reachable ? "ok" : "unavailable"} />
-            </dd>
+          <div className="control-group">
+            <label className="control-label">Quality</label>
+            <span className="status-dd">
+              {bars.length > 0 ? (
+                <StatusBadge status={bars[0].quality_status} />
+              ) : (
+                <span className="gm-badge gm-badge-blocked">unavailable</span>
+              )}
+            </span>
           </div>
-        </dl>
+          <div className="control-group">
+            <label className="control-label">Last Retrieved</label>
+            <span className="num">
+              {bars[0]?.retrieved_at
+                ? new Date(bars[0].retrieved_at).toLocaleString()
+                : "—"}
+            </span>
+          </div>
+        </div>
+        <table className="chart-table">
+          <caption>Most recent bars (accessible table)</caption>
+          <thead>
+            <tr>
+              <th>Open Time</th>
+              <th className="num-col">Open</th>
+              <th className="num-col">High</th>
+              <th className="num-col">Low</th>
+              <th className="num-col">Close</th>
+              <th className="num-col">Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bars.slice(0, 10).map((bar: MarketBar) => (
+              <tr key={bar.bar_open_time}>
+                <td className="num">
+                  {new Date(bar.bar_open_time).toLocaleString()}
+                </td>
+                <td className="num-col">{bar.open}</td>
+                <td className="num-col">{bar.high}</td>
+                <td className="num-col">{bar.low}</td>
+                <td className="num-col">{bar.close}</td>
+                <td className="num-col">{bar.volume ?? "n/a"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
-      <section aria-labelledby="provider-status-heading" style={{ marginBottom: "1.5rem" }}>
-        <h2 id="provider-status-heading" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          Provider Status
-        </h2>
-        {providersData ? (
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0", minWidth: "200px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Provider ID</dt>
-              <dd style={{ fontWeight: 500 }}>{(providersData as any).provider_id ?? "unknown"}</dd>
+      <section className="panel" aria-labelledby="research-setups-heading">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--gm-space-3)" }}>
+          <h2 id="research-setups-heading" className="section-heading">
+            Research Setups
+          </h2>
+          <Link href="/decision" style={{ fontSize: "var(--gm-text-sm)", color: "var(--gm-accent)" }}>
+            View All &rarr;
+          </Link>
+        </div>
+        {decisionsResult.available ? (
+          recentDecisions.length === 0 ? (
+            <ExplicitState state="empty" />
+          ) : (
+            <div className="recent-list">
+              {recentDecisions.map((decision: DecisionRecord) => (
+                <Link
+                  key={decision.decision_id}
+                  href={`/decision?id=${decision.decision_id}`}
+                  className="recent-item"
+                >
+                  <div className="recent-left">
+                    <StatusBadge status={decision.decision} />
+                    <span className="num">{decision.instrument_id}</span>
+                    <span style={{ fontSize: "var(--gm-text-sm)", color: "var(--gm-text-secondary)" }}>
+                      {decision.timeframe}
+                    </span>
+                    <span style={{ fontSize: "var(--gm-text-xs)", color: "var(--gm-text-muted)" }}>
+                      {decision.strategy_id}@{decision.strategy_version}
+                    </span>
+                  </div>
+                  <time dateTime={decision.created_at} className="recent-time">
+                    {new Date(decision.created_at).toLocaleString()}
+                  </time>
+                </Link>
+              ))}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0", minWidth: "200px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Status</dt>
-              <dd style={{ fontWeight: 500 }}>
-                <StatusBadge status={(providersData as any).status ?? "unavailable"} />
-              </dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0", minWidth: "200px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Market Open</dt>
-              <dd style={{ fontWeight: 500 }}>{(providersData as any).market_open === true ? "yes" : "no"}</dd>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "0.75rem", background: "#F5F5F5", borderRadius: "6px", border: "1px solid #E0E0E0", minWidth: "200px" }}>
-              <dt style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Terminal Build</dt>
-              <dd style={{ fontWeight: 500, fontFamily: "monospace", fontSize: "0.875rem" }}>{(providersData as any).terminal_build ?? "unknown"}</dd>
-            </div>
-          </div>
+          )
         ) : (
-          <ExplicitState state="unavailable" />
+          <ExplicitState state="unavailable">
+            <p>
+              Research setups unavailable — decisions database not reachable
+              ({decisionsResult.reason}).
+            </p>
+          </ExplicitState>
         )}
       </section>
 
-      <section aria-labelledby="recent-decisions-heading">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-          <h2 id="recent-decisions-heading" style={{ fontSize: "1.125rem", margin: 0 }}>
-            Recent Decisions
-          </h2>
-          <Link href="/decision" style={{ fontSize: "0.875rem", color: "#1976D2" }}>
-            View All →
-          </Link>
+      <section className="panel" aria-labelledby="system-quality-heading">
+        <h2 id="system-quality-heading" className="section-heading">
+          System &amp; Data Quality
+        </h2>
+        <div className="status-grid">
+          <div className="status-card">
+            <span className="status-dt">Backend Status</span>
+            <span className="status-dd">{health.status}</span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Backend Version</span>
+            <span className="status-dd">{health.version}</span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Contract Schema</span>
+            <span className="status-dd">{health.contract_schema_version}</span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Config Hash</span>
+            <span className="status-dd num">{health.config_hash.slice(0, 12)}…</span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Database</span>
+            <span className="status-dd">
+              <StatusBadge status={health.database.reachable ? "ok" : "unavailable"} />
+            </span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Provider</span>
+            <span className="status-dd">
+              {providersData ? (
+                <StatusBadge status={(providersData as ProviderData).status ?? "unavailable"} />
+              ) : (
+                <span className="gm-badge gm-badge-blocked">unavailable</span>
+              )}
+            </span>
+          </div>
+          <div className="status-card">
+            <span className="status-dt">Market Data</span>
+            <span className="status-dd">
+              {bars.length > 0 ? (
+                <span className="gm-badge gm-badge-valid">receiving</span>
+              ) : (
+                <span className="gm-badge gm-badge-blocked">not connected</span>
+              )}
+            </span>
+          </div>
         </div>
-        {recentDecisions.length === 0 ? (
-          <ExplicitState state="empty" />
+        {providersData && providersData.provider_id ? (
+          <div style={{ marginTop: "var(--gm-space-3)" }}>
+            <span className="text-muted">
+              Provider: {providersData.provider_id} &bull; Server Timezone:{" "}
+              {providersData.mt5_server_timezone ?? "not set"} &bull; Last Checked:{" "}
+              {new Date(providersData.checked_at).toLocaleString()}
+            </span>
+          </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {recentDecisions.map((decision: DecisionRecord) => (
-              <Link
-                key={decision.decision_id}
-                href={`/decision?id=${decision.decision_id}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0.75rem 1rem",
-                  background: "#FAFAFA",
-                  border: "1px solid #E0E0E0",
-                  borderRadius: "6px",
-                  textDecoration: "none",
-                  color: "inherit",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <StatusBadge status={decision.decision} />
-                  <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {decision.instrument_id}
-                  </span>
-                  <span style={{ fontSize: "0.875rem", color: "#616161" }}>
-                    {decision.timeframe}
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "#757575" }}>
-                    {decision.strategy_id}@{decision.strategy_version}
-                  </span>
-                </div>
-                <time dateTime={decision.created_at} style={{ fontSize: "0.75rem", color: "#757575", fontFamily: "monospace" }}>
-                  {new Date(decision.created_at).toLocaleString()}
-                </time>
-              </Link>
-            ))}
+          <div style={{ marginTop: "var(--gm-space-3)" }}>
+            <span className="text-muted">Provider: not connected</span>
           </div>
         )}
       </section>

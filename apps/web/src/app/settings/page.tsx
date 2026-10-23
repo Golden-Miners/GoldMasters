@@ -17,54 +17,60 @@ export default async function SettingsPage() {
   const config = settingsResult.config;
 
   return (
-    <section aria-labelledby="settings-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="settings-heading">Settings / Model Health</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
+    <section className="panel" aria-labelledby="settings-heading">
+      <header className="page-header">
+        <h1 id="settings-heading" className="page-title">
+          Settings / Model Health
+        </h1>
+        <p className="page-subtitle">
           Effective configuration (non-secret) and Ollama model discovery status.
         </p>
       </header>
 
-      <section aria-labelledby="model-health" style={{ marginBottom: "2rem" }}>
-        <h2 id="model-health" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          Model Health
-        </h2>
+      <section aria-labelledby="model-health" style={{ marginBottom: "var(--gm-space-8)" }}>
+        <h2 id="model-health" className="section-heading">Model Health</h2>
         {modelResult.available ? (
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px", minWidth: "200px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Status</span>
-                <StatusBadge status={(modelResult.data as any).status} />
+          <>
+            <div className="model-card">
+              <div className="model-row">
+                <span className="model-label">Status</span>
+                <span className="model-value">
+                  <StatusBadge status={(modelResult.data as any).status} />
+                </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Endpoint</span>
-                <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>{(modelResult.data as any).endpoint}</span>
+              <div className="model-row">
+                <span className="model-label">Endpoint</span>
+                <span className="model-value num">
+                  {(modelResult.data as any).endpoint}
+                </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase" }}>Expected Model</span>
-                <span style={{ fontFamily: "monospace", fontSize: "0.875rem" }}>{(modelResult.data as any).expected_model ?? "not configured"}</span>
+              <div className="model-row">
+                <span className="model-label">Expected Model</span>
+                <span className="model-value num">
+                  {(modelResult.data as any).expected_model ?? "not configured"}
+                </span>
               </div>
             </div>
-            <div style={{ padding: "0.75rem", background: "#FFF3E0", border: "1px solid #FFB74D", borderRadius: "6px", fontSize: "0.875rem", color: "#E65100" }}>
-              {(modelResult.data as any).limitations?.join("; ")}
-            </div>
-          </div>
+            {modelResult.data?.limitations && (
+              <div className="model-limitation">
+                {(modelResult.data as any).limitations.join("; ")}
+              </div>
+            )}
+          </>
         ) : (
           <ExplicitState state="offline" />
         )}
       </section>
 
       <section aria-labelledby="effective-config">
-        <h2 id="effective-config" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
+        <h2 id="effective-config" className="section-heading">
           Effective Configuration (non-secret)
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "var(--gm-space-3)" }}>
           {Object.entries(config).map(([key, value]) => (
-            <div key={key} style={{ padding: "0.75rem", background: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.75rem", color: "#757575", textTransform: "uppercase", fontWeight: 500, marginBottom: "0.25rem" }}>
-                {key}
-              </div>
-              <div style={{ fontFamily: "monospace", fontSize: "0.875rem", wordBreak: "break-all" }}>
+            <div key={key} className="config-item">
+              <div className="config-key">{key}</div>
+              <div className="config-value">
                 {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)}
               </div>
             </div>

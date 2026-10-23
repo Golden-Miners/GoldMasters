@@ -19,16 +19,13 @@ interface CandlePoint {
   o: number;
   h: number;
   l: number;
-  c: number;
-}
-
-interface TooltipPayloadItem {
-  value: number;
-  name: string;
+  c: string;
 }
 
 export default function WorkbenchPage() {
-  const [state, setState] = useState<"loading" | "empty" | "stale" | "ready" | "offline">("loading");
+  const [state, setState] = useState<
+    "loading" | "empty" | "ready" | "offline" | "unavailable"
+  >("loading");
   const [candles, setCandles] = useState<CandlePoint[]>([]);
   const [instrument, setInstrument] = useState("xauusd");
   const [timeframe, setTimeframe] = useState("H1");
@@ -39,7 +36,7 @@ export default function WorkbenchPage() {
     try {
       const result = await fetchMarketBars(instrument, timeframe, count);
       if (!result.available) {
-        setState("offline");
+        setState("unavailable");
         return;
       }
       if (result.bars.length === 0) {
@@ -51,12 +48,12 @@ export default function WorkbenchPage() {
         o: Number(bar.open),
         h: Number(bar.high),
         l: Number(bar.low),
-        c: Number(bar.close),
+        c: bar.close,
       }));
       setCandles(points);
       setState(points.length > 0 ? "ready" : "empty");
     } catch {
-      setState("offline");
+      setState("unavailable");
     }
   };
 
@@ -64,35 +61,27 @@ export default function WorkbenchPage() {
     fetchData();
   }, [instrument, timeframe, count]);
 
-  if (state === "loading") return <ExplicitState state="loading" />;
-  if (state === "offline") return <ExplicitState state="offline" />;
-  if (state === "empty") return <ExplicitState state="empty" />;
-
-  const tooltipFormatter: any = (value: number | undefined, name: string) => [value !== undefined ? value.toFixed(2) : "-", name];
-  const tooltipLabelFormatter: any = (v: React.ReactNode) => {
-    if (typeof v === "string") return new Date(v).toLocaleString();
-    return String(v);
-  };
-
   return (
     <section aria-labelledby="workbench-heading">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 id="workbench-heading">Instrument Workbench</h1>
-        <p style={{ color: "#616161", marginTop: "0.25rem" }}>
-          Live price chart with accessible data table alternative.
+      <header className="page-header">
+        <h1 id="workbench-heading" className="page-title">
+          Instrument Workbench
+        </h1>
+        <p className="page-subtitle">
+          Closed-bar analysis with chart and tabular data alternative.
         </p>
       </header>
 
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label htmlFor="instrument" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+      <div className="controls-bar">
+        <div className="control-group">
+          <label htmlFor="instrument" className="control-label">
             Instrument
           </label>
           <select
             id="instrument"
+            className="control-select"
             value={instrument}
             onChange={(e) => setInstrument(e.target.value)}
-            style={{ padding: "0.375rem 0.75rem", border: "1px solid #E0E0E0", borderRadius: "4px", fontSize: "0.875rem" }}
           >
             <option value="xauusd">XAUUSD (Gold)</option>
             <option value="xagusd">XAGUSD (Silver)</option>
@@ -100,18 +89,17 @@ export default function WorkbenchPage() {
             <option value="gbpusd">GBPUSD</option>
             <option value="btcusd">BTCUSD</option>
             <option value="ethusd">ETHUSD</option>
-            <option value="usoil">USOIL</option>
           </select>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label htmlFor="timeframe" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+        <div className="control-group">
+          <label htmlFor="timeframe" className="control-label">
             Timeframe
           </label>
           <select
             id="timeframe"
+            className="control-select"
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            style={{ padding: "0.375rem 0.75rem", border: "1px solid #E0E0E0", borderRadius: "4px", fontSize: "0.875rem" }}
           >
             <option value="M1">M1</option>
             <option value="M5">M5</option>
@@ -122,67 +110,90 @@ export default function WorkbenchPage() {
             <option value="D1">D1</option>
           </select>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label htmlFor="count" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+        <div className="control-group">
+          <label htmlFor="count" className="control-label">
             Bars
           </label>
           <input
             id="count"
+            className="control-input"
             type="number"
             min="50"
             max="1000"
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
-            style={{ padding: "0.375rem 0.75rem", border: "1px solid #E0E0E0", borderRadius: "4px", fontSize: "0.875rem", width: "80px" }}
           />
         </div>
-        <StatusBadge status={state} />
+        <span className="gm-badge gm-badge-neutral">{state}</span>
       </div>
 
-      <section aria-labelledby="chart-heading" style={{ marginBottom: "1.5rem" }}>
-        <h2 id="chart-heading" style={{ fontSize: "1.125rem", marginBottom: "0.75rem" }}>
-          Price — {instrument.toUpperCase()} ({timeframe})
-        </h2>
-        <div role="img" aria-label="Price chart; data in the table below" style={{ height: 400 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={candles} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" />
-              <XAxis dataKey="t" tick={{ fontSize: 11 }} tickFormatter={(v) => new Date(v).toLocaleTimeString()} />
-              <YAxis />
-              <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter} />
-              <Line type="monotone" dataKey="c" stroke="#1976D2" strokeWidth={1.5} name="Close" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {state === "loading" ? (
+        <ExplicitState state="loading" />
+      ) : state === "unavailable" ? (
+        <ExplicitState state="unavailable">
+          <p>
+            No market data available — MT5 terminal not connected.
+          </p>
+        </ExplicitState>
+      ) : state === "empty" ? (
+        <ExplicitState state="empty" />
+      ) : (
+        <section className="panel" aria-labelledby="chart-heading">
+          <h2 id="chart-heading" className="section-heading">
+            Price — {instrument.toUpperCase()} ({timeframe})
+          </h2>
+          <div className="chart-wrap" role="img" aria-label="Price chart; data in the table below">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={candles} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--gm-border)" />
+                <XAxis
+                  dataKey="t"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: string) => new Date(v).toLocaleTimeString()}
+                />
+                <YAxis />
+                <Tooltip
+                  formatter={(value: any, name: string | number | undefined) =>
+                    typeof value === "number" ? value.toFixed(2) : "-"
+                  }
+                  labelFormatter={(v: React.ReactNode) =>
+                    typeof v === "string" ? new Date(v).toLocaleString() : String(v)
+                  }
+                />
+                <Line type="monotone" dataKey="c" stroke="var(--gm-accent)" strokeWidth={1.5} name="Close" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
-          <caption style={{ textAlign: "left", marginBottom: "0.5rem", fontWeight: 500 }}>
-            Price data table (accessible alternative to the chart)
-          </caption>
-          <thead>
-            <tr style={{ background: "#F5F5F5" }}>
-              <th style={{ padding: "0.5rem", textAlign: "left", borderBottom: "1px solid #E0E0E0" }}>Time</th>
-              <th style={{ padding: "0.5rem", textAlign: "right", borderBottom: "1px solid #E0E0E0" }}>Open</th>
-              <th style={{ padding: "0.5rem", textAlign: "right", borderBottom: "1px solid #E0E0E0" }}>High</th>
-              <th style={{ padding: "0.5rem", textAlign: "right", borderBottom: "1px solid #E0E0E0" }}>Low</th>
-              <th style={{ padding: "0.5rem", textAlign: "right", borderBottom: "1px solid #E0E0E0" }}>Close</th>
-            </tr>
-          </thead>
-          <tbody>
-            {candles.slice(-50).map((c) => (
-              <tr key={c.t} style={{ borderBottom: "1px solid #F0F0F0" }}>
-                <td style={{ padding: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem" }}>
-                  {new Date(c.t).toLocaleString()}
-                </td>
-                <td style={{ padding: "0.5rem", textAlign: "right" }}>{c.o.toFixed(2)}</td>
-                <td style={{ padding: "0.5rem", textAlign: "right" }}>{c.h.toFixed(2)}</td>
-                <td style={{ padding: "0.5rem", textAlign: "right" }}>{c.l.toFixed(2)}</td>
-                <td style={{ padding: "0.5rem", textAlign: "right" }}>{c.c.toFixed(2)}</td>
+          <table className="chart-table">
+            <caption>Price data table (accessible alternative to the chart)</caption>
+            <thead>
+              <tr>
+                <th>Open Time</th>
+                <th className="num-col">Open</th>
+                <th className="num-col">High</th>
+                <th className="num-col">Low</th>
+                <th className="num-col">Close</th>
+                <th className="num-col">Volume</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {candles.slice(-50).map((c) => (
+                <tr key={c.t}>
+                  <td className="num">
+                    {new Date(c.t).toLocaleString()}
+                  </td>
+                  <td className="num-col">{c.o.toFixed(2)}</td>
+                  <td className="num-col">{c.h.toFixed(2)}</td>
+                  <td className="num-col">{c.l.toFixed(2)}</td>
+                  <td className="num-col">{c.c}</td>
+                  <td className="num-col">—</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
     </section>
   );
 }

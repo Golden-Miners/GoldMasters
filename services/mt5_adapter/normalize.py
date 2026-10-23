@@ -104,7 +104,25 @@ def normalize_bars(
     except ValueError as exc:
         raise NormalizationError(f"unsupported timeframe for normalization: {timeframe}") from exc
     bars: list[MarketBar] = []
-    ordered = reversed(rows[1:]) if forming_first else iter(rows)
+
+    # Detect row order: newest-first (reverse-chronological, MT5 standard)
+    # or oldest-first (chronological). Compare first two timestamps.
+    reverse_chrono = True
+    if len(rows) >= 2:
+        try:
+            if float(rows[0]["time"]) < float(rows[1]["time"]):
+                reverse_chrono = False  # Already chronological (oldest first)
+        except (KeyError, TypeError, ValueError):
+            pass  # Default to existing behavior
+
+    if reverse_chrono:
+        # Newest first: rows[0] may be the forming bar — skip it, reverse rest
+        data_rows = list(reversed(rows[1:])) if len(rows) > 1 else []
+    else:
+        # Oldest first: rows[-1] may be the forming bar — skip it, keep rest
+        data_rows = rows[:-1] if len(rows) > 1 else []
+
+    ordered = iter(data_rows)
     for row in ordered:
         try:
             open_time = server_to_utc(float(row["time"]), server_timezone)

@@ -12,6 +12,7 @@ interface StatusBadgeProps {
  * StatusBadge maps every closed enum value verbatim to a labelled badge.
  * Colour is supplementary only — never the sole carrier of meaning (WCAG 1.4.1).
  * Unknown / not_evaluated render neutral, never healthy.
+ * Uses design tokens from @/styles/design-tokens.css (quant terminal: cyan/teal on graphite).
  */
 export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
   const map: Record<string, { label: string; tone: StatusTone }> = {
@@ -39,7 +40,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
     invalid: { label: "Invalid", tone: "blocked" },
     unavailable: { label: "Unavailable", tone: "blocked" },
 
-    // QualityStatus enum (ok already exists from AgentRunStatus - same label/tone)
+    // QualityStatus enum
     duplicate: { label: "Duplicate", tone: "warning" },
     gap: { label: "Gap", tone: "warning" },
     malformed: { label: "Malformed", tone: "blocked" },
@@ -57,29 +58,21 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
 
   const entry = map[status] ?? { label: status, tone: "neutral" };
 
-  const toneStyles: Record<StatusTone, React.CSSProperties> = {
-    valid: { backgroundColor: "#E8F5E9", color: "#1B5E20", borderColor: "#81C784" },
-    warning: { backgroundColor: "#FFF3E0", color: "#E65100", borderColor: "#FFB74D" },
-    blocked: { backgroundColor: "#FBE9E7", color: "#B71C1C", borderColor: "#EF9A9A" },
-    neutral: { backgroundColor: "#ECEFF1", color: "#37474F", borderColor: "#B0BEC5" },
+  // Tone → CSS class mapping (dark theme, design tokens)
+  const toneClass: Record<StatusTone, string> = {
+    valid: "gm-badge-valid",
+    warning: "gm-badge-warning",
+    blocked: "gm-badge-blocked",
+    neutral: "gm-badge-neutral",
   };
 
-  const style = toneStyles[entry.tone];
+  const cls = toneClass[entry.tone];
 
   return (
     <span
       data-testid={`badge-${status}`}
       aria-label={`${entry.label} (${status})`}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "0.75rem",
-        fontWeight: 500,
-        border: "1px solid",
-        ...style,
-      }}
+      className={`gm-badge ${cls}`}
     >
       {entry.label}
     </span>
