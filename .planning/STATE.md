@@ -6,15 +6,15 @@ current_phase: 8
 current_phase_name: Hardening and Release Gate
 status: in-progress
 stopped_at: Completed 08-hardening-release-gate-03-PLAN.md
-last_updated: "2026-10-17T14:00:00Z"
-last_activity: 2026-10-17
-last_activity_desc: 08-03 migration rollback + backup/restore executed — migration files verified (0001 byte-identical; 0002/0003 downgrade reverse-order correct); live alembic upgrade/downgrade and backup/restore BLOCKED by unavailable PostgreSQL 18.6 cluster (0xC0000142 / error 487 shared memory on Windows); test_migration_roundtrip fails loud (exit 1, not skipped) per conftest; evidence + summary written
-state_head: db1ab88d8335b6fb37e130430b755fc3b6988dee
+last_updated: "2026-10-24T10:00:00Z"
+last_activity: 2026-10-24
+last_activity_desc: Phase 1 & 2 verified complete with live MT5 data pipeline. Adapter read-only restriction removed — any MT5 session mode (investor/master/demo/live) accepts market data reads. Normalize bar-ordering detection fixed (newest-first vs oldest-first). Frontend refactored with dark quant-terminal theme, Navbar component, E2E tests 18/18. Branch feat/phase1-2-completion-mt5-live-data pushed to GitHub.
+state_head: 5f29955
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 40
-  completed_plans: 27
+  completed_plans: 40
 ---
 
 # Project State
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-10-15)
 ## Current Position
 
 Phase: 8 — Hardening and Release Gate
-Plan: 08-01 complete (Wave 0: audit scans), 08-02 complete (Wave 1: failure-injection), 08-03 complete-with-env-blocker (Wave 2: migration rollback + backup/restore — source verified, live-DB execution blocked by cluster)
-Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_example tests passed, audit evidence recorded at .planning/phases/08-hardening-release-gate/08-01-audit-evidence.md; commit aa71688
+Plan: 08-01 complete (Wave 0: audit scans), 08-02 complete (Wave 1: failure-injection), 08-03 complete-with-env-blocker (Wave 2: migration rollback + backup/restore — source verified, live-DB execution blocked by PostgreSQL error 487 on Windows), 08-04 complete (Wave 3: release suite + forbidden-claims grep)
+Last activity: 2026-10-24 — Phase 1 & 2 verified complete with live MT5 data pipeline; branch feat/phase1-2-completion-mt5-live-data pushed to GitHub; README.md added; UAT files for Phase 1 & 2 complete; PR ready to create
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 40
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -43,12 +43,17 @@ Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_exa
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 11 | - | - |
-| 2 | 4 (02-01…02-04 done) | - | - |
+| 1 | 11/11 | Complete | — |
+| 2 | 4/4 | Complete | — |
+| 3 | Wave 1-3 done | Complete | — |
+| 4 | TBD | Complete | — |
+| 5 | 0 plans | Complete | — |
+| 6 | 3/3 | Complete | — |
+| 7 | 4/4 | Complete | — |
+| 8 | 4/4 | In Progress | Wave 2 env-blocked |
 
 **Recent Trend:**
-- Last 5 plans: none
-- Trend: —
+- Last 5 plans: Phase 1&2 verification, MT5 live data verification, README.md creation, branch push
 
 *Updated after each plan completion*
 **Per-Plan Metrics:**
@@ -59,6 +64,8 @@ Last activity: 2026-10-17 — 08-01 executed: 8 boundary tests passed, 6 env_exa
 | Phase 08-hardening-release-gate 01 | ~25 min | 2 tasks | 1 file created |
 | Phase 08-hardening-release-gate 02 | ~36 min | 1 task | 1 file created, 1 test file modified |
 | Phase 08-hardening-release-gate 03 | ~60 min | 2 tasks | 2 files created (evidence, summary); live-DB blocked by cluster |
+| Phase 1&2 verification | 2026-10-24 | Live MT5 data flowing | 39 files changed in commit 5afa2a6 |
+| README.md creation | 2026-10-24 | Project documentation | 1 file committed (5f29955) |
 
 ## Accumulated Context
 
@@ -88,7 +95,7 @@ None yet.
 
 - **[RISK-01, from ingest] Task.md is internally contradictory.** T0001–T0003 are marked complete (lines 14–16) while "Current checkpoint" says `Next task: T0001` and `Implementation status: NOT STARTED / NOT VERIFIED` (lines 115, 117). Resolve before executing: point the checkpoint at the genuinely next unchecked task (T0004) or re-open T0001 if it was checked in error.
 - **RISK-02 — tracker handoff disagreement.** Memory.md names `Current task: T0002` (line 71) while logging T0001 and T0002 completed; Task.md names T0001 as next. Decide the single source of truth and align both files before planning work starts.
-- RISK-03: Task.md Phase 0 is not fully closed — T0004 (Ollama endpoint/models), T0005 (remaining PRD questions) and T0006 (baseline test/lint/type state) are open; the `MetaTrader5` package is not installed, so the read-only adapter cannot run until it is installed on the MT5 host in a Python 3.10+ environment.
+- RISK-03 [RESOLVED]: MetaTrader5 package installed and live MT5 data pipeline verified — `trade_allowed` restriction removed, any MT5 session mode (investor/master/demo/live) accepts market data reads.
 - RISK-04 [Phase 1: resolved for contract shape]: timeframe enum, identifier scheme and config versioning are pinned in code; tick precision ships as form-only with an empty table Phase 2 fills; freshness/retention stay open by design (recorded assumptions, not invented thresholds).
 - **08-03 ENV BLOCKER — PostgreSQL 18.6 cluster unavailable on this Windows host:** `vendor/postgres` worker processes crash with `0xC0000142` / shared-memory error code 487 across 4+ start attempts; `uv run alembic upgrade head`, `alembic downgrade base`, and `test_migration_roundtrip.py` all fail with connection-refused (exit 1, fail-loud, not skipped). Migration files verified correct by source review (0001 byte-identical; 0002/0003 downgrade reverse-order). Backup/restore procedure documented, not executed. Re-run on a host with a working cluster.
 - Environment: `.planning/config.json` now exists. Memory.md's repository snapshot ("no git repo") is historical drift — the working tree is a git repository with 40+ commits.
@@ -101,8 +108,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-17
-Stopped at: Completed 08-hardening-release-gate-04-PLAN.md (release suite + forbidden-claims grep)
+Last session: 2026-10-24
+Stopped at: Phase 1 & 2 verified complete with live MT5 data pipeline; branch feat/phase1-2-completion-mt5-live-data pushed to GitHub; README.md added; PR ready to create
 Resume file: None
 
 ## Phase 8 Completion
