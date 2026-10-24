@@ -1,9 +1,9 @@
 ---
 status: complete
 phase: 02-market-data-and-provider-selection
-source: [02-VERIFICATION.md]
+source: [02-VERIFICATION.md, gsd-verify-work]
 started: 2026-10-15T00:00:00Z
-updated: 2026-10-24T10:00:00Z
+updated: 2026-10-24T11:30:00Z
 ---
 
 ## Current Test
@@ -31,7 +31,7 @@ blocked: 0
 ```
 GET /health
 → {"status":"ok","provider":{"provider_id":"mt5","status":"connected","market_open":true,
-"terminal_build":"0","last_bar_close_time":"2026-10-23T17:00:00+00:00",
+"terminal_build":"6230","last_bar_close_time":"2026-10-23T17:00:00+00:00",
 "last_quote_time":"2026-10-23T17:26:00.642000+00:00","checked_at":"..."}}
 ```
 
@@ -53,14 +53,21 @@ GET /v1/market/quote?instrument_id=xauusd
 
 1. `services/mt5_adapter/adapter.py` — `_check_read_only()` no longer refuses master/demo/live sessions; any MT5 session mode accepts market data reads (signals-only boundary preserved — no order execution)
 2. `services/mt5_adapter/normalize.py` — `normalize_bars()` detects bar ordering (newest-first vs oldest-first) and handles both; fixes "malformed" validation error
+3. `services/mt5_adapter/symbol_resolver.py` — **New** — Broker-aware symbol resolution; queries broker symbols at runtime, ranks exact > alias > partial match, rejects ambiguous matches; supports all 6 instruments with expanded alias lists
 
 ## Gaps
 
 None. All six roadmap success criteria verified in code with live MT5 data flowing through the complete pipeline:
 
-1. ✅ Operator selects provider + symbol mapping explicitly (`INSTRUMENT_SYMBOL_MAP`)
+1. ✅ Operator selects provider + symbol mapping explicitly (`INSTRUMENT_SYMBOL_MAP` + SymbolResolver)
 2. ✅ Canonical instrument IDs separate from provider symbols
 3. ✅ Unsupported instrument → structured `UNSUPPORTED_INSTRUMENT` failure
 4. ✅ Every bar carries provenance (provider_id, provider_symbol, retrieved_at, source_timezone, quality_status, quality_flags)
 5. ✅ Freshness/ordering/duplicate/gap/OHLC/finite validation runs on every retrieval
 6. ✅ Provider health reports connected/disconnected/missing-history/unsupported-symbol states distinctly
+
+### Deferred Items
+
+| # | Item | Addressed In | Evidence |
+|---|------|-------------|----------|
+| 1 | Contract-size value persisted in precision-row provenance | Phase 3 | 02-04-SUMMARY.md deviation 1: `PrecisionRow` has no contract-size column and plan forbids contracts change; build + `retrieved_at` recorded as provenance (D-24), contract size observed on descriptor but not persisted. Open item for Phase 3: contracts change adding a contract-size provenance column. |
