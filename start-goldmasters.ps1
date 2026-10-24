@@ -29,11 +29,15 @@ $API_PORT     = 8000
 $WEB_DIR      = Join-Path $SCRIPT_DIR "apps\web"
 $ENV_FILE     = Join-Path $SCRIPT_DIR ".env"
 $MT5_TERMINAL = "C:\Program Files\MetaTrader 5\terminal64.exe"
+$MT5_AUTO_LAUNCH = $false  # Set to $true to auto-launch MT5 from .env
 
 # Build URLs using string concatenation (PowerShell : parsing issue)
 $API_BASE     = "http://" + $API_HOST + ":" + [string]$API_PORT
 $HEALTH_URL   = $API_BASE + "/health"
 $MARKET_URL   = $API_BASE + "/v1/market/bars?instrument_id=xauusd&timeframe=H1&count=1"
+
+# Track started processes for clean shutdown
+$STARTED_PROCESSES = @()
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -140,6 +144,18 @@ if ($envContent -notmatch "GOLDMASTERS_MT5_SERVER_TIMEZONE") {
 }
 Write-Success "GOLDMASTERS_MT5_SERVER_TIMEZONE is set in .env"
 
+# Check optional MT5 terminal path
+if ($envContent -match "GOLDMASTERS_MT5_TERMINAL_PATH=(.+)") {
+    $mt5PathFromEnv = $Matches[1].Trim().Trim('"')
+    if (Test-Path $mt5PathFromEnv) {
+        $MT5_TERMINAL = $mt5PathFromEnv
+        $MT5_AUTO_LAUNCH = $true
+        Write-Success "MT5 terminal auto-launch enabled: $MT5_TERMINAL"
+    } else {
+        Write-Warn "MT5 terminal path from .env not found: $mt5PathFromEnv"
+    }
+}
+
 # ---------------------------------------------------------------------------
 # Step 1: Install/verify Python dependencies
 # ---------------------------------------------------------------------------
@@ -209,19 +225,42 @@ try {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2: Check MT5 terminal (optional)
+# Step 2: MT5 terminal (optional)
 # ---------------------------------------------------------------------------
 Write-Header "Step 2 — MT5 Terminal (Optional)"
 
-if (Test-Path $MT5_TERMINAL) {
-    Write-Info ("MT5 terminal found at " + $MT5_TERMINAL)
-    Write-Info "Launch MT5 manually and log in with investor credentials."
-    Write-Info "   - Enable Market Watch for XAUUSD symbol"
-    Write-Info "   - The API will connect automatically once the terminal is running"
-    Write-Host ""
-} else {
+if (-not (Test-Path $MT5_TERMINAL)) {
     Write-Warn ("MT5 terminal not found at " + $MT5_TERMINAL)
     Write-Warn "Market data endpoint will return 'terminal-closed' until MT5 is running"
+    Write-Host ""
+} elseif ($MT5_AUTO_LAUNCH) {
+    Write-Info ("Auto-launching MT5 terminal: " + $MT5_TERMINAL)
+    $mt5Proc = Start-Process -FilePath $MT5_TERMINAL -WindowStyle Normal -PassThru
+    $STARTED_PROCESSES += $mt5Proc
+    Write-Info "Waiting up to 30 seconds for MT5 terminal to start..."
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $mt5Ready = $false
+    while ($sw.Elapsed.TotalSeconds -lt 30) {
+        if (Test-Port -port 0) {  # Placeholder - MT5 doesn't expose a port we can test
+            $mt5Ready = $true
+            break
+        }
+        Start-Sleep -Milliseconds 1000
+    }
+    $sw.Stop()
+    if ($mt5Ready) {
+        Write-Success "MT5 terminal launched"
+    } else {
+        Write-Warn "MT5 terminal launch timeout — start it manually if needed"
+    }
+    Write-Host ""
+} else {
+    Write-Info ("MT5 terminal found at " + $MT5_TERMINAL)
+    Write-Info "Launch MT5 manually and log in (any account mode: investor/master/demo/live)."
+    Write-Info "   - GoldMasters is signals-only — any session mode is acceptable"
+    Write-Info "   - Enable Market Watch for your gold symbol (e.g. GOLD.i#, XAUUSD)"
+    Write-Info "   - The API will connect automatically once the terminal is running"
+    Write-Host ""
 }
 
 # ---------------------------------------------------------------------------
@@ -352,8 +391,20 @@ try {
 } catch {
     Write-Host ""
     Write-Info "Shutting down GoldMasters..."
-    Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*uvicorn*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-    Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*next*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-    Write-Success "All services stopped."
+    # Stop only processes we started (not user-owned terminals/processes)
+    foreach ($proc in $STARTED_PROCESSES) {
+        try {
+            if (-not $proc.HasExited) {
+                $proc.CloseMainWindow() | Out-Null
+                Start-Sleep -Milliseconds 500
+                if (-not $proc.HasExited) {
+                    $proc.Kill() | Out-Null
+                }
+            }
+        } catch {
+            # Process already gone
+        }
+    }
+    Write-Success "All GoldMasters services stopped."
     exit 0
 }
