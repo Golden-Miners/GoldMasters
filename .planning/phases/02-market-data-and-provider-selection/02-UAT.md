@@ -117,3 +117,44 @@ None for Phase 2 code. All six roadmap success criteria verified in code with li
 | 2 | Ollama at 127.0.0.1:11434 with gemma:2b | Phase 4 | Not running; required for LangGraph orchestration. Operator must start Ollama and ensure gemma:2b model is available. |
 | 3 | Next.js Frontend at 127.0.0.1:3000 | Phase 7 | Not started; build artifacts exist (apps/web/src/app/) but dev server not running. `npm.exe` not found in PATH — Node.js at `C:\Program Files\nodejs\node.exe`. Fix: add Node.js to PATH or run `npm run dev` manually in `apps/web/`. |
 | 4 | MT5 terminal auto-start | Operator item | Terminal running (PID 5980) but not found at hardcoded path check. Fixed: `Test-MT5Running` checks if already running before attempting launch. Operator can also set `GOLDMASTERS_MT5_TERMINAL_PATH` in `.env` to the actual terminal path. |
+
+## PostgreSQL Migration Rollback — Fixed ✅
+
+| Item | Status | Details |
+|------|--------|---------|
+| PostgreSQL 487 error | ✅ Resolved | Windows PostgreSQL 18.6 cluster crashed with shared memory error 487 (0xC0000147). Fixed by pointing Alembic to Supabase-hosted PostgreSQL instead of local Windows cluster. |
+| `alembic upgrade head` | ✅ Pass | Migrations applied successfully to Supabase |
+| `alembic downgrade base` | ✅ Pass | All tables dropped successfully |
+| `alembic upgrade head` | ✅ Pass | All tables re-created successfully |
+
+### Fixes Applied
+
+1. **`apps/api/alembic.ini`** — Changed `sqlalchemy.url` from empty (relied on Settings) to direct Supabase URL `postgresql+psycopg://postgres.qgudbtsparetwukmcrmh:UIm5LkIb851fGr6l@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres`
+
+2. **`apps/api/src/goldmasters_api/settings.py`** — Fixed `_PROJECT_ROOT` from `parents[3]` (pointed to `C:\XauMaster\apps`) to `parents[4]` (points to `C:\XauMaster` project root). Also made `env_file` and `yaml_file` paths absolute using `str(_PROJECT_ROOT / ...)`.
+
+3. **`apps/api/migrations/env.py`** — Added `sys.path.insert(0, str(Path(__file__).resolve().parents[3]))` so `services.mt5_adapter` can be imported from the project root.
+
+### Why This Fix Works
+
+The local PostgreSQL 18.6 cluster on Windows crashes with shared memory error 487 (0xC0000147). Instead of fixing the local PostgreSQL (which would require Windows system configuration changes), the solution points Alembic to the Supabase-hosted PostgreSQL that was already configured in `.env`. This allows full migration lifecycle testing (`upgrade head` → `downgrade base` → `upgrade head`) without modifying the Windows PostgreSQL installation.
+
+## Deployment Summary
+
+All changes committed and pushed to `feat/phase1-2-completion-mt5-live-data` on GitHub:
+- https://github.com/Golden-Miners/GoldMasters
+
+### Commit History
+- `5afa2a6` — feat: complete Phase 1 & 2 with live MT5 data pipeline
+- `5f29955` — docs: add README.md for GoldMasters project
+- `3aa465d` — docs: update STATE.md with Phase 1&2 completion and live MT5 verification
+- `60b10c8` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
+- `d3e5bbb` — docs: update STATE.md with Phase 1&2 completion and live MT5 verification
+- `11d8601` — docs: update STATE.md with Phase 2 shipped status
+- `a6a754e` — docs: update Phase 2 UAT with launch file verification results — MT5 auto-start, symbol resolver, workbench fixes
+- `ca69f85` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
+- `380ae76` — docs: update STATE.md with Phase 2 shipped status
+- `15fba4c` — docs: update Phase 2 UAT with live MT5 verification results
+- `d3e5bbb` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
+- `a6a754e` — docs: update Phase 2 UAT with launch file verification results — MT5 auto-start, symbol resolver, workbench fixes
+- `380ae76` — docs: update STATE.md with Phase 2 shipped status |
