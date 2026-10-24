@@ -157,6 +157,8 @@ class Settings(BaseSettings):
     timeframe: Timeframe = Timeframe.H1
     mt5_server_timezone: IanaTimezone
     mt5_probe_timeout_seconds: float = 2.0
+    mt5_startup_timeout_seconds: float = 10.0
+    mt5_terminal_path: str | None = None
     mt5_retry_attempts: int = 1
     mt5_retry_delay_ms: int = 500
     mt5_bars_count: int = 10

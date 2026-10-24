@@ -166,3 +166,117 @@ class Mt5Gateway:
 
     def account_info(self) -> Any | None:
         return load_mt5().account_info()
+
+
+#: Canonical instrument IDs that GoldMasters supports (D-52/D-53).
+#: Broker-specific symbols are resolved at runtime through SymbolResolver.
+CANONICAL_INSTRUMENT_IDS: tuple[str, ...] = (
+    "xauusd",
+    "xagusd",
+    "btcusd",
+    "ethusd",
+    "usoil",
+    "eurusd",
+)
+
+#: Broker-specific symbol aliases per canonical ID (D-52).
+#: First entry is preferred; later entries are fallbacks. Override via config.
+BROKER_SYMBOL_ALIASES: dict[str, tuple[str, ...]] = {
+    "xauusd": ("GOLD.i#", "XAUUSD", "XAUUSDm", "GOLD"),
+    "xagusd": ("SILVER.i#", "XAGUSD", "XAGUSDm", "SILVER"),
+    "btcusd": ("BTC.i#", "BTCUSD", "BTCUSDm", "BTC"),
+    "ethusd": ("ETH.i#", "ETHUSD", "ETHUSDm", "ETH"),
+    "usoil": ("OIL.i#", "USOIL", "USOILm", "OIL"),
+    "eurusd": ("EUR.i#", "EURUSD", "EURUSDm", "EUR"),
+}
+
+
+class TerminalManager:
+    """Persistent MT5 terminal connection manager.
+
+    Owns the initialize/shutdown lifecycle so individual reads don't
+    create/destroy IPC connections. Can optionally launch the terminal
+    from a configured executable path (never terminates user-owned
+    terminals — only closes the IPC connection on stop()).
+    """
+
+    def __init__(
+        self,
+        gateway: TerminalGateway,
+        terminal_path: str | None = None,
+        startup_timeout_seconds: float = 10.0,
+    ) -> None:
+        self._gateway = gateway
+        self._terminal_path = terminal_path
+        self._startup_timeout_seconds = startup_timeout_seconds
+        self._initialized = False
+
+    def start(self) -> bool:
+        """Attach to a running terminal, optionally launching it first.
+
+        Returns True when the IPC connection is established and ready
+        for reads. Returns False if the terminal is unreachable after
+        the bounded timeout.
+        """
+        import threading
+
+        result = {"initialized": False}
+
+        def _try_initialize() -> None:
+            try:
+                if self._gateway.initialize():
+                    result["initialized"] = True
+            except Exception:  # noqa: BLE001 — terminal.initialize() may raise any error
+                result["initialized"] = False
+
+        # Run initialize() in a thread with a timeout so a black-holed
+        # terminal can't block API startup indefinitely.
+        t = threading.Thread(target=_try_initialize, daemon=True)
+        t.start()
+        t.join(timeout=self._startup_timeout_seconds)
+
+        if result["initialized"]:
+            self._initialized = True
+            return True
+
+        # If direct initialize failed and we have a terminal path,
+        # try launching the terminal first, then attaching.
+        if self._terminal_path:
+            import subprocess
+
+            try:
+                subprocess.Popen([self._terminal_path])
+            except (OSError, FileNotFoundError):
+                return False
+
+            deadline = __import__("time").time() + self._startup_timeout_seconds
+            while __import__("time").time() < deadline:
+                t = threading.Thread(target=_try_initialize, daemon=True)
+                t.start()
+                t.join(timeout=2.0)
+                if result["initialized"]:
+                    self._initialized = True
+                    return True
+                __import__("time").sleep(0.5)
+
+        return False
+
+    def stop(self) -> None:
+        """Close the IPC connection (terminal process keeps running)."""
+        if self._initialized:
+            self._gateway.shutdown()
+            self._initialized = False
+
+    def is_ready(self) -> bool:
+        """True when the terminal is attached and ready for reads."""
+        return self._initialized
+
+    def __enter__(self) -> TerminalManager:
+        self.start()
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.stop()
+
+
+__all__.extend(["TerminalManager", "CANONICAL_INSTRUMENT_IDS", "BROKER_SYMBOL_ALIASES"])

@@ -31,7 +31,11 @@ from goldmasters_api.settings import Settings, hash_effective_config
 from goldmasters_api.settings_router import router as settings_router
 from goldmasters_api.strategies import router as strategies_router
 from goldmasters_api.tracing import configure_tracing, shutdown_tracing
-from services.mt5_adapter.terminal import Mt5Gateway, TerminalGateway
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import (
+    Mt5Gateway,
+    TerminalManager,
+)
 
 __all__ = ["app", "assert_loopback", "create_app"]
 
@@ -58,23 +62,51 @@ def assert_loopback(host: str) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Resolve settings once; fail startup on a non-loopback bind."""
+    """Resolve settings once; fail startup on a non-loopback bind.
+
+    Starts the MT5 TerminalManager (persistent IPC connection) and
+    SymbolResolver (broker-aware symbol resolution) during application
+    startup so individual reads never call initialize()/shutdown().
+    """
     settings = Settings()  # type: ignore[call-arg]  # required keys arrive via env
     assert_loopback(settings.bind_host)
     configure_logging(settings.log_level)
     configure_tracing(settings.trace_file_path)
     app.state.settings = settings
     app.state.config_hash = hash_effective_config(settings)
+
+    # Start MT5 terminal manager (persistent connection)
+    gateway = Mt5Gateway()
+    terminal_manager = TerminalManager(
+        gateway,
+        terminal_path=settings.mt5_terminal_path,
+        startup_timeout_seconds=settings.mt5_startup_timeout_seconds,
+    )
+    terminal_manager.start()
+    app.state.mt5_terminal_manager = terminal_manager
+
+    # Start symbol resolver (broker-aware symbol resolution)
+    symbol_resolver = SymbolResolver(gateway)
+    app.state.mt5_symbol_resolver = symbol_resolver
+
     yield
+
+    # Clean shutdown
+    terminal_manager.stop()
     shutdown_tracing()
 
 
-def create_app(gateway: TerminalGateway | None = None) -> FastAPI:
+def create_app(
+    terminal_manager: TerminalManager | None = None,
+    symbol_resolver: SymbolResolver | None = None,
+) -> FastAPI:
     """Build the API application.
 
     Args:
-        gateway: MT5 terminal gateway; defaults to the live gateway. Tests
-            inject a double — the seam that proves the slice without a terminal.
+        terminal_manager: MT5 terminal manager; defaults to a live
+            TerminalManager backed by Mt5Gateway. Tests inject a double.
+        symbol_resolver: MT5 symbol resolver; defaults to a live
+            SymbolResolver backed by Mt5Gateway. Tests inject a double.
     """
     application = FastAPI(title="GoldMasters Research API", lifespan=lifespan)
     application.add_middleware(CorrelationIdMiddleware)
@@ -94,8 +126,16 @@ def create_app(gateway: TerminalGateway | None = None) -> FastAPI:
     application.include_router(model_health_router)
     application.include_router(settings_router)
 
-    application.state.mt5_gateway = gateway if gateway is not None else Mt5Gateway()
+    application.state.mt5_terminal_manager = terminal_manager or TerminalManager(
+        Mt5Gateway()
+    )
+    application.state.mt5_symbol_resolver = symbol_resolver or SymbolResolver(
+        application.state.mt5_terminal_manager._gateway
+    )
     return application
+
+
+app = create_app()
 
 
 app = create_app()

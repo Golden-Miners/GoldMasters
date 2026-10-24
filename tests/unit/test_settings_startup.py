@@ -199,6 +199,9 @@ def test_declared_key_set(clean_env: pytest.FixtureRequest) -> None:
         # Phase 4 Wave 2 model runtime (04-03 tracer).
         "ollama_host",
         "ollama_model",
+        # Phase 2 MT5 terminal lifecycle (02-05 tracer).
+        "mt5_startup_timeout_seconds",
+        "mt5_terminal_path",
     }
 
 
@@ -218,12 +221,24 @@ def test_server_timezone_required_names_key(
     clean_env: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Fail-closed startup on a missing/invalid server timezone (D-36)."""
+    from goldmasters_api.settings import Settings as SettingsModel
+    from pydantic_settings import SettingsConfigDict
+
+    class NoEnvFileSettings(SettingsModel):
+        model_config = SettingsConfigDict(
+            env_prefix="GOLDMASTERS_",
+            env_file=None,
+            extra="forbid",
+            frozen=True,
+            yaml_file="config/goldmasters.yaml",
+        )
+
     monkeypatch.delenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", raising=False)
     with pytest.raises(ValidationError, match="mt5_server_timezone"):
-        Settings()  # type: ignore[call-arg]
+        NoEnvFileSettings()  # type: ignore[call-arg]
     monkeypatch.setenv("GOLDMASTERS_MT5_SERVER_TIMEZONE", "Not/AZone")
     with pytest.raises(ValidationError, match="mt5_server_timezone"):
-        Settings()  # type: ignore[call-arg]
+        NoEnvFileSettings()  # type: ignore[call-arg]
 
 
 def test_secret_field_hidden(

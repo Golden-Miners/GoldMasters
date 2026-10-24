@@ -1,24 +1,27 @@
-"""MT5 read-only adapter over the :class:`TerminalGateway` protocol (D-44..D-55).
+"""MT5 read-only adapter over a persistent TerminalManager and SymbolResolver.
 
-The adapter owns explicit selection (mapping table as data, never branches),
-bare-attach with a read-only session assertion, one retry then disconnected
-(D-51), exactly one ``last_error()`` capture per ``None`` return, and the
-tracer C-09 error map. Gaps are flagged, never filled; an unsupported
-instrument/timeframe answers ``UNSUPPORTED_INSTRUMENT`` /
-``UNSUPPORTED_TIMEFRAME`` verbatim (typo locked, ``errors.py:30``) with no
+The adapter owns explicit selection (symbol resolution as data, never branches),
+read-only session assertion, one retry then disconnected (D-51), exactly one
+``last_error()`` capture per ``None`` return, and the tracer C-09 error map.
+Gaps are flagged, never filled; an unsupported instrument/timeframe answers
+``UNSUPPORTED_INSTRUMENT`` / ``UNSUPPORTED_TIMEFRAME`` verbatim with no
 gateway call and no substitution.
 
 Terminal-field names (``trade_allowed``, ``select``/``visible``,
 ``digits``/``point``) come from the integration docs and are
 must-verify-first against the installed package (RISK-03): presence is
 asserted at runtime and absence fails the read visibly.
+
+The terminal IPC lifecycle is owned by ``TerminalManager`` — the adapter
+never calls ``initialize()`` or ``shutdown()`` directly. The symbol
+resolution is owned by ``SymbolResolver`` — the adapter never hardcodes
+broker-specific symbols.
 """
 
 from __future__ import annotations
 
 import time
 from collections.abc import Sequence
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
@@ -36,7 +39,14 @@ from goldmasters_contracts import (
 
 from services.mt5_adapter import normalize
 from services.mt5_adapter.normalize import NormalizationError
-from services.mt5_adapter.terminal import TerminalGateway
+from services.mt5_adapter.symbol_resolver import (
+    SymbolResolutionFailure,
+    SymbolResolver,
+)
+from services.mt5_adapter.terminal import (
+    CANONICAL_INSTRUMENT_IDS,
+    TerminalManager,
+)
 from services.mt5_adapter.validation import (
     is_weekend_closed,
     missing_opens,
@@ -48,7 +58,6 @@ from services.mt5_adapter.validation import (
 
 __all__ = [
     "AdapterFailure",
-    "INSTRUMENT_SYMBOL_MAP",
     "PROVIDER_ID",
     "Mt5Adapter",
     "probe_mt5",
@@ -56,10 +65,6 @@ __all__ = [
 
 #: Generic provider key (D-25 form, no broker suffix — D-48).
 PROVIDER_ID = "mt5"
-
-#: Canonical ``(instrument_id, timeframe)`` → provider symbol, as data (D-52/D-53).
-#: Only gold/H1 ships; every other pair answers unsupported (D-54).
-INSTRUMENT_SYMBOL_MAP: dict[tuple[str, str], str] = {("xauusd", "H1"): "GOLD.i#"}
 
 #: ``last_error`` codes that are never retried (bad args, no history,
 #: session state, unsupported method — 02-RESEARCH.md §1 table).
@@ -121,11 +126,18 @@ def _failure_for(kind: ProviderKind, message: str) -> AdapterFailure:
 
 
 class Mt5Adapter:
-    """Read-only MT5 adapter coding against :class:`TerminalGateway` only."""
+    """Read-only MT5 adapter over :class:`TerminalManager` and
+    :class:`SymbolResolver`.
+
+    Never calls ``initialize()`` or ``shutdown()`` directly — those are owned
+    by ``TerminalManager``. Never hardcodes broker-specific symbols — those
+    are resolved by ``SymbolResolver``.
+    """
 
     def __init__(
         self,
-        gateway: TerminalGateway,
+        terminal_manager: TerminalManager,
+        symbol_resolver: SymbolResolver,
         *,
         server_timezone: str,
         retry_attempts: int = 1,
@@ -143,7 +155,8 @@ class Mt5Adapter:
         weekend_close_utc: str = "Fri 21:00-Sun 22:00",
         daily_break_utc: str = "21:00-22:00",
     ) -> None:
-        self._gateway = gateway
+        self._terminal_manager = terminal_manager
+        self._symbol_resolver = symbol_resolver
         self._server_timezone = server_timezone
         self._retry_attempts = retry_attempts
         self._retry_delay_ms = retry_delay_ms
@@ -156,43 +169,64 @@ class Mt5Adapter:
         self._weekend_spec = weekend_close_utc
         self._break_spec = daily_break_utc
 
-    # -- selection (no gateway touch on failure) ---------------------------
+    # -- selection (symbol resolution via SymbolResolver, no gateway touch on failure) --
 
     def _resolve(self, instrument_id: str, timeframe: str) -> str | AdapterFailure:
         """Map ``(instrument_id, timeframe)`` to the provider symbol, or fail."""
-        symbol = INSTRUMENT_SYMBOL_MAP.get((instrument_id, timeframe))
-        if symbol is not None:
-            return symbol
-        known_instruments = {key[0] for key in INSTRUMENT_SYMBOL_MAP}
-        if instrument_id not in known_instruments:
+        resolution = self._symbol_resolver.resolve(instrument_id, timeframe)
+        if isinstance(resolution, SymbolResolutionFailure):
+            if resolution.is_timeframe:
+                return AdapterFailure(
+                    ErrorCode.UNSUPPORTED_TIMEFRAME,
+                    "unsupported",
+                    (
+                        f"timeframe {timeframe!r} is not supported for "
+                        f"{instrument_id!r}: {resolution.reason}"
+                    ),
+                )
             return AdapterFailure(
                 ErrorCode.UNSUPPORTED_INSTRUMENT,
                 "unsupported",
-                f"instrument {instrument_id!r} is not mapped for provider mt5",
+                f"instrument {instrument_id!r} timeframe {timeframe!r}: {resolution.reason}",
             )
-        return AdapterFailure(
-            ErrorCode.UNSUPPORTED_TIMEFRAME,
-            "unsupported",
-            f"timeframe {timeframe!r} is not supported for {instrument_id!r}",
-        )
+        # Verify the symbol is visible and accessible
+        verified = self._symbol_resolver.verify_symbol_access(resolution)
+        if isinstance(verified, SymbolResolutionFailure):
+            return AdapterFailure(
+                ErrorCode.UNSUPPORTED_INSTRUMENT,
+                "unsupported",
+                f"instrument {instrument_id!r} timeframe {timeframe!r}: {verified.reason}",
+            )
+        return resolution.provider_symbol
 
     def _resolve_symbol(self, instrument_id: str) -> str | AdapterFailure:
-        """Map an instrument to its symbol for timeframe-free reads (quote/spec)."""
-        for (known_instrument, _), symbol in INSTRUMENT_SYMBOL_MAP.items():
-            if known_instrument == instrument_id:
-                return symbol
-        return AdapterFailure(
-            ErrorCode.UNSUPPORTED_INSTRUMENT,
-            "unsupported",
-            f"instrument {instrument_id!r} is not mapped for provider mt5",
-        )
+        """Map an instrument to its symbol for timeframe-free reads (quote/spec).
+
+        Uses H1 as the default timeframe for resolution since symbol
+        visibility is timeframe-independent.
+        """
+        resolution = self._symbol_resolver.resolve(instrument_id, "H1")
+        if isinstance(resolution, SymbolResolutionFailure):
+            return AdapterFailure(
+                ErrorCode.UNSUPPORTED_INSTRUMENT,
+                "unsupported",
+                f"instrument {instrument_id!r}: {resolution.reason}",
+            )
+        verified = self._symbol_resolver.verify_symbol_access(resolution)
+        if isinstance(verified, SymbolResolutionFailure):
+            return AdapterFailure(
+                ErrorCode.UNSUPPORTED_INSTRUMENT,
+                "unsupported",
+                f"instrument {instrument_id!r}: {verified.reason}",
+            )
+        return resolution.provider_symbol
 
     # -- session guards ----------------------------------------------------
 
     def _capture_error(self) -> ProviderKind:
         """Exactly one ``last_error()`` capture, mapped; never leaks payloads."""
         try:
-            raw = self._gateway.last_error()
+            raw = self._terminal_manager._gateway.last_error()
             code = int(raw[0])
         except Exception:  # noqa: BLE001 — any unreadable error reads disconnected
             return "disconnected"
@@ -205,8 +239,8 @@ class Mt5Adapter:
         so any MT5 session mode is acceptable for reading market data.
         """
         try:
-            terminal = self._gateway.terminal_info()
-            account = self._gateway.account_info()
+            terminal = self._terminal_manager._gateway.terminal_info()
+            account = self._terminal_manager._gateway.account_info()
         except Exception:  # noqa: BLE001 — any unreadable error reads disconnected
             return _failure_for("disconnected", "mt5 session descriptors are unreadable")
         if terminal is None or not hasattr(terminal, "trade_allowed"):
@@ -233,15 +267,9 @@ class Mt5Adapter:
         return None
 
     def _attached(self) -> AdapterFailure | None:
-        """Bare attach plus read-only assertion; ``None`` means ready."""
-        try:
-            attached = self._gateway.initialize()
-        except Exception:  # noqa: BLE001 — attach failure is a value, never raises
-            return _failure_for("terminal-closed", "mt5 terminal is not reachable")
-        if not attached:
-            # A failed attach reads terminal-closed regardless of last_error
-            # (02-03 precedence top; code mapping applies to mid-session reads).
-            return _failure_for("terminal-closed", "mt5 terminal is not reachable")
+        """Terminal is already attached by TerminalManager; ``None`` means ready."""
+        if not self._terminal_manager.is_ready():
+            return _failure_for("terminal-closed", "mt5 terminal manager not started")
         return self._check_read_only()
 
     def _fetch_rows(
@@ -252,7 +280,9 @@ class Mt5Adapter:
         failure: AdapterFailure = _failure_for("disconnected", "mt5 read failed")
         for attempt in range(attempts):
             try:
-                rows = self._gateway.copy_rates_from_pos(symbol, timeframe, 0, count + 1)
+                rows = self._terminal_manager._gateway.copy_rates_from_pos(
+                    symbol, timeframe, 0, count + 1
+                )
             except Exception:  # noqa: BLE001 — a raising terminal reads disconnected
                 rows = None
             if rows is not None:
@@ -289,7 +319,7 @@ class Mt5Adapter:
             return guard
         try:
             try:
-                info = self._gateway.symbol_info(resolved)
+                info = self._terminal_manager._gateway.symbol_info(resolved)
             except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
                 return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
             if info is None:
@@ -328,7 +358,8 @@ class Mt5Adapter:
             )
             return tuple(self._backfill_gaps(stamped, resolved, timeframe, now))
         finally:
-            self._gateway.shutdown()
+            # TerminalManager owns shutdown — do NOT call gateway.shutdown() here
+            pass
 
     def _backfill_gaps(
         self, bars: list[MarketBar], symbol: str, timeframe: str, now: datetime
@@ -348,7 +379,9 @@ class Mt5Adapter:
         filled: dict[datetime, MarketBar] = {bar.bar_open_time: bar for bar in bars}
         for span_start, span_end, missing in gaps:
             try:
-                rows = self._gateway.copy_rates_range(symbol, timeframe, span_start, span_end)
+                rows = self._terminal_manager._gateway.copy_rates_range(
+                    symbol, timeframe, span_start, span_end
+                )
             except Exception:  # noqa: BLE001 — a failed re-fetch keeps missing-history
                 continue
             if not rows:
@@ -363,7 +396,7 @@ class Mt5Adapter:
                     retrieved_at=now,
                     forming_first=False,
                 )
-            except NormalizationError, KeyError, TypeError, ValueError:
+            except (NormalizationError, KeyError, TypeError, ValueError):
                 continue
             wanted = set(missing)
             for bar in extra:
@@ -397,7 +430,7 @@ class Mt5Adapter:
             failure = _failure_for("disconnected", "mt5 tick read failed")
             for attempt in range(attempts):
                 try:
-                    tick = self._gateway.symbol_info_tick(resolved)
+                    tick = self._terminal_manager._gateway.symbol_info_tick(resolved)
                 except Exception:  # noqa: BLE001 — a raising terminal reads disconnected
                     tick = None
                 if tick is not None:
@@ -436,7 +469,8 @@ class Mt5Adapter:
                 quote, now_utc=now, stale_seconds=limit, weekend_spec=self._weekend_spec
             )
         finally:
-            self._gateway.shutdown()
+            # TerminalManager owns shutdown — do NOT call gateway.shutdown() here
+            pass
 
     def get_instrument_spec(
         self, instrument_id: str, *, now_utc: datetime | None = None
@@ -451,7 +485,7 @@ class Mt5Adapter:
             return guard
         try:
             try:
-                info = self._gateway.symbol_info(resolved)
+                info = self._terminal_manager._gateway.symbol_info(resolved)
             except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
                 return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
             if info is None or not getattr(info, "visible", False):
@@ -463,7 +497,7 @@ class Mt5Adapter:
                         f"symbol descriptor lacks {field} (must-verify-first, RISK-03)",
                     )
             try:
-                version = self._gateway.version()
+                version = self._terminal_manager._gateway.version()
                 build = version[1] if version is not None else "unknown"
             except Exception:  # noqa: BLE001 — build provenance degrades, read continues
                 build = "unknown"
@@ -495,18 +529,17 @@ class Mt5Adapter:
             except Exception as exc:  # noqa: BLE001 — contract rejection reads malformed
                 return AdapterFailure(ErrorCode.CONFIG_INVALID, "malformed", str(exc))
         finally:
-            self._gateway.shutdown()
+            # TerminalManager owns shutdown — do NOT call gateway.shutdown() here
+            pass
 
     def capabilities(self) -> dict[str, object]:
         """Supported vs unsupported mapping entries for the connected terminal."""
-        try:
-            self._gateway.initialize()  # attach only; readiness is proven by symbols_get below
-        except Exception:  # noqa: BLE001 — capability probe never raises
+        if not self._terminal_manager.is_ready():
             return {"provider_id": PROVIDER_ID, "supported": [], "unsupported": []}
         try:
             names: set[str] = set()
             try:
-                symbols = self._gateway.symbols_get()
+                symbols = self._terminal_manager._gateway.symbols_get()
                 for entry in symbols or []:
                     name = getattr(entry, "name", None)
                     if isinstance(name, str):
@@ -515,53 +548,64 @@ class Mt5Adapter:
                 pass
             supported: list[dict[str, object]] = []
             unsupported: list[dict[str, object]] = []
-            for (instrument_id, timeframe), symbol in INSTRUMENT_SYMBOL_MAP.items():
+            for canonical_id in CANONICAL_INSTRUMENT_IDS:
+                resolution = self._symbol_resolver.resolve(canonical_id, "H1")
+                if isinstance(resolution, SymbolResolutionFailure):
+                    unsupported.append(
+                        {
+                            "instrument_id": canonical_id,
+                            "provider_symbol": None,
+                            "timeframes": ["H1"],
+                            "reason": resolution.reason,
+                        }
+                    )
+                    continue
+                verified = self._symbol_resolver.verify_symbol_access(resolution)
+                if isinstance(verified, SymbolResolutionFailure):
+                    unsupported.append(
+                        {
+                            "instrument_id": canonical_id,
+                            "provider_symbol": resolution.provider_symbol,
+                            "timeframes": ["H1"],
+                            "reason": verified.reason,
+                        }
+                    )
+                    continue
                 entry = {
-                    "instrument_id": instrument_id,
-                    "provider_symbol": symbol,
-                    "timeframes": [timeframe],
+                    "instrument_id": canonical_id,
+                    "provider_symbol": resolution.provider_symbol,
+                    "timeframes": ["H1"],
+                    "confidence": resolution.confidence,
                 }
-                (supported if symbol in names else unsupported).append(entry)
+                if resolution.provider_symbol in names:
+                    supported.append(entry)
+                else:
+                    unsupported.append(entry)
             return {"provider_id": PROVIDER_ID, "supported": supported, "unsupported": unsupported}
         finally:
-            try:
-                self._gateway.shutdown()
-            except Exception:  # noqa: BLE001 — capability probe never raises
-                pass
+            # TerminalManager owns shutdown — do NOT call gateway.shutdown() here
+            pass
 
 
-def _provider_object(
-    status: str,
-    *,
-    market_open: bool | None,
-    terminal_build: str | None,
-    last_bar_close_time: str | None,
-    last_quote_time: str | None,
-    checked_at: datetime,
-) -> dict[str, object]:
-    """Seven-key provider object; fixed shape, no terminal internals."""
-    return {
-        "provider_id": PROVIDER_ID,
-        "status": status,
-        "market_open": market_open,
-        "terminal_build": terminal_build,
-        "last_bar_close_time": last_bar_close_time,
-        "last_quote_time": last_quote_time,
-        "checked_at": checked_at.astimezone(UTC).isoformat(),
-    }
-
-
-def _probe_once(
-    gateway: TerminalGateway,
+def probe_mt5(
+    terminal_manager: TerminalManager,
+    symbol_resolver: SymbolResolver,
     server_timezone: str,
     bars_count: int,
-    now: datetime,
     weekend_spec: str,
+    now_utc: datetime | None = None,
 ) -> dict[str, object]:
-    """Single bounded probe pass; every failure maps to a status, never raises."""
-    adapter = Mt5Adapter(gateway, server_timezone=server_timezone, bars_count=bars_count)
+    """Bounded probe pass; every failure maps to a status, never raises.
+
+    Uses the persistent TerminalManager (already started) rather than
+    create/destroy per probe.
+    """
+    adapter = Mt5Adapter(
+        terminal_manager, symbol_resolver, server_timezone=server_timezone, bars_count=bars_count
+    )
+    now = now_utc or datetime.now(UTC)
     try:
-        version = gateway.version()
+        version = terminal_manager._gateway.version()
         build = str(version[1]) if version is not None else None
     except Exception:  # noqa: BLE001 — probe contract: every failure maps to a status
         build = None
@@ -622,36 +666,22 @@ def _probe_once(
     )
 
 
-def probe_mt5(
-    gateway: TerminalGateway,
+def _provider_object(
+    status: str,
     *,
-    server_timezone: str,
-    timeout_seconds: float = 2.0,
-    bars_count: int = 2,
-    now_utc: datetime | None = None,
-    weekend_spec: str = "Fri 21:00-Sun 22:00",
+    market_open: bool | None,
+    terminal_build: str | None,
+    last_bar_close_time: str | None,
+    last_quote_time: str | None,
+    checked_at: datetime,
 ) -> dict[str, object]:
-    """Bounded provider probe for ``GET /health`` (follows ``probe_database``).
-
-    Never raises and never leaks terminal internals: every exception maps to a
-    ``disconnected`` object with the fixed seven-key shape.
-    """
-    now = now_utc or datetime.now(UTC)
-    try:
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(
-                _probe_once, gateway, server_timezone, bars_count, now, weekend_spec
-            )
-            result = future.result(timeout=timeout_seconds)
-            if isinstance(result, dict):
-                return result
-    except Exception:  # noqa: BLE001 — probe contract: every failure maps to a status
-        pass
-    return _provider_object(
-        "disconnected",
-        market_open=None,
-        terminal_build=None,
-        last_bar_close_time=None,
-        last_quote_time=None,
-        checked_at=now,
-    )
+    """Seven-key provider object; fixed shape, no terminal internals."""
+    return {
+        "provider_id": PROVIDER_ID,
+        "status": status,
+        "market_open": market_open,
+        "terminal_build": terminal_build,
+        "last_bar_close_time": last_bar_close_time,
+        "last_quote_time": last_quote_time,
+        "checked_at": checked_at.astimezone(UTC).isoformat(),
+    }

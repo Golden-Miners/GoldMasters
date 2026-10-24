@@ -18,6 +18,8 @@ from goldmasters_contracts import MarketBar, MarketQuote, PrecisionRow
 from pydantic import ValidationError
 
 from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import TerminalManager
 
 FIXTURE_NOW = datetime(2026, 1, 6, 15, 30, tzinfo=UTC)
 FIXTURE_VERSION = (500, 4570, "2026-01-01")
@@ -127,11 +129,11 @@ class FIXTURE_Terminal:  # noqa: N801 — fixture prefix is the labelling conven
 
 
 def _adapter(now: datetime) -> Mt5Adapter:
-    return Mt5Adapter(
-        FIXTURE_Terminal(now),
-        server_timezone="UTC",
-        retry_delay_ms=1,
-    )
+    gateway = FIXTURE_Terminal(now)
+    tm = TerminalManager(gateway)
+    tm._initialized = True  # Bypass terminal start for tests
+    resolver = SymbolResolver(gateway)
+    return Mt5Adapter(tm, resolver, server_timezone="UTC", retry_delay_ms=1)
 
 
 def _as_json(model: MarketBar | MarketQuote | PrecisionRow) -> str:

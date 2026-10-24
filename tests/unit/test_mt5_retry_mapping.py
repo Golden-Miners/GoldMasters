@@ -12,6 +12,8 @@ from types import SimpleNamespace
 from typing import Any
 
 from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter, _map_last_error
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import TerminalManager
 
 #: Tuesday 2026-01-06 — mid-week, far from any closed window.
 FIXTURE_TUESDAY = datetime(2026, 1, 6, 12, 0, tzinfo=UTC)
@@ -112,7 +114,10 @@ def _rows(first: datetime, count: int) -> list[dict[str, Any]]:
 
 
 def _adapter(terminal: FIXTURE_flaky_terminal) -> Mt5Adapter:
-    return Mt5Adapter(terminal, server_timezone="UTC", retry_delay_ms=1)
+    tm = TerminalManager(terminal)
+    tm._initialized = True  # Bypass terminal start for tests
+    resolver = SymbolResolver(terminal)
+    return Mt5Adapter(tm, resolver, server_timezone="UTC", retry_delay_ms=1)
 
 
 def test_transient_failure_retried_exactly_once() -> None:

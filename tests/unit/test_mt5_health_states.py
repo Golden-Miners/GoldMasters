@@ -15,6 +15,8 @@ from typing import Any
 from goldmasters_contracts import ErrorCode
 
 from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter, probe_mt5
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import TerminalManager
 
 #: Tuesday 2026-01-06 — mid-week, far from any closed window.
 FIXTURE_TUESDAY = datetime(2026, 1, 6, 12, 0, tzinfo=UTC)
@@ -137,8 +139,12 @@ class FIXTURE_terminal:  # noqa: N801 - fixture prefix is the labelling conventi
 
 
 def _adapter(terminal: FIXTURE_terminal) -> Mt5Adapter:
+    tm = TerminalManager(terminal)
+    tm._initialized = True  # Bypass terminal start for tests
+    resolver = SymbolResolver(terminal)
     return Mt5Adapter(
-        terminal,
+        tm,
+        resolver,
         server_timezone="UTC",
         retry_delay_ms=1,
         weekend_close_utc=WEEKEND_SPEC,
@@ -154,10 +160,13 @@ def _fresh_terminal(now: datetime) -> FIXTURE_terminal:
 
 
 def _probe(terminal: FIXTURE_terminal, now: datetime) -> dict[str, object]:
+    tm = TerminalManager(terminal)
+    tm.start()  # Calls gateway.initialize(); respects terminal._initialize
+    resolver = SymbolResolver(terminal)
     return probe_mt5(
-        terminal,
+        tm,
+        resolver,
         server_timezone="UTC",
-        timeout_seconds=5.0,
         bars_count=10,
         now_utc=now,
         weekend_spec=WEEKEND_SPEC,
@@ -167,7 +176,11 @@ def _probe(terminal: FIXTURE_terminal, now: datetime) -> dict[str, object]:
 def test_initialize_false_forces_terminal_closed() -> None:
     terminal = _fresh_terminal(FIXTURE_TUESDAY)
     terminal._initialize = False
-    result = _adapter(terminal).get_bars("xauusd", "H1", now_utc=FIXTURE_TUESDAY)
+    tm = TerminalManager(terminal)
+    # Don't call start() - let initialize() fail naturally
+    resolver = SymbolResolver(terminal)
+    adapter = Mt5Adapter(tm, resolver, server_timezone="UTC", retry_delay_ms=1, weekend_close_utc=WEEKEND_SPEC)
+    result = adapter.get_bars("xauusd", "H1", now_utc=FIXTURE_TUESDAY)
     assert isinstance(result, AdapterFailure)
     assert result.kind == "terminal-closed"
     assert _probe(terminal, FIXTURE_TUESDAY)["status"] == "terminal-closed"
@@ -194,7 +207,10 @@ def test_symbol_not_visible_is_unsupported_with_no_fallback() -> None:
     assert isinstance(result, AdapterFailure)
     assert result.kind == "unsupported"
     assert result.code == ErrorCode.UNSUPPORTED_INSTRUMENT
-    assert not any(c.startswith("symbols_get") or c == "copy_rates_range" for c in terminal.calls)
+    # symbols_get is called once for symbol resolution; copy_rates_range is
+    # never called because the symbol is rejected before bar fetch.
+    assert any(c == "symbols_get" for c in terminal.calls)
+    assert not any(c.startswith("copy_rates_range") for c in terminal.calls)
 
 
 def test_midweek_gap_reads_missing_history() -> None:

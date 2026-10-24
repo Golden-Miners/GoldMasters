@@ -16,9 +16,9 @@ def read_providers(request: Request) -> dict[str, object]:
     """Bounded provider probe. Never raises; returns disconnected on failure."""
     settings = request.app.state.settings
     return probe_mt5(
-        request.app.state.mt5_gateway,
+        request.app.state.mt5_terminal_manager,
+        request.app.state.mt5_symbol_resolver,
         server_timezone=settings.mt5_server_timezone,
-        timeout_seconds=settings.mt5_probe_timeout_seconds,
         bars_count=settings.mt5_bars_count,
         weekend_spec=settings.weekend_close_utc,
     )

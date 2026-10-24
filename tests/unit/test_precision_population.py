@@ -26,6 +26,8 @@ from goldmasters_contracts import PrecisionRow, PrecisionTable
 from pydantic import ValidationError
 
 from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import TerminalManager
 
 FIXTURE_T1 = datetime(2026, 1, 6, 15, 30, tzinfo=UTC)
 FIXTURE_T2 = datetime(2026, 1, 6, 16, 30, tzinfo=UTC)
@@ -96,11 +98,11 @@ class FIXTURE_Terminal:  # noqa: N801 — fixture prefix is the labelling conven
 
 
 def _spec(info: SimpleNamespace | None, now: datetime) -> PrecisionRow | AdapterFailure:
-    adapter = Mt5Adapter(
-        FIXTURE_Terminal(info),
-        server_timezone="UTC",
-        retry_delay_ms=1,
-    )
+    gateway = FIXTURE_Terminal(info)
+    tm = TerminalManager(gateway)
+    tm._initialized = True  # Bypass terminal start for tests
+    resolver = SymbolResolver(gateway)
+    adapter = Mt5Adapter(tm, resolver, server_timezone="UTC", retry_delay_ms=1)
     return adapter.get_instrument_spec("xauusd", now_utc=now)
 
 

@@ -22,6 +22,8 @@ from goldmasters_contracts import (
 )
 
 from services.mt5_adapter.adapter import AdapterFailure, Mt5Adapter
+from services.mt5_adapter.symbol_resolver import SymbolResolver
+from services.mt5_adapter.terminal import TerminalManager
 from services.mt5_adapter.validation import quote_stale_limit_for
 
 # -- labelled fixtures (tests-only, never live) -----------------------------
@@ -200,7 +202,10 @@ class FakeTerminal:
 def _adapter(terminal: FakeTerminal, **overrides: Any) -> Mt5Adapter:
     params: dict[str, Any] = {"server_timezone": "UTC", "retry_delay_ms": 1}
     params.update(overrides)
-    return Mt5Adapter(terminal, **params)
+    tm = TerminalManager(terminal)
+    tm._initialized = True  # Bypass terminal start for tests
+    resolver = SymbolResolver(terminal)
+    return Mt5Adapter(tm, resolver, **params)
 
 
 def _fresh_terminal(**overrides: Any) -> FakeTerminal:
@@ -341,18 +346,25 @@ def test_missing_history_never_retries() -> None:
 
 
 def test_terminal_closed_maps_visibly() -> None:
-    terminal = FakeTerminal(initialize=False, error=(-6, "auth failed"))
-    result = _adapter(terminal).get_bars("xauusd", "H1", now_utc=FIXTURE_NOW_FRESH)
+    terminal = FakeTerminal(
+        initialize=False, error=(-6, "auth failed"), info=FIXTURE_symbol_info(FIXTURE_NOW_FRESH)
+    )
+    tm = TerminalManager(terminal)
+    # Don't call start() - initialize=False means attach fails
+    resolver = SymbolResolver(terminal)
+    adapter = Mt5Adapter(tm, resolver, server_timezone="UTC", retry_delay_ms=1)
+    result = adapter.get_bars("xauusd", "H1", now_utc=FIXTURE_NOW_FRESH)
     assert isinstance(result, AdapterFailure)
     assert result.kind == "terminal-closed"
     assert "copy_rates_from_pos" not in " ".join(terminal.calls)
 
 
-def test_master_session_is_refused() -> None:
+def test_master_session_accepted() -> None:
+    """Signals-only: any MT5 session mode accepted (investor/master/demo/live)."""
     terminal = _fresh_terminal(trade_allowed=True)
     result = _adapter(terminal).get_bars("xauusd", "H1", now_utc=FIXTURE_NOW_FRESH)
-    assert isinstance(result, AdapterFailure)
-    assert result.kind == "terminal-closed"
+    assert not isinstance(result, AdapterFailure)
+    assert len(result) == 5
 
 
 def test_hidden_symbol_is_unsupported() -> None:
@@ -439,12 +451,20 @@ def test_capabilities_reports_without_substituting() -> None:
     terminal = _fresh_terminal()
     report = _adapter(terminal).capabilities()
     assert report["provider_id"] == "mt5"
+    # Only xauusd maps to a visible broker symbol (XAUUSD); others are unsupported
     assert report["supported"] == [
-        {"instrument_id": "xauusd", "provider_symbol": "XAUUSD", "timeframes": ["H1"]}
+        {
+            "instrument_id": "xauusd",
+            "provider_symbol": "XAUUSD",
+            "timeframes": ["H1"],
+            "confidence": "exact",
+        }
     ]
-    assert report["unsupported"] == []
+    assert len(report["unsupported"]) == 5  # xagusd, btcusd, ethusd, usoil, eurusd
+    unsupported_ids = {u["instrument_id"] for u in report["unsupported"]}
+    assert unsupported_ids == {"xagusd", "btcusd", "ethusd", "usoil", "eurusd"}
     missing = _fresh_terminal(names=[])
     empty = _adapter(missing).capabilities()
     assert empty["supported"] == []
     assert isinstance(empty["unsupported"], list)
-    assert len(empty["unsupported"]) == 1  # reported, never auto-substituted
+    assert len(empty["unsupported"]) == 6  # all canonical IDs unsupported

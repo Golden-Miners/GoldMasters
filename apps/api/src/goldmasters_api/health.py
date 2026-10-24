@@ -44,13 +44,19 @@ def probe_database(database_url: str) -> bool:
 
 @router.get("/health")
 def health(request: Request) -> dict[str, object]:
-    """Five-field health surface plus the bounded provider object."""
+    """Five-field health surface plus the bounded provider object.
+
+    ``status`` is always "ok" when the API itself responds. Provider
+    connectivity is reported separately in ``database.reachable`` and
+    ``provider.status`` — a disconnected MT5 terminal does not make the
+    API itself unhealthy.
+    """
     settings = request.app.state.settings
     reachable = probe_database(settings.database_url)
     provider = probe_mt5(
-        request.app.state.mt5_gateway,
+        request.app.state.mt5_terminal_manager,
+        request.app.state.mt5_symbol_resolver,
         server_timezone=settings.mt5_server_timezone,
-        timeout_seconds=settings.mt5_probe_timeout_seconds,
         bars_count=settings.mt5_bars_count,
         weekend_spec=settings.weekend_close_utc,
     )

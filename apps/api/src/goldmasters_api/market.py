@@ -48,10 +48,15 @@ _VERDICT_CODES: dict[QualityStatus, ErrorCode] = {
 
 
 def _adapter_from(request: Request) -> Mt5Adapter:
-    """Build the request adapter from app state settings (cheap, stateless)."""
+    """Build the request adapter from app state (cheap, stateless).
+
+    Uses the persistent TerminalManager and SymbolResolver stored on app
+    state — individual reads never call initialize()/shutdown().
+    """
     settings = request.app.state.settings
     return Mt5Adapter(
-        request.app.state.mt5_gateway,
+        request.app.state.mt5_terminal_manager,
+        request.app.state.mt5_symbol_resolver,
         server_timezone=settings.mt5_server_timezone,
         retry_attempts=settings.mt5_retry_attempts,
         retry_delay_ms=settings.mt5_retry_delay_ms,
