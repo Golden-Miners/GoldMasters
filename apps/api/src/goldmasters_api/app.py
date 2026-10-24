@@ -31,8 +31,10 @@ from goldmasters_api.settings import Settings, hash_effective_config
 from goldmasters_api.settings_router import router as settings_router
 from goldmasters_api.strategies import router as strategies_router
 from goldmasters_api.tracing import configure_tracing, shutdown_tracing
+from services.mt5_adapter.adapter import Mt5Adapter
 from services.mt5_adapter.symbol_resolver import SymbolResolver
 from services.mt5_adapter.terminal import (
+    BROKER_SYMBOL_ALIASES,
     Mt5Gateway,
     TerminalManager,
 )
@@ -86,7 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.mt5_terminal_manager = terminal_manager
 
     # Start symbol resolver (broker-aware symbol resolution)
-    symbol_resolver = SymbolResolver(gateway)
+    symbol_resolver = SymbolResolver(gateway, BROKER_SYMBOL_ALIASES)
     app.state.mt5_symbol_resolver = symbol_resolver
 
     yield

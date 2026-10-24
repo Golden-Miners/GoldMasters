@@ -122,14 +122,28 @@ CsvPositiveInts = Annotated[list[int], NoDecode, BeforeValidator(_split_positive
 
 def _parse_cost_profiles(value: Any) -> dict[str, CostProfile]:
     """Parse a JSON object of instrument_id -> cost profile mapping."""
+    import json
+    from typing import cast
+
     if value is None or value == "":
         return {}
     if isinstance(value, str):
-        import json
-
         raw = json.loads(value)
-        return {k: CostProfile(**v) for k, v in raw.items()}
-    return value
+        if not isinstance(raw, dict):
+            return {}
+        result: dict[str, CostProfile] = {}
+        for k, v in raw.items():
+            if not isinstance(v, dict):
+                continue
+            result[k] = CostProfile(
+                spread=cast(PriceStr | None, v.get("spread")),
+                commission=cast(PriceStr | None, v.get("commission")),
+                slippage=cast(PriceStr | None, v.get("slippage")),
+                swap=cast(PriceStr | None, v.get("swap")),
+                confirmed=cast(bool, v.get("confirmed", False)),
+            )
+        return result
+    return cast(dict[str, CostProfile], value)
 
 
 CostProfiles = Annotated[
