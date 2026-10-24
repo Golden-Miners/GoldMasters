@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldMasters — Strategy Lab (Quant Terminal Mockup)</title>
+<style>
+:root {
+  --gm-canvas: #111820;
+  --gm-surface-1: #1a2630;
+  --gm-surface-2: #1b2a3a;
+  --gm-border: #2a3a52;
+  --gm-border-focus: #42d9c5;
+  --gm-text-primary: #e8f1f5;
+  --gm-text-secondary: #9eb0bc;
+  --gm-text-muted: #5b6b78;
+  --gm-accent: #42d9c5;
+  --gm-accent-hover: #38c0ae;
+  --gm-focus: #a7d7ff;
+  --gm-tone-valid-bg: #0b2a1f;
+  --gm-tone-valid-border: #3bc98a;
+  --gm-tone-valid-text: #e8f5e9;
+  --gm-tone-warning-bg: #2d240b;
+  --gm-tone-warning-border: #f4c15d;
+  --gm-tone-warning-text: #fff3e0;
+  --gm-tone-blocked-bg: #2a0b0b;
+  --gm-tone-blocked-border: #ff6b78;
+  --gm-tone-blocked-text: #fbe9e7;
+  --gm-tone-neutral-bg: #1f2630;
+  --gm-tone-neutral-border: #9ea0b4;
+  --gm-tone-neutral-text: #eceff1;
+  --gm-space-1: 0.25rem; --gm-space-2: 0.5rem; --gm-space-3: 0.75rem;
+  --gm-space-4: 1rem; --gm-space-5: 1.25rem; --gm-space-6: 1.5rem;
+  --gm-space-8: 2rem; --gm-space-10: 2.5rem; --gm-space-12: 3rem;
+  --gm-radius-sm: 4px; --gm-radius-md: 8px; --gm-radius-lg: 12px;
+  --gm-text-xs: 0.75rem; --gm-text-sm: 0.8125rem; --gm-text-base: 0.875rem;
+  --gm-text-lg: 1rem; --gm-text-xl: 1.25rem; --gm-text-2xl: 1.5rem;
+  --gm-text-3xl: 1.875rem;
+  --gm-leading-tight: 1.25; --gm-leading-normal: 1.45; --gm-leading-dense: 1.35;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; min-height: 100vh;
+  background-color: var(--gm-canvas);
+  color: var(--gm-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--gm-text-base);
+  line-height: var(--gm-leading-normal);
+}
+a { color: var(--gm-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.focus-ring:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gm-focus); }
+.section { padding: var(--gm-space-6); }
+.section-heading {
+  font-size: var(--gm-text-xl); font-weight: 600; letter-spacing: -0.01em;
+  margin: 0 0 var(--gm-space-4) 0; color: var(--gm-text-primary);
+}
+.text-muted { color: var(--gm-text-muted); }
+.panel {
+  background-color: var(--gm-surface-1);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+}
+.table-base { width: 100%; border-collapse: collapse; font-size: var(--gm-text-sm); }
+.table-base th, .table-base td {
+  padding: var(--gm-space-2) var(--gm-space-3);
+  text-align: left; border-bottom: 1px solid var(--gm-border);
+}
+.table-base th {
+  font-weight: 600; color: var(--gm-text-secondary);
+  background-color: var(--gm-surface-2);
+}
+.num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.gm-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: var(--gm-radius-sm);
+  font-size: var(--gm-text-xs); font-weight: 500;
+  border: 1px solid; white-space: nowrap;
+}
+.gm-badge-valid {
+  background-color: var(--gm-tone-valid-bg);
+  color: var(--gm-tone-valid-text);
+  border-color: var(--gm-tone-valid-border);
+}
+.gm-badge-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+.gm-badge-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+.gm-badge-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+.gm-explicit-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--gm-space-5); border-radius: var(--gm-radius-md);
+  border: 1px solid; gap: var(--gm-space-3); text-align: center;
+}
+.gm-explicit-state-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+.gm-explicit-state-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+.gm-explicit-state-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+.gm-explicit-state__label { margin: 0; font-weight: 500; font-size: var(--gm-text-base); }
+.gm-explicit-state__description {
+  margin: 0; font-size: var(--gm-text-sm); opacity: 0.9;
+}
+.gm-explicit-state__action {
+  margin-top: var(--gm-space-3); padding: var(--gm-space-2) var(--gm-space-4);
+  border-radius: var(--gm-radius-sm); border: 1px solid currentColor;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.gm-explicit-state__action:hover { background-color: rgba(255,255,255,0.05); }
+
+/* Layout */
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.app-header {
+  border-bottom: 1px solid var(--gm-border);
+  padding: var(--gm-space-2) var(--gm-space-6);
+  background: var(--gm-surface-1);
+  position: sticky; top: 0; z-index: 10;
+}
+.app-nav { display: flex; gap: var(--gm-space-1); flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.app-brand { font-weight: 600; text-decoration: none; color: var(--gm-text-primary); font-size: var(--gm-text-lg); }
+.nav-link {
+  padding: var(--gm-space-1) var(--gm-space-2); border-radius: var(--gm-radius-sm);
+  text-decoration: none; color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm); font-weight: 500; border: 1px solid transparent;
+}
+.nav-link:hover { background: var(--gm-surface-2); border-color: var(--gm-border); }
+.nav-link.active { color: var(--gm-accent); border-color: var(--gm-accent); }
+.app-main { flex: 1; padding: var(--gm-space-6); max-width: 1200px; margin: 0 auto; width: 100%; }
+.app-footer {
+  border-top: 1px solid var(--gm-border);
+  padding: var(--gm-space-3) var(--gm-space-6);
+  background: var(--gm-surface-1);
+  font-size: var(--gm-text-xs); color: var(--gm-text-muted); text-align: center;
+}
+.page-header { margin-bottom: var(--gm-space-6); }
+.page-title {
+  font-size: var(--gm-text-2xl); font-weight: 600; margin: 0 0 var(--gm-space-1) 0;
+  color: var(--gm-text-primary);
+}
+.page-subtitle { margin: 0; color: var(--gm-text-secondary); font-size: var(--gm-text-sm); }
+
+/* Strategy table */
+.strategy-table { width: 100%; border-collapse: collapse; font-size: var(--gm-text-sm); margin-bottom: var(--gm-space-6); }
+.strategy-table th, .strategy-table td {
+  padding: var(--gm-space-2) var(--gm-space-3); border-bottom: 1px solid var(--gm-border); text-align: left;
+}
+.strategy-table th { font-weight: 600; color: var(--gm-text-secondary); background: var(--gm-surface-2); }
+.strategy-table tr:hover { background: rgba(66,217,197,0.05); }
+.strategy-id { font-family: monospace; font-size: var(--gm-text-sm); font-weight: 500; color: var(--gm-text-primary); }
+.strategy-meta { font-size: var(--gm-text-xs); color: var(--gm-text-muted); font-family: monospace; }
+.strategy-actions { display: flex; gap: var(--gm-space-1); }
+.btn-toggle {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm);
+  border: 1px solid var(--gm-border);
+  background: transparent; color: var(--gm-text-primary);
+  font: inherit; font-size: var(--gm-text-xs); font-weight: 500; cursor: pointer;
+}
+.btn-toggle:hover { background: var(--gm-surface-2); }
+.btn-toggle.enabled { border-color: var(--gm-accent); color: var(--gm-accent); }
+.btn-toggle.enabled:hover { background: var(--gm-accent); color: var(--gm-canvas); }
+
+/* Rule checks detail */
+.rule-detail {
+  padding: var(--gm-space-4); background: var(--gm-surface-2);
+  border: 1px solid var(--gm-border); border-radius: var(--gm-radius-sm);
+}
+.rule-row { display: flex; gap: var(--gm-space-2); margin-bottom: var(--gm-space-2); align-items: flex-start; }
+.rule-id { font-family: monospace; font-size: var(--gm-text-xs); color: var(--gm-text-secondary); width: 120px; flex-shrink: 0; }
+.rule-evidence { flex: 1; font-size: var(--gm-text-sm); color: var(--gm-text-secondary); }
+.rule-verdict { font-size: var(--gm-text-xs); font-weight: 500; text-transform: uppercase; white-space: nowrap; }
+.expand-btn {
+  margin-top: var(--gm-space-3); padding: var(--gm-space-1) var(--gm-space-2);
+  border-radius: var(--gm-radius-sm); border: 1px solid var(--gm-border);
+  background: transparent; color: var(--gm-accent); font: inherit; font-size: var(--gm-text-xs); cursor: pointer;
+}
+.expand-btn:hover { background: var(--gm-accent); color: var(--gm-canvas); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <nav class="app-nav">
+      <a href="/" class="app-brand">GoldMasters</a>
+      <a href="/overview" class="nav-link">Overview</a>
+      <a href="/workbench" class="nav-link">Instrument Workbench</a>
+      <a href="/decision" class="nav-link">Decision Detail</a>
+      <a href="/news-sentiment" class="nav-link">News & Sentiment</a>
+      <a href="/strategy-lab" class="nav-link active">Strategy Lab</a>
+      <a href="/backtest" class="nav-link">Backtest Results</a>
+      <a href="/journal" class="nav-link">Journal</a>
+      <a href="/agent-runs" class="nav-link">Agent Runs</a>
+      <a href="/data-providers" class="nav-link">Data Providers</a>
+      <a href="/settings" class="nav-link">Settings/Model Health</a>
+      <a href="/system-health" class="nav-link">System Health</a>
+    </nav>
+  </header>
+  <main class="app-main">
+    <header class="page-header">
+      <h1 class="page-title">Strategy Lab</h1>
+      <p class="page-subtitle">Registered strategy agents with eligibility configuration. Rule-by-rule evidence per agent.</p>
+    </header>
+
+    <table class="strategy-table">
+      <thead>
+        <tr>
+          <th style="width: 22%;">Strategy ID</th>
+          <th style="width: 12%;">Status</th>
+          <th style="width: 20%;">Instruments</th>
+          <th style="width: 18%;">Timeframes</th>
+          <th style="width: 20%;">Regimes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="strategy-id">agent_01</span></td>
+          <td><span class="gm-badge gm-badge-valid">ok</span></td>
+          <td><span class="strategy-meta">xauusd, xagusd</span></td>
+          <td><span class="strategy-meta">H1, H4</span></td>
+          <td><span class="strategy-meta">uptrend, breakout</span></td>
+          <td>
+            <button class="btn-toggle enabled">Enabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_02</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">btcusd, ethusd</span></td>
+          <td><span class="strategy-meta">H4, D1</span></td>
+          <td><span class="strategy-meta">range, pullback</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_03</span></td>
+          <td><span class="gm-badge gm-badge-warning">insufficient_data</span></td>
+          <td><span class="strategy-meta">eurusd, gbpusd</span></td>
+          <td><span class="strategy-meta">M15, H1</span></td>
+          <td><span class="strategy-meta">momentum, pullback</span></td>
+          <td>
+            <button class="btn-toggle enabled">Enabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_04</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">usoil</span></td>
+          <td><span class="strategy-meta">H1</span></td>
+          <td><span class="strategy-meta">breakout</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_05</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_06</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_07</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_08</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_09</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="strategy-id">agent_10</span></td>
+          <td><span class="gm-badge gm-badge-neutral">no_setup</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td><span class="strategy-meta">—</span></td>
+          <td>
+            <button class="btn-toggle">Disabled</button>
+            <button class="expand-btn">View Rules</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="rule-detail" style="max-width: 800px;">
+      <h3 style="margin: 0 0 var(--gm-space-3) 0; font-size: var(--gm-text-lg); color: var(--gm-text-primary);">Rule Checks — agent_01 (v1.0.0)</h3>
+      <div class="rule-row">
+        <span class="rule-id">trend_align</span>
+        <span class="rule-evidence">Price above 20 SMA; ADX 28.4 &gt; 25 threshold</span>
+        <span class="rule-verdict gm-badge gm-badge-valid">pass</span>
+      </div>
+      <div class="rule-row">
+        <span class="rule-id">structure_hh_hl</span>
+        <span class="rule-evidence">Last 3 swing highs ascending; last 2 swing lows ascending</span>
+        <span class="rule-verdict gm-badge gm-badge-valid">pass</span>
+      </div>
+      <div class="rule-row">
+        <span class="rule-id">pullback_zone</span>
+        <span class="rule-evidence">Price retested 50% Fibonacci level of prior swing</span>
+        <span class="rule-verdict gm-badge gm-badge-valid">pass</span>
+      </div>
+      <div class="rule-row">
+        <span class="rule-id">news_risk</span>
+        <span class="rule-evidence">No high-impact news in next 2 hours</span>
+        <span class="rule-verdict gm-badge gm-badge-valid">pass</span>
+      </div>
+      <div class="rule-row">
+        <span class="rule-id">risk_rr_gate</span>
+        <span class="rule-evidence">Computed R:R = 2.0; meets minimum threshold 1.5</span>
+        <span class="rule-verdict gm-badge gm-badge-valid">pass</span>
+      </div>
+    </div>
+
+    <p style="font-size: var(--gm-text-xs); color: var(--gm-text-muted); margin-top: var(--gm-space-6);">
+      Rule thresholds are operator-configured via GOLDMASTERS_* settings. All values fail-closed (null) until explicitly approved.
+    </p>
+  </main>
+  <footer class="app-footer">
+    GoldMasters Research Console — Signals only. No trade execution.
+  </footer>
+</div>
+</body>
+</html>
