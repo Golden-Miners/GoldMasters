@@ -1,5 +1,3 @@
-"use client";
-
 import { fetchStrategies } from "../../lib/api";
 import { StatusBadge } from "../../components/StatusBadge";
 import { ExplicitState } from "../../components/ExplicitState";

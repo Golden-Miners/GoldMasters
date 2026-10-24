@@ -36,10 +36,12 @@ export default function WorkbenchPage() {
     try {
       const result = await fetchMarketBars(instrument, timeframe, count);
       if (!result.available) {
+        setCandles([]);
         setState("unavailable");
         return;
       }
       if (result.bars.length === 0) {
+        setCandles([]);
         setState("empty");
         return;
       }
@@ -48,11 +50,12 @@ export default function WorkbenchPage() {
         o: Number(bar.open),
         h: Number(bar.high),
         l: Number(bar.low),
-        c: bar.close,
+        c: Number(bar.close),
       }));
       setCandles(points);
       setState(points.length > 0 ? "ready" : "empty");
     } catch {
+      setCandles([]);
       setState("unavailable");
     }
   };
@@ -132,7 +135,7 @@ export default function WorkbenchPage() {
       ) : state === "unavailable" ? (
         <ExplicitState state="unavailable">
           <p>
-            No market data available — MT5 terminal not connected.
+            Market data unavailable. Please check your MT5 connection and try again.
           </p>
         </ExplicitState>
       ) : state === "empty" ? (
@@ -140,7 +143,7 @@ export default function WorkbenchPage() {
       ) : (
         <section className="panel" aria-labelledby="chart-heading">
           <h2 id="chart-heading" className="section-heading">
-            Price — {instrument.toUpperCase()} ({timeframe})
+            Close Price — {instrument.toUpperCase()} ({timeframe})
           </h2>
           <div className="chart-wrap" role="img" aria-label="Price chart; data in the table below">
             <ResponsiveContainer width="100%" height="100%">
