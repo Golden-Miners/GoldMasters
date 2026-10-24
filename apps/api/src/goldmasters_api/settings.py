@@ -7,6 +7,7 @@ import json
 import os
 import typing
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated, Any
 from urllib.parse import urlparse
 
@@ -31,6 +32,9 @@ from pydantic_settings import (
 __all__ = ["HASH_ALGORITHM_VERSION", "Settings", "hash_effective_config"]
 
 HASH_ALGORITHM_VERSION = "1"
+
+#: Project root directory: apps/api/src/goldmasters_api/settings.py -> parents[3]
+_PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 def _split_strategy_list(value: Any) -> Any:
@@ -118,14 +122,28 @@ CsvPositiveInts = Annotated[list[int], NoDecode, BeforeValidator(_split_positive
 
 def _parse_cost_profiles(value: Any) -> dict[str, CostProfile]:
     """Parse a JSON object of instrument_id -> cost profile mapping."""
+    import json
+    from typing import cast
+
     if value is None or value == "":
         return {}
     if isinstance(value, str):
-        import json
-
         raw = json.loads(value)
-        return {k: CostProfile(**v) for k, v in raw.items()}
-    return value
+        if not isinstance(raw, dict):
+            return {}
+        result: dict[str, CostProfile] = {}
+        for k, v in raw.items():
+            if not isinstance(v, dict):
+                continue
+            result[k] = CostProfile(
+                spread=cast(PriceStr | None, v.get("spread")),
+                commission=cast(PriceStr | None, v.get("commission")),
+                slippage=cast(PriceStr | None, v.get("slippage")),
+                swap=cast(PriceStr | None, v.get("swap")),
+                confirmed=cast(bool, v.get("confirmed", False)),
+            )
+        return result
+    return cast(dict[str, CostProfile], value)
 
 
 CostProfiles = Annotated[
@@ -138,10 +156,10 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="GOLDMASTERS_",
-        env_file=".env",
+        env_file=str(_PROJECT_ROOT / ".env"),
         extra="forbid",
         frozen=True,
-        yaml_file="config/goldmasters.yaml",
+        yaml_file=str(_PROJECT_ROOT / "config" / "goldmasters.yaml"),
     )
 
     bind_host: str = "127.0.0.1"

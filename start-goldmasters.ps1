@@ -39,6 +39,37 @@ $MARKET_URL   = $API_BASE + "/v1/market/bars?instrument_id=xauusd&timeframe=H1&c
 # Track started processes for clean shutdown
 $STARTED_PROCESSES = @()
 
+# Helper: check if MT5 terminal is already running
+function Test-MT5Running {
+    try {
+        $proc = Get-Process -Name "terminal64" -ErrorAction SilentlyContinue
+        return $null -ne $proc
+    } catch {
+        return $false
+    }
+}
+
+# Helper: find npm.exe in common locations
+function Find-NpmExe {
+    $candidates = @(
+        "C:\Program Files\nodejs\npm.exe",
+        "C:\Program Files (x86)\nodejs\npm.exe",
+        Join-Path $env:ProgramFiles "nodejs\npm.exe",
+        Join-Path "${env:ProgramFiles(x86)}" "nodejs\npm.exe"
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path $c) {
+            return $c
+        }
+    }
+    # Try PATH
+    $npmPath = Get-Command "npm.exe" -ErrorAction SilentlyContinue
+    if ($npmPath) {
+        return $npmPath.Source
+    }
+    return $null
+}
+
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
@@ -229,9 +260,19 @@ try {
 # ---------------------------------------------------------------------------
 Write-Header "Step 2 — MT5 Terminal (Optional)"
 
-if (-not (Test-Path $MT5_TERMINAL)) {
+$mt5PathExists = Test-Path $MT5_TERMINAL
+$mt5IsRunning = Test-MT5Running
+
+if (-not $mt5PathExists) {
     Write-Warn ("MT5 terminal not found at " + $MT5_TERMINAL)
     Write-Warn "Market data endpoint will return 'terminal-closed' until MT5 is running"
+    Write-Host ""
+} elseif ($mt5IsRunning) {
+    Write-Success ("MT5 terminal is already running (PID " + (Get-Process terminal64 -ErrorAction SilentlyContinue).Id + ")")
+    Write-Info "Log in to MT5 (any account mode: investor/master/demo/live)."
+    Write-Info "   - GoldMasters is signals-only — any session mode is acceptable"
+    Write-Info "   - Enable Market Watch for your gold symbol (e.g. GOLD.i#, XAUUSD)"
+    Write-Info "   - The API will connect automatically once the terminal is running"
     Write-Host ""
 } elseif ($MT5_AUTO_LAUNCH) {
     Write-Info ("Auto-launching MT5 terminal: " + $MT5_TERMINAL)
@@ -241,7 +282,7 @@ if (-not (Test-Path $MT5_TERMINAL)) {
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     $mt5Ready = $false
     while ($sw.Elapsed.TotalSeconds -lt 30) {
-        if (Test-Port -port 0) {  # Placeholder - MT5 doesn't expose a port we can test
+        if (Test-MT5Running) {
             $mt5Ready = $true
             break
         }
@@ -343,29 +384,37 @@ if (-not (Test-Path (Join-Path $WEB_DIR "package.json"))) {
 } else {
     Write-Info ("Next.js project found at " + $WEB_DIR)
 
-    if (-not (Test-Path (Join-Path $WEB_DIR "node_modules"))) {
-        Write-Info "Installing Node.js dependencies..."
-        cd $WEB_DIR
-        npm install 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            Write-Err "npm install failed"
-            exit 1
-        }
-        Write-Success "Node modules installed"
-    }
-
-    if (Test-Port 3000) {
-        Write-Success "Next.js frontend already running on port 3000"
+    # Find npm.exe
+    $NPM_EXE = Find-NpmExe
+    if (-not $NPM_EXE) {
+        Write-Warn "npm.exe not found — skipping frontend. Install Node.js (includes npm) from https://nodejs.org/"
     } else {
-        Write-Info "Starting Next.js frontend on port 3000..."
-        Start-Process -FilePath "npm.exe" `
-            -ArgumentList "run dev" `
-            -WindowStyle Hidden `
-            -WorkingDirectory $WEB_DIR
+        Write-Info ("npm found at: " + $NPM_EXE)
 
-        if (-not (Wait-Port 3000 "Next.js Frontend" 60)) {
-            Write-Err "Next.js frontend failed to start"
-            exit 1
+        if (-not (Test-Path (Join-Path $WEB_DIR "node_modules"))) {
+            Write-Info "Installing Node.js dependencies..."
+            cd $WEB_DIR
+            & $NPM_EXE install 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Err "npm install failed"
+                exit 1
+            }
+            Write-Success "Node modules installed"
+        }
+
+        if (Test-Port 3000) {
+            Write-Success "Next.js frontend already running on port 3000"
+        } else {
+            Write-Info "Starting Next.js frontend on port 3000..."
+            Start-Process -FilePath $NPM_EXE `
+                -ArgumentList "run dev" `
+                -WindowStyle Hidden `
+                -WorkingDirectory $WEB_DIR
+
+            if (-not (Wait-Port 3000 "Next.js Frontend" 60)) {
+                Write-Err "Next.js frontend failed to start"
+                exit 1
+            }
         }
     }
 }

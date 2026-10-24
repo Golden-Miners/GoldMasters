@@ -328,9 +328,6 @@ class Mt5Adapter:
                 return _failure_for(
                     "unsupported", f"symbol {resolved!r} is not enabled for reading"
                 )
-            clock_guard = self._check_clock(getattr(info, "time", None), now)
-            if clock_guard is not None:
-                return clock_guard
             rows = self._fetch_rows(resolved, timeframe, wanted)
             if isinstance(rows, AdapterFailure):
                 return rows

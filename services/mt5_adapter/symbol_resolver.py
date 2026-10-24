@@ -20,6 +20,7 @@ from dataclasses import dataclass
 
 from services.mt5_adapter.terminal import (
     CANONICAL_INSTRUMENT_IDS,
+    BROKER_SYMBOL_ALIASES,
     TIMEFRAME_IDS,
     TerminalGateway,
 )
@@ -75,7 +76,7 @@ class SymbolResolver:
     ) -> None:
         self._gateway = gateway
         self._aliases: dict[str, tuple[str, ...]] = dict(
-            aliases or {}
+            aliases or BROKER_SYMBOL_ALIASES
         )
         self._cache: dict[tuple[str, str], SymbolResolution | SymbolResolutionFailure] = {}
 

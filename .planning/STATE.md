@@ -6,10 +6,10 @@ current_phase: 8
 current_phase_name: Hardening and Release Gate
 status: in-progress
 stopped_at: Completed 08-hardening-release-gate-03-PLAN.md
-last_updated: "2026-10-24T10:00:00Z"
+last_updated: "2026-10-24T11:30:00Z"
 last_activity: 2026-10-24
-last_activity_desc: Phase 1 & 2 verified complete with live MT5 data pipeline. Adapter read-only restriction removed — any MT5 session mode (investor/master/demo/live) accepts market data reads. Normalize bar-ordering detection fixed (newest-first vs oldest-first). Frontend refactored with dark quant-terminal theme, Navbar component, E2E tests 18/18. Branch feat/phase1-2-completion-mt5-live-data pushed to GitHub.
-state_head: 5f29955
+last_activity_desc: Phase 2 shipped — PR feat/phase1-2-completion-mt5-live-data pushed to GitHub (commit 380ae76). MT5 auto-start (GOLDMASTERS_MT5_TERMINAL_PATH, bounded timeout), SymbolResolver expanded aliases, cache refresh on startup + symbol miss, startup fail-fast if MT5 can't attach. All committed, pushed, and verified with 252/252 tests passing.
+state_head: 380ae76
 progress:
   total_phases: 8
   completed_phases: 8

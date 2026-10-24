@@ -16,6 +16,9 @@ from sqlalchemy import create_engine
 # Allow `from goldmasters_api.settings import Settings` regardless of CWD.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
+# Allow `from services.mt5_adapter.validation import ...` regardless of CWD.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
 from goldmasters_api.settings import Settings  # noqa: E402
 
 config = context.config
