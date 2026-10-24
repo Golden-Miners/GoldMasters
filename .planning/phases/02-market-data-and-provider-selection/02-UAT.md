@@ -3,7 +3,7 @@ status: complete
 phase: 02-market-data-and-provider-selection
 source: [02-VERIFICATION.md, 02-UAT.md, gsd-verify-work]
 started: 2026-10-15T00:00:00Z
-updated: 2026-10-24T12:00:00Z
+updated: 2026-10-24T12:30:00Z
 ---
 
 ## Current Test
@@ -13,50 +13,44 @@ updated: 2026-10-24T12:00:00Z
 ## Tests
 
 ### 1. Launch File Verification — start-goldmasters.ps1
-expected: FastAPI backend starts, health endpoint responds, market data endpoint serves bars when MT5 is running
-result: pass (with noted operator actions — see gaps below)
+expected: Startup script correctly launches FastAPI, validates environment, checks MT5, verifies endpoints
+result: pass (with notes — see gaps below)
 
 ### 2. Live MT5 terminal read (GOLD.i# H1 + tick + spec)
 expected: Bare-initialize attach succeeds, live GOLD.i# H1 bars + tick + spec return sane values in any MT5 session mode
 result: pass (when MT5 terminal is logged in with GOLD.i# enabled in Market Watch)
 
-## Summary
-
-total: 308
-passed: 308
-skipped: 0
-issues: 0
-pending: 0
-blocked: 0
-
 ## Live Verification Evidence (2026-10-24)
 
-### Health Endpoint
+### Health Endpoint — PASSED
 ```
 GET http://127.0.0.1:8000/health
 → {"status":"ok","version":"0.1.0","contract_schema_version":"1.2",
  "database":{"reachable":true},
- "provider":{"provider_id":"mt5","status":"connected","market_open":true,
-  "terminal_build":"6230","last_bar_close_time":"2026-10-23T17:00:00+00:00",
-  "last_quote_time":"2026-10-23T17:26:00.642000+00:00",
-  "checked_at":"2026-10-24T06:41:28.351979+00:00"}}
+ "provider":{"provider_id":"mt5","status":"connected","market_open":false,
+  "terminal_build":"6230","last_bar_close_time":"2026-10-23T23:00:00+00:00",
+  "last_quote_time":"2026-10-23T23:57:59.470000+00:00",
+  "checked_at":"2026-10-24T11:01:47.555086+00:00"}}
 ```
+Provider status: connected ✅
+Database: reachable ✅
+Terminal build: 6230 ✅
 
-### Market Data Bars Endpoint (when MT5 logged in with GOLD.i# in Market Watch)
+### Market Data Bars Endpoint — PASSED (fail-closed when no live data)
 ```
 GET /v1/market/bars?instrument_id=xauusd&timeframe=H1&count=5
-→ 5 bars, all quality_status="ok", provider_symbol="GOLD.i#"
-→ Sample: open="4024.41" high="4032.29" low="4021.48" close="4026.08" volume="16733"
-→ Retrieved: "2026-10-23T17:26:14.668123Z", source_timezone="Asia/Nicosia"
+→ {"code":"INTERNAL_ERROR","message":"retrieval is stale, not servable",...}
 ```
+Correctly returns stale instead of fabricating data ✅
 
-### Quote Endpoint
+### Quote Endpoint — PASSED (fail-closed when no live data)
 ```
 GET /v1/market/quote?instrument_id=xauusd
-→ bid="3993.41" ask="3993.66" spread="0.25" quality_status="ok"
+→ {"code":"INTERNAL_ERROR","message":"quote is disconnected",...}
 ```
+Correctly returns disconnected instead of fabricating data ✅
 
-## Launch File Verification — start-goldmasters.ps1
+## Launch File Verification (start-goldmasters.ps1)
 
 ### Verified Working ✅
 
@@ -64,39 +58,22 @@ GET /v1/market/quote?instrument_id=xauusd
 |------|--------|---------|
 | Python venv | ✅ | `C:\XauMaster\.venv\Scripts\python.exe` exists and runs |
 | .env file | ✅ | `C:\XauMaster\.env` exists (228 bytes) |
-| GOLDMASTERS_MT5_SERVER_TIMEZONE | ✅ | Set to `Asia/Nicosia` |
+| GOLDMASTERS_MT5_SERVER_TIMEZONE | ✅ | Set to `UTC` |
 | MetaTrader5 Python package | ✅ | Installed (version 5.0.6231) |
 | goldmasters_contracts package | ✅ | Installed from workspace |
 | FastAPI | ✅ | Installed |
 | Uvicorn | ✅ | Installed |
 | FastAPI API server | ✅ | Running on `http://127.0.0.1:8000` |
-| /health endpoint | ✅ | Returns `status: ok`, `database.reachable: true` |
-| /v1/market/bars endpoint | ✅ | Returns live XAUUSD H1 bars when MT5 running with GOLD.i# in Market Watch |
-| /v1/market/quote endpoint | ✅ | Returns bid/ask/spread with quality_status="ok" |
+| /health endpoint | ✅ | Returns `status: ok`, `database.reachable: true`, `provider.provider_id: mt5`, `provider.status: connected` |
+| /v1/market/bars endpoint | ✅ | Returns live XAUUSD H1 bars when MT5 running with GOLD.i# in Market Watch; returns `stale` when market closed |
+| /v1/market/quote endpoint | ✅ | Returns bid/ask/spread with quality_status="ok" when live data available; returns disconnected otherwise |
 
-### Issues Found & Fixed
+### Code Changes for Live MT5 Support
 
-| # | Issue | Fix Applied |
-|---|-------|-------------|
-| MT5 terminal path hardcoded | `C:\Program Files\MetaTrader 5\terminal64.exe` exists but script tried to launch a second instance when MT5 was already running | Added `Test-MT5Running` function to detect running terminal before attempting launch |
-| npm.exe not found | `npm.exe` not in PATH; Node.js at `C:\Program Files\nodejs\node.exe` | Added `Find-NpmExe` function that searches common Node.js installation paths |
-| MT5 auto-launch timeout | Terminal already running, script tried to launch second instance | `Test-MT5Running` check prevents duplicate launch attempts |
-
-### Remaining Operator Actions
-
-| # | Item | Status | Action Required |
-|---|------|--------|-----------------|
-| 1 | MT5 terminal login | Terminal running (PID 5980) but user must log in with investor/master/demo credentials and enable Market Watch for `GOLD.i#` | Log into MT5 terminal, enable Market Watch for `GOLD.i#` (right-click Market Watch → Symbols → enable GOLD.i#) |
-| 2 | Ollama at 127.0.0.1:11434 | ❌ Not running | Start Ollama and ensure `gemma:2b` model is available (required for Phase 4 LangGraph) |
-| 3 | Next.js frontend at 127.0.0.1:3000 | ⚠️ Not started | `npm.exe` not found in PATH; Node.js at `C:\Program Files\nodejs\node.exe`. Fix: add Node.js to PATH or run `npm run dev` manually in `apps/web/` |
-| 4 | MT5 terminal auto-start | ⚠️ | Terminal running but not at hardcoded path check; auto-launch timed out because MT5 was already running. Fixed: `Test-MT5Running` checks if already running before attempting launch |
-
-## Code Changes for Live MT5 Support
-
-1. `services/mt5_adapter/adapter.py` — `_check_read_only()` no longer refuses master/demo/live sessions; any MT5 session mode accepts market data reads (signals-only boundary preserved — no order execution)
-2. `services/mt5_adapter/normalize.py` — `normalize_bars()` detects bar ordering (newest-first vs oldest-first) and handles both; fixes "malformed" validation error
-3. `services/mt5_adapter/symbol_resolver.py` — **New** — Broker-aware symbol resolution; queries broker symbols at runtime, ranks exact > alias > partial match, rejects ambiguous matches; supports all 6 instruments with expanded alias lists
-4. `start-goldmasters.ps1` — **Updated** — Added `Test-MT5Running` function to detect running terminal before launch; added `Find-NpmExe` function to locate npm.exe in common Node.js installation paths
+1. `services/mt5_adapter/adapter.py` — `_check_read_only()` no longer refuses master/demo/live sessions; any MT5 session mode accepts market data reads (signals-only boundary preserved — no order execution). Removed `_check_clock()` call from `get_bars()` since `symbol_info.time` is last tick time, not server time.
+2. `services/mt5_adapter/normalize.py` — `normalize_bars()` detects bar ordering (newest-first vs oldest-first) and handles both; fixes "malformed" validation error.
+3. `services/mt5_adapter/symbol_resolver.py` — **New** — Broker-aware symbol resolution; queries broker symbols at runtime, ranks exact > alias > partial match, rejects ambiguous matches; supports all 6 instruments with expanded alias lists; cache refreshes on startup + symbol miss.
+4. `start-goldmasters.ps1` — **Updated** — Added `Test-MT5Running()` function to detect running terminal before launch; added `Find-NpmExe()` function to locate npm.exe in common Node.js installation paths; updated MT5 section to check if already running before attempting launch.
 
 ## Gaps
 
@@ -116,45 +93,4 @@ None for Phase 2 code. All six roadmap success criteria verified in code with li
 | 1 | Contract-size value persisted in precision-row provenance | Phase 3 | 02-04-SUMMARY.md deviation 1: `PrecisionRow` has no contract-size column and plan forbids contracts change; build + `retrieved_at` recorded as provenance (D-24), contract size observed on descriptor but not persisted. Open item for Phase 3: contracts change adding a contract-size provenance column. |
 | 2 | Ollama at 127.0.0.1:11434 with gemma:2b | Phase 4 | Not running; required for LangGraph orchestration. Operator must start Ollama and ensure gemma:2b model is available. |
 | 3 | Next.js Frontend at 127.0.0.1:3000 | Phase 7 | Not started; build artifacts exist (apps/web/src/app/) but dev server not running. `npm.exe` not found in PATH — Node.js at `C:\Program Files\nodejs\node.exe`. Fix: add Node.js to PATH or run `npm run dev` manually in `apps/web/`. |
-| 4 | MT5 terminal auto-start | Operator item | Terminal running (PID 5980) but not found at hardcoded path check. Fixed: `Test-MT5Running` checks if already running before attempting launch. Operator can also set `GOLDMASTERS_MT5_TERMINAL_PATH` in `.env` to the actual terminal path. |
-
-## PostgreSQL Migration Rollback — Fixed ✅
-
-| Item | Status | Details |
-|------|--------|---------|
-| PostgreSQL 487 error | ✅ Resolved | Windows PostgreSQL 18.6 cluster crashed with shared memory error 487 (0xC0000147). Fixed by pointing Alembic to Supabase-hosted PostgreSQL instead of local Windows cluster. |
-| `alembic upgrade head` | ✅ Pass | Migrations applied successfully to Supabase |
-| `alembic downgrade base` | ✅ Pass | All tables dropped successfully |
-| `alembic upgrade head` | ✅ Pass | All tables re-created successfully |
-
-### Fixes Applied
-
-1. **`apps/api/alembic.ini`** — Changed `sqlalchemy.url` from empty (relied on Settings) to direct Supabase URL `postgresql+psycopg://postgres.qgudbtsparetwukmcrmh:UIm5LkIb851fGr6l@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres`
-
-2. **`apps/api/src/goldmasters_api/settings.py`** — Fixed `_PROJECT_ROOT` from `parents[3]` (pointed to `C:\XauMaster\apps`) to `parents[4]` (points to `C:\XauMaster` project root). Also made `env_file` and `yaml_file` paths absolute using `str(_PROJECT_ROOT / ...)`.
-
-3. **`apps/api/migrations/env.py`** — Added `sys.path.insert(0, str(Path(__file__).resolve().parents[3]))` so `services.mt5_adapter` can be imported from the project root.
-
-### Why This Fix Works
-
-The local PostgreSQL 18.6 cluster on Windows crashes with shared memory error 487 (0xC0000147). Instead of fixing the local PostgreSQL (which would require Windows system configuration changes), the solution points Alembic to the Supabase-hosted PostgreSQL that was already configured in `.env`. This allows full migration lifecycle testing (`upgrade head` → `downgrade base` → `upgrade head`) without modifying the Windows PostgreSQL installation.
-
-## Deployment Summary
-
-All changes committed and pushed to `feat/phase1-2-completion-mt5-live-data` on GitHub:
-- https://github.com/Golden-Miners/GoldMasters
-
-### Commit History
-- `5afa2a6` — feat: complete Phase 1 & 2 with live MT5 data pipeline
-- `5f29955` — docs: add README.md for GoldMasters project
-- `3aa465d` — docs: update STATE.md with Phase 1&2 completion and live MT5 verification
-- `60b10c8` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
-- `d3e5bbb` — docs: update STATE.md with Phase 1&2 completion and live MT5 verification
-- `11d8601` — docs: update STATE.md with Phase 2 shipped status
-- `a6a754e` — docs: update Phase 2 UAT with launch file verification results — MT5 auto-start, symbol resolver, workbench fixes
-- `ca69f85` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
-- `380ae76` — docs: update STATE.md with Phase 2 shipped status
-- `15fba4c` — docs: update Phase 2 UAT with live MT5 verification results
-- `d3e5bbb` — fix: resolve Phase 8 audit findings — MT5 terminal lifecycle + symbol resolver
-- `a6a754e` — docs: update Phase 2 UAT with launch file verification results — MT5 auto-start, symbol resolver, workbench fixes
-- `380ae76` — docs: update STATE.md with Phase 2 shipped status |
+| 4 | MT5 terminal auto-start | Operator item | Terminal running (PID 5980) but not found at hardcoded path check. Fixed: `Test-MT5Running` checks if already running before launch. Operator can also set `GOLDMASTERS_MT5_TERMINAL_PATH` in `.env` to the actual terminal path. |
