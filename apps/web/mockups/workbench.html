@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldMasters — Instrument Workbench (Quant Terminal Mockup)</title>
+<style>
+:root {
+  --gm-canvas: #111820;
+  --gm-surface-1: #1a2630;
+  --gm-surface-2: #1b2a3a;
+  --gm-border: #2a3a52;
+  --gm-border-focus: #42d9c5;
+  --gm-text-primary: #e8f1f5;
+  --gm-text-secondary: #9eb0bc;
+  --gm-text-muted: #5b6b78;
+  --gm-accent: #42d9c5;
+  --gm-accent-hover: #38c0ae;
+  --gm-focus: #a7d7ff;
+  --gm-tone-valid-bg: #0b2a1f;
+  --gm-tone-valid-border: #3bc98a;
+  --gm-tone-valid-text: #e8f5e9;
+  --gm-tone-warning-bg: #2d240b;
+  --gm-tone-warning-border: #f4c15d;
+  --gm-tone-warning-text: #fff3e0;
+  --gm-tone-blocked-bg: #2a0b0b;
+  --gm-tone-blocked-border: #ff6b78;
+  --gm-tone-blocked-text: #fbe9e7;
+  --gm-tone-neutral-bg: #1f2630;
+  --gm-tone-neutral-border: #9ea0b4;
+  --gm-tone-neutral-text: #eceff1;
+  --gm-space-1: 0.25rem; --gm-space-2: 0.5rem; --gm-space-3: 0.75rem;
+  --gm-space-4: 1rem; --gm-space-5: 1.25rem; --gm-space-6: 1.5rem;
+  --gm-space-8: 2rem; --gm-space-10: 2.5rem; --gm-space-12: 3rem;
+  --gm-radius-sm: 4px; --gm-radius-md: 8px; --gm-radius-lg: 12px;
+  --gm-text-xs: 0.75rem; --gm-text-sm: 0.8125rem; --gm-text-base: 0.875rem;
+  --gm-text-lg: 1rem; --gm-text-xl: 1.25rem; --gm-text-2xl: 1.5rem;
+  --gm-text-3xl: 1.875rem;
+  --gm-leading-tight: 1.25; --gm-leading-normal: 1.45; --gm-leading-dense: 1.35;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; min-height: 100vh;
+  background-color: var(--gm-canvas);
+  color: var(--gm-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--gm-text-base);
+  line-height: var(--gm-leading-normal);
+}
+a { color: var(--gm-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.focus-ring:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gm-focus); }
+.section { padding: var(--gm-space-6); }
+.section-heading {
+  font-size: var(--gm-text-xl); font-weight: 600; letter-spacing: -0.01em;
+  margin: 0 0 var(--gm-space-4) 0; color: var(--gm-text-primary);
+}
+.text-muted { color: var(--gm-text-muted); }
+.panel {
+  background-color: var(--gm-surface-1);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+}
+.table-base { width: 100%; border-collapse: collapse; font-size: var(--gm-text-sm); }
+.table-base th, .table-base td {
+  padding: var(--gm-space-2) var(--gm-space-3);
+  text-align: left; border-bottom: 1px solid var(--gm-border);
+}
+.table-base th {
+  font-weight: 600; color: var(--gm-text-secondary);
+  background-color: var(--gm-surface-2);
+}
+.num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.gm-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: var(--gm-radius-sm);
+  font-size: var(--gm-text-xs); font-weight: 500;
+  border: 1px solid; white-space: nowrap;
+}
+.gm-badge-valid {
+  background-color: var(--gm-tone-valid-bg);
+  color: var(--gm-tone-valid-text);
+  border-color: var(--gm-tone-valid-border);
+}
+.gm-badge-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+.gm-badge-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+.gm-badge-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+.gm-explicit-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--gm-space-5); border-radius: var(--gm-radius-md);
+  border: 1px solid; gap: var(--gm-space-3); text-align: center;
+}
+.gm-explicit-state-neutral {
+  background-color: var(--gm-tone-neutral-bg);
+  color: var(--gm-tone-neutral-text);
+  border-color: var(--gm-tone-neutral-border);
+}
+.gm-explicit-state-warning {
+  background-color: var(--gm-tone-warning-bg);
+  color: var(--gm-tone-warning-text);
+  border-color: var(--gm-tone-warning-border);
+}
+.gm-explicit-state-blocked {
+  background-color: var(--gm-tone-blocked-bg);
+  color: var(--gm-tone-blocked-text);
+  border-color: var(--gm-tone-blocked-border);
+}
+.gm-explicit-state__label { margin: 0; font-weight: 500; font-size: var(--gm-text-base); }
+.gm-explicit-state__description {
+  margin: 0; font-size: var(--gm-text-sm); opacity: 0.9;
+}
+.gm-explicit-state__action {
+  margin-top: var(--gm-space-3); padding: var(--gm-space-2) var(--gm-space-4);
+  border-radius: var(--gm-radius-sm); border: 1px solid currentColor;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.gm-explicit-state__action:hover { background-color: rgba(255,255,255,0.05); }
+
+/* Layout */
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.app-header {
+  border-bottom: 1px solid var(--gm-border);
+  padding: var(--gm-space-2) var(--gm-space-6);
+  background: var(--gm-surface-1);
+  position: sticky; top: 0; z-index: 10;
+}
+.app-nav { display: flex; gap: var(--gm-space-1); flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.app-brand { font-weight: 600; text-decoration: none; color: var(--gm-text-primary); font-size: var(--gm-text-lg); }
+.nav-link {
+  padding: var(--gm-space-1) var(--gm-space-2); border-radius: var(--gm-radius-sm);
+  text-decoration: none; color: var(--gm-text-secondary);
+  font-size: var(--gm-text-sm); font-weight: 500; border: 1px solid transparent;
+}
+.nav-link:hover { background: var(--gm-surface-2); border-color: var(--gm-border); }
+.nav-link.active { color: var(--gm-accent); border-color: var(--gm-accent); }
+.app-main { flex: 1; padding: var(--gm-space-6); max-width: 1200px; margin: 0 auto; width: 100%; }
+.app-footer {
+  border-top: 1px solid var(--gm-border);
+  padding: var(--gm-space-3) var(--gm-space-6);
+  background: var(--gm-surface-1);
+  font-size: var(--gm-text-xs); color: var(--gm-text-muted); text-align: center;
+}
+.page-header { margin-bottom: var(--gm-space-6); }
+.page-title {
+  font-size: var(--gm-text-2xl); font-weight: 600; margin: 0 0 var(--gm-space-1) 0;
+  color: var(--gm-text-primary);
+}
+.page-subtitle { margin: 0; color: var(--gm-text-secondary); font-size: var(--gm-text-sm); }
+.status-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gm-space-3); margin-bottom: var(--gm-space-6);
+}
+.status-card {
+  display: flex; flex-direction: column; gap: var(--gm-space-1);
+  padding: var(--gm-space-3); background: var(--gm-surface-2);
+  border-radius: var(--gm-radius-sm); border: 1px solid var(--gm-border);
+}
+.status-dt { font-size: var(--gm-text-xs); color: var(--gm-text-muted); text-transform: uppercase; }
+.status-dd { font-weight: 500; font-size: var(--gm-text-base); }
+.controls-bar {
+  display: flex; gap: var(--gm-space-2); flex-wrap: wrap;
+  margin-bottom: var(--gm-space-4); align-items: center;
+}
+.control-group { display: flex; align-items: center; gap: var(--gm-space-1); }
+.control-label {
+  font-size: var(--gm-text-sm); font-weight: 500; color: var(--gm-text-secondary);
+}
+.control-select, .control-input {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border: 1px solid var(--gm-border); border-radius: var(--gm-radius-sm);
+  background: var(--gm-surface-1); color: var(--gm-text-primary);
+  font-size: var(--gm-text-sm);
+}
+.control-select:focus, .control-input:focus {
+  outline: none; border-color: var(--gm-accent);
+  box-shadow: 0 0 0 2px var(--gm-focus);
+}
+.chart-wrap {
+  height: 340px; background: var(--gm-surface-2);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gm-text-muted); font-size: var(--gm-text-sm);
+  position: relative;
+}
+.chart-wrap svg { width: 100%; height: 100%; display: block; }
+.chart-table {
+  width: 100%; border-collapse: collapse; font-size: var(--gm-text-sm);
+  margin-top: var(--gm-space-3);
+}
+.chart-table caption {
+  caption-side: top; text-align: left; margin-bottom: var(--gm-space-1);
+  font-weight: 600; color: var(--gm-text-secondary);
+}
+.chart-table th, .chart-table td {
+  padding: var(--gm-space-1) var(--gm-space-2);
+  border-bottom: 1px solid var(--gm-border); text-align: left;
+}
+.chart-table th {
+  font-weight: 600; color: var(--gm-text-secondary); background: var(--gm-surface-2);
+}
+.chart-table td.num-col { text-align: right; font-family: monospace; }
+.chart-table tr:hover { background: rgba(66,217,197,0.05); }
+.line-stroke { stroke: var(--gm-accent); stroke-width: 2; fill: none; }
+.grid-line { stroke: var(--gm-border); stroke-dasharray: 3 3; }
+.axis-text { fill: var(--gm-text-secondary); font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <nav class="app-nav">
+      <a href="/" class="app-brand">GoldMasters</a>
+      <a href="/overview" class="nav-link">Overview</a>
+      <a href="/workbench" class="nav-link active">Instrument Workbench</a>
+      <a href="/decision" class="nav-link">Decision Detail</a>
+      <a href="/news-sentiment" class="nav-link">News & Sentiment</a>
+      <a href="/strategy-lab" class="nav-link">Strategy Lab</a>
+      <a href="/backtest" class="nav-link">Backtest Results</a>
+      <a href="/journal" class="nav-link">Journal</a>
+      <a href="/agent-runs" class="nav-link">Agent Runs</a>
+      <a href="/data-providers" class="nav-link">Data Providers</a>
+      <a href="/settings" class="nav-link">Settings/Model Health</a>
+      <a href="/system-health" class="nav-link">System Health</a>
+    </nav>
+  </header>
+  <main class="app-main">
+    <header class="page-header">
+      <h1 class="page-title">Instrument Workbench</h1>
+      <p class="page-subtitle">Live price chart with accessible data table alternative.</p>
+    </header>
+
+    <div class="controls-bar">
+      <div class="control-group">
+        <label class="control-label">Instrument</label>
+        <select class="control-select">
+          <option value="xauusd" selected>XAUUSD (Gold)</option>
+          <option value="xagusd">XAGUSD (Silver)</option>
+          <option value="eurusd">EURUSD</option>
+          <option value="gbpusd">GBPUSD</option>
+          <option value="btcusd">BTCUSD</option>
+          <option value="ethusd">ETHUSD</option>
+          <option value="usoil">USOIL</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Timeframe</label>
+        <select class="control-select">
+          <option value="M1">M1</option>
+          <option value="M5">M5</option>
+          <option value="M15">M15</option>
+          <option value="M30">M30</option>
+          <option value="H1" selected>H1</option>
+          <option value="H4">H4</option>
+          <option value="D1">D1</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Bars</label>
+        <input type="number" class="control-input" value="200" min="50" max="1000" style="width: 80px;">
+      </div>
+      <span class="gm-badge gm-badge-neutral">Ready</span>
+    </div>
+
+    <section class="panel" style="padding: var(--gm-space-4); margin-bottom: var(--gm-space-6);">
+      <h2 class="section-heading">Price — XAUUSD (H1)</h2>
+      <div class="chart-wrap" role="img" aria-label="Price chart; data in the table below">
+        <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="var(--gm-accent)"/>
+            </marker>
+          </defs>
+          <line x1="40" y1="40" x2="660" y2="40" class="grid-line"/>
+          <line x1="40" y1="140" x2="660" y2="140" class="grid-line"/>
+          <line x1="40" y1="240" x2="660" y2="240" class="grid-line"/>
+          <line x1="40" y1="40" x2="40" y2="240" class="grid-line"/>
+          <line x1="170" y1="40" x2="170" y2="240" class="grid-line"/>
+          <line x1="300" y1="40" x2="300" y2="240" class="grid-line"/>
+          <line x1="430" y1="40" x2="430" y2="240" class="grid-line"/>
+          <line x1="560" y1="40" x2="560" y2="240" class="grid-line"/>
+          <polyline points="40,200 110,180 170,160 240,180 300,120 370,100 430,140 500,90 560,130 620,110 660,150" class="line-stroke"/>
+          <text x="40" y="260" class="axis-text">10:00</text>
+          <text x="170" y="260" class="axis-text">12:00</text>
+          <text x="300" y="260" class="axis-text">14:00</text>
+          <text x="430" y="260" class="axis-text">16:00</text>
+          <text x="560" y="260" class="axis-text">18:00</text>
+          <text x="660" y="260" class="axis-text">20:00</text>
+          <text x="10" y="50" class="axis-text">2700</text>
+          <text x="10" y="150" class="axis-text">2650</text>
+          <text x="10" y="250" class="axis-text">2600</text>
+        </svg>
+      </div>
+      <table class="chart-table">
+        <caption>Price data table (accessible alternative to the chart)</caption>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th class="num-col">Open</th>
+            <th class="num-col">High</th>
+            <th class="num-col">Low</th>
+            <th class="num-col">Close</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-family: monospace; font-size: var(--gm-text-xs);">2026-10-18 10:00</td>
+            <td class="num-col">2642.15</td>
+            <td class="num-col">2655.80</td>
+            <td class="num-col">2638.40</td>
+            <td class="num-col">2650.30</td>
+          </tr>
+          <tr>
+            <td style="font-family: monospace; font-size: var(--gm-text-xs);">2026-10-18 11:00</td>
+            <td class="num-col">2650.30</td>
+            <td class="num-col">2658.20</td>
+            <td class="num-col">2645.90</td>
+            <td class="num-col">2648.75</td>
+          </tr>
+          <tr>
+            <td style="font-family: monospace; font-size: var(--gm-text-xs);">2026-10-18 12:00</td>
+            <td class="num-col">2648.75</td>
+            <td class="num-col">2662.40</td>
+            <td class="num-col">2645.00</td>
+            <td class="num-col">2655.60</td>
+          </tr>
+          <tr>
+            <td style="font-family: monospace; font-size: var(--gm-text-xs);">2026-10-18 13:00</td>
+            <td class="num-col">2655.60</td>
+            <td class="num-col">2658.90</td>
+            <td class="num-col">2640.20</td>
+            <td class="num-col">2645.80</td>
+          </tr>
+          <tr>
+            <td style="font-family: monospace; font-size: var(--gm-text-xs);">2026-10-18 14:00</td>
+            <td class="num-col">2645.80</td>
+            <td class="num-col">2670.10</td>
+            <td class="num-col">2644.50</td>
+            <td class="num-col">2665.25</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <footer class="app-footer">
+    GoldMasters Research Console — Signals only. No trade execution.
+  </footer>
+</div>
+</body>
+</html>

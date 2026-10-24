@@ -53,9 +53,7 @@ function Test-MT5Running {
 function Find-NpmExe {
     $candidates = @(
         "C:\Program Files\nodejs\npm.exe",
-        "C:\Program Files (x86)\nodejs\npm.exe",
-        Join-Path $env:ProgramFiles "nodejs\npm.exe",
-        Join-Path "${env:ProgramFiles(x86)}" "nodejs\npm.exe"
+        "C:\Program Files (x86)\nodejs\npm.exe"
     )
     foreach ($c in $candidates) {
         if (Test-Path $c) {
@@ -333,7 +331,7 @@ try:
     print(r.status)
     print(r.read().decode())
 except Exception as e:
-    print('ERROR:', str(e))
+    print('ERROR: ' + repr(e))
     exit(1)
 " 2>&1
     if ($LASTEXITCODE -eq 0) {
@@ -348,8 +346,7 @@ except Exception as e:
 }
 
 Write-Info "Verifying /v1/market/bars endpoint..."
-try {
-    $bars = & $VENV_PYTHON -c "
+$testScript = @"
 import urllib.request
 try:
     r = urllib.request.urlopen('http://127.0.0.1:8000/v1/market/bars?instrument_id=xauusd&timeframe=H1&count=5', timeout=15)
@@ -359,18 +356,18 @@ except urllib.error.HTTPError as e:
     print('HTTP ' + str(e.code))
     print(e.read().decode())
 except Exception as e:
-    print('ERROR:', str(e))
+    print('ERROR: ' + str(e))
     exit(1)
-" 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "Market data endpoint responding"
-        Write-Info ("Response: " + $bars)
-    } else {
-        Write-Warn "Market data endpoint returned error (expected if MT5 terminal not running):"
-        Write-Info $bars
-    }
-} catch {
-    Write-Warn ("Market data check failed: " + $_)
+"@
+$testScriptPath = Join-Path $env:TEMP "gm_test_bars.py"
+$testScript | Out-File -FilePath $testScriptPath -Encoding UTF8
+$bars = & $VENV_PYTHON $testScriptPath 2>&1
+if ($LASTEXITCODE -eq 0) {
+    Write-Success "Market data endpoint responding"
+    Write-Info ("Response: " + $bars)
+} else {
+    Write-Warn "Market data endpoint returned error (expected if MT5 terminal not running):"
+    Write-Info $bars
 }
 
 # ---------------------------------------------------------------------------
