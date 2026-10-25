@@ -60,8 +60,13 @@ def health(request: Request) -> dict[str, object]:
         bars_count=settings.mt5_bars_count,
         weekend_spec=settings.weekend_close_utc,
     )
+    status = "ok"
+    if provider.get("status") in ("terminal-closed", "disconnected"):
+        status = "unavailable"
+    elif provider.get("status") in ("stale", "insufficient_data", "conflicted", "invalid"):
+        status = "degraded"
     return {
-        "status": "ok",
+        "status": status,
         "version": goldmasters_api.__version__,
         "contract_schema_version": goldmasters_contracts.CONTRACT_VERSION,
         "config_hash": request.app.state.config_hash,

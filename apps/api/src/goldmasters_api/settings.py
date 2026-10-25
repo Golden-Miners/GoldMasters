@@ -171,7 +171,6 @@ class Settings(BaseSettings):
     provider_api_key: SecretStr | None = None
     provider_id: ProviderId = "mt5"
     instrument_id: str = "xauusd"
-    mt5_symbol: str = "XAUUSD"
     timeframe: Timeframe = Timeframe.H1
     mt5_server_timezone: IanaTimezone
     mt5_probe_timeout_seconds: float = 2.0

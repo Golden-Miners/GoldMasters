@@ -89,9 +89,9 @@ export default function WorkbenchPage() {
             <option value="xauusd">XAUUSD (Gold)</option>
             <option value="xagusd">XAGUSD (Silver)</option>
             <option value="eurusd">EURUSD</option>
-            <option value="gbpusd">GBPUSD</option>
             <option value="btcusd">BTCUSD</option>
             <option value="ethusd">ETHUSD</option>
+            <option value="usoil">USOIL</option>
           </select>
         </div>
         <div className="control-group">
@@ -104,13 +104,7 @@ export default function WorkbenchPage() {
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
           >
-            <option value="M1">M1</option>
-            <option value="M5">M5</option>
-            <option value="M15">M15</option>
-            <option value="M30">M30</option>
             <option value="H1">H1</option>
-            <option value="H4">H4</option>
-            <option value="D1">D1</option>
           </select>
         </div>
         <div className="control-group">

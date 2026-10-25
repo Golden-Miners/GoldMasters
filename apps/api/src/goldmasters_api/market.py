@@ -112,7 +112,18 @@ def read_bars(
     count: int | None = None,
 ) -> list[MarketBar] | JSONResponse:
     """Closed bars for an explicitly selected instrument/timeframe."""
-    result = _adapter_from(request).get_bars(instrument_id, timeframe, count=count)
+    wanted = count if count is not None else settings.mt5_bars_count
+    if wanted < 1:
+        return _failure_response(
+            AdapterFailure(
+                ErrorCode.CONFIG_INVALID,
+                "malformed",
+                "bars count must be >= 1",
+            )
+        )
+    if wanted > 1000:
+        wanted = 1000
+    result = _adapter_from(request).get_bars(instrument_id, timeframe, count=wanted)
     if isinstance(result, AdapterFailure):
         return _failure_response(result)
     verdict = _verdict_failure(result)
