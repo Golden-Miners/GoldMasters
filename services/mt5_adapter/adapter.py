@@ -320,17 +320,10 @@ class Mt5Adapter:
         try:
             try:
                 info = self._terminal_manager._gateway.symbol_info(resolved)
-            except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
-                return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
-            if info is None:
-                return _failure_for("unsupported", f"symbol {resolved!r} is not exposed")
-            if not getattr(info, "visible", False):
-                return _failure_for(
-                    "unsupported", f"symbol {resolved!r} is not enabled for reading"
-                )
-            rows = self._fetch_rows(resolved, timeframe, wanted)
-            if isinstance(rows, AdapterFailure):
-                return rows
+            except Exception:  # noqa: BLE001 -- an unreadable descriptor reads disconnected
+                info = None  # Cannot read symbol info, but try bars anyway
+            if info is not None and not getattr(info,"visible", False):
+                return _failure_for("unsupported", f"symbol {resolved!r} is not visible")
             if len(rows) <= 1:
                 return _failure_for("missing-history", "terminal returned no closed bars")
             try:
@@ -483,7 +476,7 @@ class Mt5Adapter:
         try:
             try:
                 info = self._terminal_manager._gateway.symbol_info(resolved)
-            except Exception:  # noqa: BLE001 — an unreadable descriptor reads disconnected
+            except Exception:  # noqa: BLE001 -- an unreadable descriptor reads disconnected
                 return _failure_for("disconnected", "mt5 symbol descriptor unreadable")
             if info is None or not getattr(info, "visible", False):
                 return _failure_for("unsupported", f"symbol {resolved!r} is not exposed")

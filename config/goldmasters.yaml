@@ -11,7 +11,6 @@ config_version: "1.0"
 # is intentionally absent: it is required with no default.
 provider_id: mt5
 instrument_id: xauusd
-mt5_symbol: XAUUSD
 timeframe: H1
 mt5_probe_timeout_seconds: 2.0
 mt5_retry_attempts: 1

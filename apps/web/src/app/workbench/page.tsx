@@ -129,7 +129,8 @@ export default function WorkbenchPage() {
       ) : state === "unavailable" ? (
         <ExplicitState state="unavailable">
           <p>
-            Market data unavailable. Please check your MT5 connection and try again.
+            Market data unavailable. Please check your MT5 connection and try
+            again.
           </p>
         </ExplicitState>
       ) : state === "empty" ? (
@@ -137,7 +138,7 @@ export default function WorkbenchPage() {
       ) : (
         <section className="panel" aria-labelledby="chart-heading">
           <h2 id="chart-heading" className="section-heading">
-            Close Price — {instrument.toUpperCase()} ({timeframe})
+            Price — {instrument.toUpperCase()} ({timeframe})
           </h2>
           <div className="chart-wrap" role="img" aria-label="Price chart; data in the table below">
             <ResponsiveContainer width="100%" height="100%">

@@ -147,42 +147,39 @@ class SymbolResolver:
         if canonical_id in self._aliases:
             candidates.extend(self._aliases[canonical_id])
 
-        # Score each broker symbol against candidates
+        # Try each candidate: exact match first, then alias, then partial
         exact_matches: list[str] = []
         alias_matches: list[str] = []
         partial_matches: list[str] = []
 
+        # Exact match: canonical_upper == broker_name
+        if canonical_upper in broker_names:
+            return SymbolResolution(canonical_id, timeframe, canonical_upper, "exact")
+
+        # Alias match: any configured alias matches a broker name
+        if canonical_id in self._aliases:
+            for alias in self._aliases[canonical_id]:
+                if alias in broker_names:
+                    return SymbolResolution(canonical_id, timeframe, alias, "alias")
+
+        # Partial match: canonical_upper is a substring of broker_name or vice versa
         for broker_name in broker_names:
-            if broker_name in candidates:
-                if broker_name == canonical_upper:
-                    exact_matches.append(broker_name)
-                else:
-                    alias_matches.append(broker_name)
-            elif canonical_upper in broker_name or broker_name in canonical_upper:
+            if canonical_upper in broker_name or broker_name in canonical_upper:
                 partial_matches.append(broker_name)
 
-        # Resolution precedence: exact > alias > partial
-        if len(exact_matches) == 1:
-            return SymbolResolution(canonical_id, timeframe, exact_matches[0], "exact")
-        if len(alias_matches) == 1:
-            return SymbolResolution(canonical_id, timeframe, alias_matches[0], "alias")
+        # Ambiguous or no match
         if len(partial_matches) == 1:
             return SymbolResolution(canonical_id, timeframe, partial_matches[0], "partial")
-
-        # Ambiguous or no match
-        all_matches = exact_matches + alias_matches + partial_matches
-        if len(all_matches) > 1:
+        if len(partial_matches) > 1:
             return SymbolResolutionFailure(
-                canonical_id, timeframe, f"ambiguous_match: {all_matches}"
+                canonical_id, timeframe, f"ambiguous_match: {partial_matches}"
             )
-        return SymbolResolutionFailure(
-            canonical_id, timeframe, "no_matching_symbol"
-        )
+        return SymbolResolutionFailure(canonical_id, timeframe, "no_matching_symbol")
 
     def verify_symbol_access(
         self, resolution: SymbolResolution
     ) -> SymbolResolution | SymbolResolutionFailure:
-        """Verify that the resolved symbol is visible and has metadata access.
+        """Verify that the resolved symbol is visible and accessible.
 
         Calls symbol_info() on the resolved symbol to confirm the terminal
         can read it. Returns the resolution unchanged on success, or a
@@ -194,7 +191,6 @@ class SymbolResolver:
             return SymbolResolutionFailure(
                 resolution.canonical_id, resolution.timeframe, "symbol_info_failed"
             )
-
         if info is None:
             return SymbolResolutionFailure(
                 resolution.canonical_id,
@@ -211,7 +207,6 @@ class SymbolResolver:
                     "symbol_not_visible",
                 )
         except Exception:  # noqa: BLE001 — broker gateway may raise any error
-            # If we can't read visibility, proceed — some brokers may not expose it
             pass
 
         return resolution

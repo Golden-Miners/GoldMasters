@@ -41,6 +41,20 @@
         "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
       },
       "autoStart": false
+    },
+    "metaeditor": {
+      "type": "http",
+      "url": "http://127.0.0.1:22345/mcp",
+      "headers": {
+        "Authorization": "Bearer 4LBA9dgq41a4HXAdpg94r2wxXsUvVhV6MwTFq5hGDo"
+      }
+    },
+    "terminal": {
+      "type": "http",
+      "url": "http://127.0.0.1:22346/mcp",
+      "headers": {
+        "Authorization": "Bearer 4LBA9dgq41a4HXAdpg94r2wxXsUvVhV6MwTFq5hGDo"
+      }
     }
   }
 }

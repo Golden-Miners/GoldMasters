@@ -235,6 +235,7 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding-top: var(--gm-space-1);
+  flex-wrap: wrap;
 }
 
 .app-brand {
