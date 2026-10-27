@@ -21,7 +21,7 @@ from goldmasters_api.backtests import router as backtests_router
 from goldmasters_api.decisions import router as decisions_router
 from goldmasters_api.health import router as health_router
 from goldmasters_api.journal import router as journal_router
-from goldmasters_api.logging import configure_logging
+from goldmasters_api.app_logging import configure_logging
 from goldmasters_api.market import router as market_router
 from goldmasters_api.middleware import CorrelationIdMiddleware
 from goldmasters_api.model_health import router as model_health_router

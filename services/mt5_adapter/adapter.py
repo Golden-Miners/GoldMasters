@@ -324,6 +324,7 @@ class Mt5Adapter:
                 info = None  # Cannot read symbol info, but try bars anyway
             if info is not None and not getattr(info,"visible", False):
                 return _failure_for("unsupported", f"symbol {resolved!r} is not visible")
+            rows = self._fetch_rows(resolved, timeframe, wanted)
             if len(rows) <= 1:
                 return _failure_for("missing-history", "terminal returned no closed bars")
             try:
