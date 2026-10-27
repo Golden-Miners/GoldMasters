@@ -1,18 +1,18 @@
 @echo off
 :: ==============================================================================
-# GoldMasters v1.0 — Research Signal Team
-# Startup Script (Batch)
-#
-# Starts:
-#   1. Ollama (local model runtime)   — http://127.0.0.1:11434
-#   2. FastAPI Backend                — http://127.0.0.1:8000
-#   3. Next.js Frontend               — http://127.0.0.1:3000
-#
-# Prerequisites:
-#   - Ollama installed (ollama.exe on PATH)
-#   - Python 3.14+ with .venv at C:\XauMaster\.venv
-#   - Node.js 22+ with npm
-#   - .env.example present at repo root
+:: GoldMasters v1.0 — Research Signal Team
+:: Startup Script (Batch)
+::
+:: Starts:
+::   1. Ollama (local model runtime)   — http://127.0.0.1:11434
+::   2. FastAPI Backend                — http://127.0.0.1:8000
+::   3. Next.js Frontend               — http://127.0.0.1:3000
+::
+:: Prerequisites:
+::   - Ollama installed (ollama.exe on PATH)
+::   - Python 3.14+ with .venv at C:\XauMaster\.venv
+::   - Node.js 22+ with npm
+::   - .env.example present at repo root
 # ==============================================================================
 
 @echo off
@@ -81,7 +81,7 @@ echo [OK] FastAPI backend is running on port 8000
 REM Start Next.js frontend
 echo.
 echo [INFO] Starting Next.js frontend...
-cd /d "%SCRIPT_DIR%apps\web"
+cd /d "%SCRIPT_DIR%\apps\web"
 start /b npm run dev > "%TEMP%\goldmasters-web.log" 2>&1
 :web_wait
 curl.exe -s http://127.0.0.1:3000/ 2>&1 | findstr /c:"GoldMasters" >nul
@@ -111,7 +111,7 @@ echo ===========================================================================
 pause
 
 :: Cleanup on exit
-taskkill /F /IM python.exe 2>nul
-taskkill /F /IM node.exe 2>nul
+taskkill /F /IM "python.exe" /FI "WINDOWTITLE eq *goldmasters*" 2>nul
+taskkill /F /IM "node.exe" /FI "WINDOWTITLE eq *goldmasters*" 2>nul
 echo.
 echo [OK] All services stopped.

@@ -34,7 +34,6 @@ $MT5_AUTO_LAUNCH = $false  # Set to $true to auto-launch MT5 from .env
 # Build URLs using string concatenation (PowerShell : parsing issue)
 $API_BASE     = "http://" + $API_HOST + ":" + [string]$API_PORT
 $HEALTH_URL   = $API_BASE + "/health"
-$MARKET_URL   = $API_BASE + "/v1/market/bars?instrument_id=xauusd&timeframe=H1&count=1"
 
 # Track started processes for clean shutdown
 $STARTED_PROCESSES = @()
