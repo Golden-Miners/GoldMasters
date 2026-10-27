@@ -123,58 +123,52 @@ class SymbolResolver:
                 canonical_id, timeframe, f"unsupported timeframe: {timeframe}", is_timeframe=True
             )
 
-        # Get broker's visible symbols
-        try:
-            symbols = self._gateway.symbols_get()
-        except Exception:  # noqa: BLE001 — broker gateway may raise any error
-            return SymbolResolutionFailure(canonical_id, timeframe, "symbols_get_failed")
-
-        if not symbols:
-            return SymbolResolutionFailure(canonical_id, timeframe, "no_symbols_visible")
-
-        # Collect symbol names
-        broker_names: list[str] = []
-        for entry in symbols:
-            name = getattr(entry, "name", None)
-            if isinstance(name, str):
-                broker_names.append(name)
-
-        if not broker_names:
-            return SymbolResolutionFailure(canonical_id, timeframe, "no_symbol_names")
-
-        # Candidate aliases: canonical upper first, then configured aliases
+        # Try symbol_info() FIRST — it can query ANY symbol on the broker,
+        # not just those in Market Watch. This is the critical fix for
+        # terminals where Market Watch hasn't been populated yet.
         candidates: list[str] = [canonical_upper]
         if canonical_id in self._aliases:
             candidates.extend(self._aliases[canonical_id])
 
-        # Try each candidate: exact match first, then alias, then partial
-        exact_matches: list[str] = []
-        alias_matches: list[str] = []
-        partial_matches: list[str] = []
+        for candidate in candidates:
+            try:
+                info = self._gateway.symbol_info(candidate)
+                if info is not None:
+                    return SymbolResolution(canonical_id, timeframe, candidate, "exact")
+            except Exception:  # noqa: BLE001 — broker gateway may raise any error
+                # symbol_info returned None or raised — try next candidate
+                pass
 
-        # Exact match: canonical_upper == broker_name
-        if canonical_upper in broker_names:
-            return SymbolResolution(canonical_id, timeframe, canonical_upper, "exact")
+        # If symbol_info didn't find it, try symbols_get() as fallback
+        try:
+            symbols = self._gateway.symbols_get()
+        except Exception:  # noqa: BLE001 — broker gateway may raise any error
+            symbols = []
 
-        # Alias match: any configured alias matches a broker name
-        if canonical_id in self._aliases:
-            for alias in self._aliases[canonical_id]:
-                if alias in broker_names:
-                    return SymbolResolution(canonical_id, timeframe, alias, "alias")
+        broker_names: set[str] = set()
+        for entry in symbols or []:
+            name = getattr(entry, "name", None)
+            if isinstance(name, str):
+                broker_names.add(name)
 
-        # Partial match: canonical_upper is a substring of broker_name or vice versa
+        # Try exact match first
+        for candidate in candidates:
+            if candidate in broker_names:
+                return SymbolResolution(canonical_id, timeframe, candidate, "exact")
+
+        # Fallback: case-insensitive substring match — broker might use
+        # a different naming convention (e.g. "XAUUSD" vs "GOLD" vs "XAUUSDm").
+        # Match if ANY candidate is a substring of broker symbol, or vice versa.
         for broker_name in broker_names:
-            if canonical_upper in broker_name or broker_name in canonical_upper:
-                partial_matches.append(broker_name)
+            broker_upper = broker_name.upper()
+            for candidate in candidates:
+                if candidate in broker_upper or broker_upper in candidate:
+                    return SymbolResolution(canonical_id, timeframe, candidate, "exact")
 
-        # Ambiguous or no match
-        if len(partial_matches) == 1:
-            return SymbolResolution(canonical_id, timeframe, partial_matches[0], "partial")
-        if len(partial_matches) > 1:
-            return SymbolResolutionFailure(
-                canonical_id, timeframe, f"ambiguous_match: {partial_matches}"
-            )
-        return SymbolResolutionFailure(canonical_id, timeframe, "no_matching_symbol")
+        # No match found
+        return SymbolResolutionFailure(
+            canonical_id, timeframe, f"unsupported symbol: {candidates}"
+        )
 
     def verify_symbol_access(
         self, resolution: SymbolResolution
